@@ -1,15 +1,16 @@
 #include "VtkActorFactory.h"
 using RVTK::VtkActorFactory;
-using RVTK::ObjectFaceValuer;
 #include <cassert>
 #include <algorithm>
 #include <cmath>
+#include <boost/foreach.hpp>
 
 
 vtkSmartPointer<vtkActor> makeActor( vtkSmartPointer<vtkPolyData> pd)
 {
-    pd->BuildLinks();   // Required to use vtkPolyData::GetPointCells
     pd = RVTK::generateNormals( pd);
+    pd->BuildLinks();   // Required to use vtkPolyData::GetPointCells
+    pd->BuildCells();
     vtkSmartPointer<vtkPolyDataMapper> mapper = RVTK::createMapper( pd);
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
     actor->SetMapper( mapper);
@@ -63,35 +64,6 @@ vtkSmartPointer<vtkActor> VtkActorFactory::generateTexturedActor()
 }   // end generateTexturedActor
 
 
-// public
-vtkSmartPointer<vtkFloatArray> VtkActorFactory::createFaceLookupTableIndices( const ObjectFaceValuer& ofv,
-                                                    int numVals, double minVal, double maxVal)
-{
-    const IntSet& faceIds = _omodel->getFaceIds();
-    const double drng = maxVal - minVal;
-
-    const float maxIdx = numVals - 1;
-
-    vtkSmartPointer<vtkFloatArray> faceLookupTableIdxs = vtkSmartPointer<vtkFloatArray>::New();
-    faceLookupTableIdxs->SetNumberOfValues( _ufmappings.size());
-
-    typedef std::pair<int, int> IntsPair;
-    BOOST_FOREACH ( const IntsPair& fmap, _ufmappings)
-    {
-        const double d = ofv.getFaceValue(fmap.first);
-
-        float v = (d - minVal)/drng;
-        if ( v < 0.0)
-            v = 0.0;
-        if ( v > 1.0)
-            v = 1.0;
-        float cidx = cvRound(v * maxIdx);
-        faceLookupTableIdxs->SetValue( fmap.second, cidx);
-    }   // end for
-
-    return faceLookupTableIdxs;
-}   // end createFaceLookupTableIndices
-
     /*
     vtkSmartPointer<vtkCurvatures> curveFilter = vtkSmartPointer<vtkCurvatures>::New();
 #if VTK_MAJOR_VERSION == 6
@@ -113,13 +85,16 @@ vtkSmartPointer<vtkPoints> VtkActorFactory::generateUniqueVertices()
     const IntSet& uvidxs = _omodel->getUniqueVertexIds();
     _uvmappings.clear();
     _ruvmappings.clear();
+    _uvidxs.clear();
     int i = 0;
     BOOST_FOREACH ( const int& ui, uvidxs)
     {
         const cv::Vec3f& uv = _omodel->getUniqueVertex(ui);
         upoints->SetPoint( i, &uv[0]);
         _ruvmappings[i] = ui;
-        _uvmappings[ui] = i++;
+        _uvmappings[ui] = i;
+        _uvidxs.insert(i);
+        i++;
     }   // end foreach
     return upoints;
 }   // end generateUniqueVertices
@@ -132,6 +107,7 @@ vtkSmartPointer<vtkCellArray> VtkActorFactory::generateUniqueVertexFaces()
     const IntSet& fids = _omodel->getFaceIds();
     _ufmappings.clear();
     _rufmappings.clear();
+    _ufidxs.clear();
     int i = 0;
     BOOST_FOREACH ( const int& fid, fids)
     {
@@ -141,7 +117,9 @@ vtkSmartPointer<vtkCellArray> VtkActorFactory::generateUniqueVertexFaces()
         ufaces->InsertCellPoint( _uvmappings[uface.vindices[1]]);
         ufaces->InsertCellPoint( _uvmappings[uface.vindices[2]]);
         _rufmappings[i] = fid;
-        _ufmappings[fid] = i++;
+        _ufmappings[fid] = i;
+        _ufidxs.insert(i);
+        i++;
     }   // end for
     return ufaces;
 }   // end generateUniqueVertexFaces
@@ -150,7 +128,7 @@ vtkSmartPointer<vtkCellArray> VtkActorFactory::generateUniqueVertexFaces()
 // private
 vtkSmartPointer<vtkPoints> VtkActorFactory::generateNonUniqueVertices( vtkSmartPointer<vtkFloatArray>& uvs)
 {
-    const int nvs = _omodel->getNumVertices();
+    const int nvs = (int)_omodel->getNumVertices();
     vtkSmartPointer<vtkPoints> tpoints = vtkSmartPointer<vtkPoints>::New();
     tpoints->SetNumberOfPoints( nvs);
     uvs = vtkSmartPointer<vtkFloatArray>::New();
@@ -169,7 +147,8 @@ vtkSmartPointer<vtkPoints> VtkActorFactory::generateNonUniqueVertices( vtkSmartP
         tpoints->SetPoint( i, &v[0]);
         uvs->SetTuple2( i, uv[0], uv[1]);
         _rvmappings[i] = vi;
-        _vmappings[vi] = i++;
+        _vmappings[vi] = i;
+        i++;
     }   // end foreach
     return tpoints;
 }   // end generateNonUniqueVertices
@@ -191,8 +170,65 @@ vtkSmartPointer<vtkCellArray> VtkActorFactory::generateNonUniqueVertexFaces()
         tfaces->InsertCellPoint( _vmappings[face.vindices[1]]);
         tfaces->InsertCellPoint( _vmappings[face.vindices[2]]);
         _rfmappings[i] = fid;
-        _fmappings[fid] = i++;
+        _fmappings[fid] = i;
+        i++;
     }   // end for
     return tfaces;
 }   // end generateNonUniqueVertexFaces
 
+
+
+// public
+int VtkActorFactory::getObjIdxFromVtkUniqueVtx( int vtkUvidx) const
+{
+    assert( _ruvmappings.count(vtkUvidx));
+    return _ruvmappings.at(vtkUvidx);
+}   // end getObjIdxFromVtkUniqueVtx
+
+
+// public
+int VtkActorFactory::getObjIdxFromVtkVtx( int vtkUvidx) const
+{
+    assert( _rvmappings.count(vtkUvidx));
+    return _rvmappings.at(vtkUvidx);
+}   // end getObjIdxFromVtkVtx
+
+
+// public
+int VtkActorFactory::getObjIdxFromVtkUniqueFace( int vtkFaceId) const
+{
+    assert( _rufmappings.count(vtkFaceId));
+    return _rufmappings.at(vtkFaceId);
+}   // end getObjIdxFromVtkUniqueFace
+
+
+// public
+int VtkActorFactory::getObjIdxFromVtkFace( int vtkFaceId) const
+{
+    assert( _rfmappings.count(vtkFaceId));
+    return _rfmappings.at(vtkFaceId);
+}   // end getObjIdxFromVtkFace
+
+
+// public
+int VtkActorFactory::getVtkBasicIdxFromObjFaceIdx( int objFaceId) const
+{
+    assert( _ufmappings.count(objFaceId));
+    return _ufmappings.at(objFaceId);
+}   // end getVtkBasicIdxFromObjFaceIdx
+
+
+// public
+int VtkActorFactory::getVtkTextureIdxFromObjFaceIdx( int objFaceId) const
+{
+    assert( _fmappings.count(objFaceId));
+    return _fmappings.at(objFaceId);
+}   // end getVtkTextureIdxFromObjFaceIdx
+
+
+// public
+int VtkActorFactory::getVtkIdxFromObjUniqueVtx( int objUvidx) const
+{
+    assert( _uvmappings.count(objUvidx));
+    return _uvmappings.at(objUvidx);
+}   // end getVtkIdxFromObjUniqueVtx

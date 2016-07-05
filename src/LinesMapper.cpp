@@ -27,7 +27,7 @@ LinesMapper::LinesMapper( const Lines3d &lns)
     polyData->SetPoints( points);
     polyData->SetLines( lines);
 
-#if VTK_MAJOR_VERSION == 6
+#if VTK_MAJOR_VERSION >= 6
     mapper->SetInputData( polyData);
 #else
     mapper->SetInput( polyData);
@@ -60,7 +60,7 @@ LinesMapper::LinesMapper()
     vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
     polyData->SetPoints( points);
     polyData->SetLines( lines);
-#if VTK_MAJOR_VERSION == 6
+#if VTK_MAJOR_VERSION >= 6
     mapper->SetInputData( polyData);
 #else
     mapper->SetInput( polyData);

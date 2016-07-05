@@ -5,12 +5,15 @@
 #include <vtkTriangle.h>
 #include <vtkFloatArray.h>
 #include <vtkPolyDataNormals.h>
+#include <vtkWindowToImageFilter.h>
+#include <vtkImageShiftScale.h>
+#include <vtkImageExport.h>
+#include <vtkRenderWindow.h>
 
 
-vtkSmartPointer<vtkLookupTable> RVTK::createColoursLookupTable(
-        int numColours, const vtkColor3ub& scol, const vtkColor3ub& fcol)
+void RVTK::setColoursLookupTable( vtkSmartPointer<vtkLookupTable> lut,
+                            int numColours, const vtkColor3ub& scol, const vtkColor3ub& fcol)
 {
-    vtkSmartPointer<vtkLookupTable> lut = vtkSmartPointer<vtkLookupTable>::New();
     lut->SetNumberOfTableValues( numColours);
     lut->Build();
 
@@ -26,22 +29,12 @@ vtkSmartPointer<vtkLookupTable> RVTK::createColoursLookupTable(
         rgb[2] = (scol[2] + i*cstep[2])/255.0;
         lut->SetTableValue( i, rgb[0], rgb[1], rgb[2], 1);
     }   // end for
-
-    return lut;
 }   // end createColoursLookupTable
 
 
-void RVTK::setLookupTable( vtkSmartPointer<vtkActor> actor, vtkSmartPointer<vtkLookupTable> lut)
+vtkPolyData* RVTK::getPolyData( const vtkSmartPointer<vtkActor>& actor)
 {
-    vtkSmartPointer<vtkMapper> mapper = actor->GetMapper();
-    mapper->SetScalarRange( 0, lut->GetNumberOfTableValues() - 1);
-    mapper->SetLookupTable( lut);
-}   // end setLookupTable
-
-
-vtkSmartPointer<vtkPolyData> RVTK::getPolyData( const vtkSmartPointer<vtkActor>& actor)
-{
-    vtkSmartPointer<vtkPolyDataMapper> mapper = (vtkPolyDataMapper*)actor->GetMapper();
+    vtkPolyDataMapper* mapper = (vtkPolyDataMapper*)actor->GetMapper();
     return mapper->GetInput();
 }   // end getPolyData
 
@@ -49,7 +42,7 @@ vtkSmartPointer<vtkPolyData> RVTK::getPolyData( const vtkSmartPointer<vtkActor>&
 vtkSmartPointer<vtkPolyDataMapper> RVTK::createMapper( const vtkSmartPointer<vtkPolyData>& data)
 {
     vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-#if VTK_MAJOR_VERSION == 6
+#if VTK_MAJOR_VERSION >= 6
     mapper->SetInputData( data);
 #else
     mapper->SetInput( data);
@@ -114,7 +107,7 @@ vtkSmartPointer<vtkTexture> RVTK::convertToTexture( const cv::Mat& image, bool X
 void RVTK::extractBoundaryVertices( const vtkSmartPointer<vtkPolyData>& pdata, std::vector<int>& bvids)
 {
     vtkSmartPointer<vtkFeatureEdges> vfe = vtkSmartPointer<vtkFeatureEdges>::New();
-#if VTK_MAJOR_VERSION == 6
+#if VTK_MAJOR_VERSION >= 6
     vfe->SetInputData( pdata);
 #else
     vfe->SetInput( pdata);
@@ -154,3 +147,57 @@ vtkSmartPointer<vtkPolyData> RVTK::generateNormals( vtkSmartPointer<vtkPolyData>
     return normalsGenerator->GetOutput();
 }   // end generateNormals
 
+
+
+cv::Mat_<cv::Vec3b> RVTK::extractImage( vtkRenderWindow* renWin)
+{
+    vtkSmartPointer<vtkWindowToImageFilter> filter = vtkSmartPointer<vtkWindowToImageFilter>::New();
+    filter->SetInput( renWin);
+    filter->SetMagnification(1);
+    filter->SetInputBufferTypeToRGB();  // Extract RGB info
+
+    vtkSmartPointer<vtkImageShiftScale> scale = vtkSmartPointer<vtkImageShiftScale>::New();
+    scale->SetOutputScalarTypeToUnsignedChar();
+    scale->SetInputConnection( filter->GetOutputPort());
+
+    vtkSmartPointer<vtkImageExport> exporter = vtkSmartPointer<vtkImageExport>::New();
+    exporter->SetInputConnection( scale->GetOutputPort());
+    exporter->SetImageLowerLeft(false); // Flip vertically for OpenCV
+
+    const int cols = renWin->GetSize()[0];
+    const int rows = renWin->GetSize()[1];
+    cv::Mat_<cv::Vec3b> img( rows, cols);
+    exporter->SetExportVoidPointer( img.ptr());
+    exporter->Export();
+
+    // Need to swap the red and blue channels for OpenCV
+    cv::cvtColor( img, img, CV_RGB2BGR);
+
+    return img;
+}   // end extractImage
+
+
+
+cv::Mat_<float> RVTK::extractZBuffer( vtkRenderWindow* renWin)
+{
+    vtkSmartPointer<vtkWindowToImageFilter> filter = vtkSmartPointer<vtkWindowToImageFilter>::New();
+    filter->SetInput( renWin);
+    filter->SetMagnification(1);
+    filter->SetInputBufferTypeToZBuffer();
+
+    vtkSmartPointer<vtkImageShiftScale> scale = vtkSmartPointer<vtkImageShiftScale>::New();
+    scale->SetOutputScalarTypeToFloat();
+    scale->SetInputConnection( filter->GetOutputPort());
+
+    vtkSmartPointer<vtkImageExport> exporter = vtkSmartPointer<vtkImageExport>::New();
+    exporter->SetInputConnection( scale->GetOutputPort());
+    exporter->SetImageLowerLeft(false); // Flip vertically for OpenCV
+
+    const int cols = renWin->GetSize()[0];
+    const int rows = renWin->GetSize()[1];
+    cv::Mat_<float> rngMap( rows, cols);
+    exporter->SetExportVoidPointer( rngMap.ptr());
+    exporter->Export();
+
+    return rngMap;
+}   // end extractZBuffer

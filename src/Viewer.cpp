@@ -1,4 +1,5 @@
 #include "Viewer.h"
+#include "VtkTools.h"
 using RVTK::Viewer;
 using RVTK::ActorSubset;
 
@@ -375,29 +376,7 @@ void Viewer::updateRender()
 
 cv::Mat_<cv::Vec3b> Viewer::extractImage() const
 {
-    vtkSmartPointer<vtkWindowToImageFilter> filter = vtkSmartPointer<vtkWindowToImageFilter>::New();
-    filter->SetInput( _renWin);
-    filter->SetMagnification(1);
-    filter->SetInputBufferTypeToRGB();  // Extract RGB info
-
-    vtkSmartPointer<vtkImageShiftScale> scale = vtkSmartPointer<vtkImageShiftScale>::New();
-    scale->SetOutputScalarTypeToUnsignedChar();
-    scale->SetInputConnection( filter->GetOutputPort());
-
-    vtkSmartPointer<vtkImageExport> exporter = vtkSmartPointer<vtkImageExport>::New();
-    exporter->SetInputConnection( scale->GetOutputPort());
-    exporter->SetImageLowerLeft(false); // Flip vertically for OpenCV
-
-    const int cols = _renWin->GetSize()[0];
-    const int rows = _renWin->GetSize()[1];
-    cv::Mat_<cv::Vec3b> img( rows, cols);
-    exporter->SetExportVoidPointer( img.ptr());
-    exporter->Export();
-
-    // Need to swap the red and blue channels for OpenCV
-    cv::cvtColor( img, img, CV_RGB2BGR);
-
-    return img;
+    return RVTK::extractImage( _renWin);
 }   // end extractImage
 
 
@@ -411,26 +390,7 @@ cv::Mat_<float> Viewer::extractZBuffer() const
     std::cerr << "Camera clipping range (near, far): " << nearZ << ", " << farZ << std::endl;
     */
 
-    vtkSmartPointer<vtkWindowToImageFilter> filter = vtkSmartPointer<vtkWindowToImageFilter>::New();
-    filter->SetInput( _renWin);
-    filter->SetMagnification(1);
-    filter->SetInputBufferTypeToZBuffer();
-
-    vtkSmartPointer<vtkImageShiftScale> scale = vtkSmartPointer<vtkImageShiftScale>::New();
-    scale->SetOutputScalarTypeToFloat();
-    scale->SetInputConnection( filter->GetOutputPort());
-
-    vtkSmartPointer<vtkImageExport> exporter = vtkSmartPointer<vtkImageExport>::New();
-    exporter->SetInputConnection( scale->GetOutputPort());
-    exporter->SetImageLowerLeft(false); // Flip vertically for OpenCV
-
-    const int cols = _renWin->GetSize()[0];
-    const int rows = _renWin->GetSize()[1];
-    cv::Mat_<float> rngMap( rows, cols);
-    exporter->SetExportVoidPointer( rngMap.ptr());
-    exporter->Export();
-
-    return rngMap;
+    return RVTK::extractZBuffer( _renWin);
 }   // end extractZBuffer
 
 

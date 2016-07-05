@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 2.8.11 FATAL_ERROR)
 project( rVTK)
 
 include( "../LibCMakeCommon.cmake")
+
 set( BUILD_SHARED_LIBS TRUE)
+set( BUILD_USING_SHARED_LIBS TRUE)
 
 set( SRC_DIR "${PROJECT_SOURCE_DIR}/src")
 set( INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
@@ -11,61 +13,43 @@ include_directories( "${INCLUDE_DIR}")
 include_directories( "${PROJECT_BINARY_DIR}")
 
 # Boost
-if(WIN32)
-    set( BOOST_ROOT "D:/boost_1_56_0")
-    set( BOOST_LIBRARYDIR "${BOOST_ROOT}/lib64-msvc-11.0")
-endif(WIN32)
-find_package( Boost 1.5 REQUIRED COMPONENTS filesystem system thread random regex)
+find_package( Boost 1.58 REQUIRED COMPONENTS system filesystem thread random regex)
 include_directories( ${Boost_INCLUDE_DIRS})
-link_directories( ${Boost_LIBRARY_DIRS})
+add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
+
 
 # OpenCV
-if(WIN32)
-    set( OpenCV_DIR "${LOCALLIBS}/opencv")
-endif(WIN32)
 find_package( OpenCV 2.4 REQUIRED)
 include_directories( ${OpenCV_INCLUDE_DIRS})
 
 # VTK
-set( VTK_DIR "${LOCALLIBS}/VTK64/lib/cmake/vtk-6.1")
 find_package( VTK REQUIRED)
 include( "${VTK_USE_FILE}")
 include_directories( ${VTK_INCLUDE_DIRS})
 
-# Qt
-if(WIN32)
-    # Build 64-bit using the MSVC11 64-bit compiler
-    set( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "C:/Program Files (x86)/Windows Kits/8.0/Lib/win8/um/x64")
-    set( Qt5_LIBRARY_DIR "D:/Qt/5.2.1/msvc2012_64_opengl/lib")
-    find_package( Qt5 REQUIRED Widgets OpenGL Sql WebKitWidgets)
-    link_libraries( Qt5::Widgets Qt5::OpenGL Qt5::Sql Qt5::WebKitWidgets)
-endif()
-
-set( RFeatures_DIR "${LOCALLIBS}/rFeatures")
 find_package( RFeatures REQUIRED)
 include_directories( "${RFeatures_INCLUDE_DIR}")
 
-set( RLIB_DIR "${LOCALLIBS}/rlib")
 find_package( RLIB REQUIRED)
 
-set( LibLAS_DIR "${LOCALLIBS}/libLAS-1.7.0")
 find_package( LibLAS REQUIRED)
 
 
 set( INCLUDE_FILES
     "${INCLUDE_DIR}/ClosestPointFinder.h"
     "${INCLUDE_DIR}/DataReader.h"
-    "${INCLUDE_DIR}/DijkstraPath.h"
+    "${INCLUDE_DIR}/DijkstraShortestPathLineInterpolator.h"
     #"${INCLUDE_DIR}/FlightInteractor.h"
     #"${INCLUDE_DIR}/ImagingInteractor.h"
     "${INCLUDE_DIR}/InteractorC1.h"
     "${INCLUDE_DIR}/KeyPresser.h"
     "${INCLUDE_DIR}/LinePlotter.h"
     "${INCLUDE_DIR}/LinesMapper.h"
-    "${INCLUDE_DIR}/ModelBounder.h"
+    "${INCLUDE_DIR}/ModelPathDrawer.h"
     "${INCLUDE_DIR}/PointCloudMapper.h"
     "${INCLUDE_DIR}/PointPlacer.h"
     "${INCLUDE_DIR}/SnapshotKeyPresser.h"
+    #"${INCLUDE_DIR}/SurfacePathInterpolator.h"
     "${INCLUDE_DIR}/Viewer.h"
     "${INCLUDE_DIR}/ViewerProjector.h"
     "${INCLUDE_DIR}/VtkActorFactory.h"
@@ -78,17 +62,18 @@ set( INCLUDE_FILES
 set( SRC_FILES
     ${SRC_DIR}/ClosestPointFinder
     ${SRC_DIR}/DataReader
-    ${SRC_DIR}/DijkstraPath
+    ${SRC_DIR}/DijkstraShortestPathLineInterpolator
     #${SRC_DIR}/FlightInteractor
     #${SRC_DIR}/ImagingInteractor
     ${SRC_DIR}/InteractorC1
     ${SRC_DIR}/KeyPresser
     ${SRC_DIR}/LinePlotter
     ${SRC_DIR}/LinesMapper
-    ${SRC_DIR}/ModelBounder
+    ${SRC_DIR}/ModelPathDrawer
     ${SRC_DIR}/PointCloudMapper
     ${SRC_DIR}/PointPlacer
     ${SRC_DIR}/SnapshotKeyPresser
+    #${SRC_DIR}/SurfacePathInterpolator
     ${SRC_DIR}/Viewer
     ${SRC_DIR}/ViewerProjector
     ${SRC_DIR}/VtkActorFactory

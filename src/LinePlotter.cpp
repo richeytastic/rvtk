@@ -72,7 +72,7 @@ vtkActor* LinePlotter::createActor() const
 
 	vtkPolyDataMapper* mapper = vtkPolyDataMapper::New();
 
-#if VTK_MAJOR_VERSION == 6
+#if VTK_MAJOR_VERSION >= 6
     mapper->SetInputData( polyData);
 #else
     mapper->SetInput( polyData);

@@ -1,6 +1,5 @@
-#pragma once
-#ifndef RVTK_CLOSEST_POINT_FINDER_H
-#define RVTK_CLOSEST_POINT_FINDER_H
+#ifndef RVTK_CLOSEST_POINT_FINDER_H__
+#define RVTK_CLOSEST_POINT_FINDER_H__
 
 #include <opencv2/opencv.hpp>
 #include <vtkPolyData.h>
@@ -15,8 +14,7 @@ namespace RVTK
 class rVTK_EXPORT ClosestPointFinder
 {
 public:
-    explicit ClosestPointFinder(
-            const vtkSmartPointer<vtkPolyData>& data);
+    explicit ClosestPointFinder( const vtkSmartPointer<vtkPolyData>& data);
 
     int getClosestVertex( const cv::Vec3f& pos) const;  // Returns index of closest vertex
     int getClosestVertex( const double pos[3]) const;

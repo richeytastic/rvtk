@@ -7,6 +7,7 @@ using RFeatures::ObjModel;
 #include <vtkImplicitSelectionLoop.h>
 #include <vtkPolyDataConnectivityFilter.h>
 #include <iostream>
+#include <boost/foreach.hpp>
 
 
 // public static
@@ -16,24 +17,9 @@ VtkModel::Ptr VtkModel::create(const ObjModel::Ptr model)
 }   // end create
 
 
-class CurvFaceValuer : public RVTK::ObjectFaceValuer
-{
-public:
-    explicit CurvFaceValuer( const ObjModel::Ptr om) : _omodel(om) {}
-
-    virtual double getFaceValue( int faceId) const
-    {
-        return _omodel->getFaceCurvature( faceId);
-    }   // end getFaceValue
-
-private:
-    const ObjModel::Ptr _omodel;
-};  // end class
-
-
 // private
 VtkModel::VtkModel( const ObjModel::Ptr model)
-    : _actorFactory( new VtkActorFactory(model)), _objModel(model)
+    : _actorFactory( new VtkActorFactory(model))
 {
     _basicActor = _actorFactory->generateBasicActor();
     _basicActor->GetProperty()->SetLineWidth(0.7);  // OpenGL only
@@ -42,6 +28,7 @@ VtkModel::VtkModel( const ObjModel::Ptr model)
 
     _texturedActor = _actorFactory->generateTexturedActor();
 
+    /*
     const int ncols = 500;
     const vtkColor3ub scol( 255, 255,   0);
     const vtkColor3ub fcol( 0,     0, 255);
@@ -50,8 +37,7 @@ VtkModel::VtkModel( const ObjModel::Ptr model)
 
     // Set the curvature information on the actor
     CurvFaceValuer cfv( model);
-    vtkSmartPointer<vtkFloatArray> cvals
-        = _actorFactory->createFaceLookupTableIndices( cfv, ncols, -0.2, 0.2);
+    vtkSmartPointer<vtkFloatArray> cvals = _actorFactory->createFaceLookupTableIndices( &cfv);
     cvals->SetName( "Curvature");
     RVTK::getPolyData(_basicActor)->GetCellData()->AddArray( cvals);
 
@@ -74,10 +60,7 @@ VtkModel::VtkModel( const ObjModel::Ptr model)
 
     RVTK::getPolyData( _basicActor)->GetCellData()->AddArray( _basicColours);
     RVTK::getPolyData( _basicActor)->GetCellData()->AddArray( _transColours);
-
-    // Default actor is the textured actor
-    _currentModelType = RVTK::TEXTURED_MODEL;
-    _currentActor = _texturedActor;
+    */
 
     _unqcpf = new RVTK::ClosestPointFinder( RVTK::getPolyData( _basicActor));
     _tcpf = new RVTK::ClosestPointFinder( RVTK::getPolyData( _texturedActor));
@@ -94,18 +77,45 @@ VtkModel::~VtkModel()
 
 
 // public
+int VtkModel::getVtkBasicIdxFromObjFaceIdx( int objFaceIdx) const
+{
+    return _actorFactory->getVtkBasicIdxFromObjFaceIdx( objFaceIdx);
+}   // end getVtkBasicIdxFromObjFaceIdx
+
+
+// public
+int VtkModel::getVtkIdxFromObjUniqueVtx( int objUvidx) const
+{
+    return _actorFactory->getVtkIdxFromObjUniqueVtx( objUvidx);
+}   // end getVtkIdxFromObjUniqueVtx
+
+
+// public
+int VtkModel::getObjIdxFromVtkUniqueVtx( int vtkUvidx) const
+{
+    return _actorFactory->getObjIdxFromVtkUniqueVtx( vtkUvidx);
+}   // end getObjIdxFromVtkUniqueVtx
+
+
+// public
+int VtkModel::getObjIdxFromVtkUniqueFace( int vtkFaceIdx) const
+{
+    return _actorFactory->getObjIdxFromVtkUniqueFace( vtkFaceIdx);
+}   // end getObjIdxFromVtkUniqueFace
+
+
+// public
 int VtkModel::getClosestObjUniqueVertexIdx( const double v[3]) const
 {
     const int uvtkid = _unqcpf->getClosestVertex(v);
-    // Translate to object index using the actor factory
     return _actorFactory->getObjIdxFromVtkUniqueVtx( uvtkid);
 }   // end getClosestObjUniqueVertexIdx
 
 // public
 int VtkModel::getClosestObjUniqueVertexIdx( const cv::Vec3f& v) const
 {
-    double v0[3] = {v[0], v[1], v[2]};
-    return getClosestObjUniqueVertexIdx(v0);
+    const int uvtkid = _unqcpf->getClosestVertex(v);
+    return _actorFactory->getObjIdxFromVtkUniqueVtx( uvtkid);
 }   // end getClosestObjUniqueVertexIdx
 
 // public
@@ -138,48 +148,30 @@ int VtkModel::getClosestObjFaceIdx( const cv::Vec3f& v) const
 
 
 // public
-void VtkModel::setCurrentModel( RVTK::ModelType mt)
+cv::Vec3f VtkModel::getClosestPoint( const cv::Vec3f& v) const
 {
-    switch ( mt)
-    {
-        case RVTK::POINTS_MODEL:
-            RVTK::getPolyData( _basicActor)->GetCellData()->SetActiveScalars( "BaseColours");
-            _basicActor->GetProperty()->SetRepresentationToPoints();
-            _basicActor->GetProperty()->SetBackfaceCulling(0);
-            break;
-        case RVTK::EDGES_MODEL:
-            RVTK::getPolyData( _basicActor)->GetCellData()->SetActiveScalars( "Transparency");
-            _basicActor->GetProperty()->SetRepresentationToSurface();
-            _basicActor->GetProperty()->SetEdgeVisibility(1);
-            _basicActor->GetProperty()->SetEdgeColor(1.0,1.0,1);
-            _basicActor->GetProperty()->SetBackfaceCulling(0);
-            break;
-        case RVTK::SURFACE_MODEL:
-            RVTK::getPolyData( _basicActor)->GetCellData()->SetActiveScalars( "BaseColours");
-            _basicActor->GetProperty()->SetRepresentationToSurface();
-            _basicActor->GetProperty()->SetEdgeVisibility(0);
-            _basicActor->GetProperty()->SetBackfaceCulling(1);
-            break;
-        case RVTK::GRADIENTS_MODEL:
-            RVTK::getPolyData( _basicActor)->GetCellData()->SetActiveScalars( "Curvature");
-            _basicActor->GetProperty()->SetBackfaceCulling(1);
-            break;
-        case RVTK::TEXTURED_MODEL:
-            _texturedActor->GetProperty()->SetBackfaceCulling(1);
-            break;
-    }   // end switch
-
-    if ( mt == RVTK::NULL_MODEL)
-        _currentActor = NULL;
-    else if ( mt == RVTK::TEXTURED_MODEL)
-        _currentActor = _texturedActor;
-    else
-        _currentActor = _basicActor;
-
-    _currentModelType = mt;
-}   // end setCurrentModel
+    cv::Vec3f outv;
+    _unqcpf->getClosestCell( v, &outv);
+    return outv;
+}   // end getClosestPoint
 
 
+// public
+const boost::unordered_set<int>& VtkModel::getVtkUniqueVertexIds() const
+{
+    return _actorFactory->getVtkUniqueVertexIds();
+}   // end getVtkUniqueVertexIds
+
+
+// public
+const boost::unordered_set<int>& VtkModel::getVtkUniqueFaceIds() const
+{
+    return _actorFactory->getVtkUniqueFaceIds();
+}   // end getVtkUniqueFaceIds
+
+
+
+/*
 // public
 void VtkModel::colourObjectFace( int fid, const cv::Vec4b& rgba)
 {
@@ -187,8 +179,8 @@ void VtkModel::colourObjectFace( int fid, const cv::Vec4b& rgba)
     const int cid = _actorFactory->getVtkBasicIdxFromObjFaceIdx(fid);
     const unsigned char ucol[4] = {rgba[0],rgba[1],rgba[2],rgba[3]}; // R,G,B,Opacity
     _transColours->SetTupleValue( cid, ucol);
-    setCurrentModel( _currentModelType);
 }   // end colourObjectFace
+*/
 
 
 /*

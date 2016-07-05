@@ -93,7 +93,7 @@ PointCloudMapper::PointCloudMapper( const cv::Mat_<cv::Vec3f> pts, const cv::Mat
     polyData->SetPoints( points);
     polyData->GetPointData()->SetScalars( cols);
     polyData->SetVerts( cells);
-#if VTK_MAJOR_VERSION == 6
+#if VTK_MAJOR_VERSION >= 6
     mapper->SetInputData( polyData);
 #else
     mapper->SetInput( polyData);
@@ -116,7 +116,7 @@ PointCloudMapper::PointCloudMapper( const PointCloud::Ptr pts)
     polyData->SetPoints( points);
     polyData->GetPointData()->SetScalars( cols);
     polyData->SetVerts( cells);
-#if VTK_MAJOR_VERSION == 6
+#if VTK_MAJOR_VERSION >= 6
     mapper->SetInputData( polyData);
 #else
     mapper->SetInput( polyData);
@@ -137,7 +137,7 @@ PointCloudMapper::PointCloudMapper()
     polyData->SetPoints( points);
     polyData->GetPointData()->SetScalars( cols);
     polyData->SetVerts( cells);
-#if VTK_MAJOR_VERSION == 6
+#if VTK_MAJOR_VERSION >= 6
     mapper->SetInputData( polyData);
 #else
     mapper->SetInput( polyData);

@@ -42,7 +42,7 @@ bool PointPlacer::calcSurfacePosition( int x, int y, float* worldPos, RVTK::Disp
     if ( dispOrig == RVTK::TOP_LEFT_DISPLAY_ORIGIN)
         y = _renderer->GetSize()[1] - y - 1;    // Convert to VTK display origin (BOTTOM_LEFT_DISPLAY_ORIGIN)
 
-    double dpos[2] = {x, y};
+    double dpos[2] = {(double)x, (double)y};
     if ( !_pplacer->ValidateDisplayPosition( _renderer, dpos))
         return false;
 

@@ -24,16 +24,13 @@
 namespace RVTK
 {
 
-// Create a lookup table of colours from startCol to endCol (inclusive).
+// Set a provided lookup table of colours from startCol to endCol (inclusive).
 // Colour values should be specified in RGB order.
-rVTK_EXPORT vtkSmartPointer<vtkLookupTable> createColoursLookupTable(
-        int numColours, const vtkColor3ub& startCol, const vtkColor3ub& endCol);
+rVTK_EXPORT void setColoursLookupTable( vtkSmartPointer<vtkLookupTable>,
+                                        int numColours, const vtkColor3ub& startCol, const vtkColor3ub& endCol);
 
-// Set the provided lookup table in the actor's mapper.
-rVTK_EXPORT void setLookupTable( vtkSmartPointer<vtkActor> actor, vtkSmartPointer<vtkLookupTable> lut);
-
-// VTK version independent return of poly data object from actor
-rVTK_EXPORT vtkSmartPointer<vtkPolyData> getPolyData( const vtkSmartPointer<vtkActor>& actor);
+// Return of poly data object from actor
+rVTK_EXPORT vtkPolyData* getPolyData( const vtkSmartPointer<vtkActor>& actor);
 
 // VTK version independent creation of mapper object from poly data
 rVTK_EXPORT vtkSmartPointer<vtkPolyDataMapper> createMapper( const vtkSmartPointer<vtkPolyData>& data);
@@ -57,6 +54,10 @@ rVTK_EXPORT void extractBoundaryVertices( const vtkSmartPointer<vtkPolyData>& pd
 
 // Generate a set of normals from a vtkPolyData object having point and cell data.
 rVTK_EXPORT vtkSmartPointer<vtkPolyData> generateNormals( vtkSmartPointer<vtkPolyData> pdata);
+
+// Dump a colour or Z buffer image from the provided render window.
+rVTK_EXPORT cv::Mat_<cv::Vec3b> extractImage( vtkRenderWindow*);
+rVTK_EXPORT cv::Mat_<float> extractZBuffer( vtkRenderWindow*);
 
 }   // end namespace
 
