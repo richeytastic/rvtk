@@ -1,11 +1,10 @@
-#pragma once
 #ifndef RVTK_DIJKSTRA_SHORTEST_PATH_LINE_INTERPOLATOR_H
 #define RVTK_DIJKSTRA_SHORTEST_PATH_LINE_INTERPOLATOR_H
 
 #include <vtkRenderer.h>
 #include <vtkContourRepresentation.h>
 #include <vtkContourLineInterpolator.h>
-#include "VtkModel.h"
+#include "ClosestPointFinder.h"
 #include <vector>
 
 namespace RFeatures
@@ -18,13 +17,13 @@ namespace RVTK
 
 /*** Custom line interpolation ***/
 //class VTK_WIDGETS_EXPORT DijkstraShortestPathLineInterpolator : public vtkContourLineInterpolator
-class DijkstraShortestPathLineInterpolator : public vtkContourLineInterpolator
+class rVTK_EXPORT DijkstraShortestPathLineInterpolator : public vtkContourLineInterpolator
 {
 public:
     vtkTypeMacro( DijkstraShortestPathLineInterpolator, vtkContourLineInterpolator);
     static DijkstraShortestPathLineInterpolator* New();
 
-    void setModel( const RVTK::VtkModel::Ptr& vmodel);
+    bool setModel( const RVTK::ClosestPointFinder*);
 
     // Interpolate between nodes n0 and n1 on the given vtkContourRepresentation
     virtual int InterpolateLine( vtkRenderer* ren, vtkContourRepresentation* rep, int n0, int n1);
@@ -39,7 +38,7 @@ private:
 
     RFeatures::DijkstraShortestPathFinder* _spfinder;
     std::vector<int>* _pathVtxs;
-    RVTK::VtkModel::Ptr _vmodel;
+    const ClosestPointFinder* _cpf;
 };  // end class
 
 }   // end namespace

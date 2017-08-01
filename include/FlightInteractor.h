@@ -4,7 +4,6 @@
  * 2012
  */
 
-#pragma once
 #ifndef RVTK_FLIGHT_INTERACTOR_H
 #define RVTK_FLIGHT_INTERACTOR_H
 
@@ -13,12 +12,13 @@
 using RVTK::Viewer;
 #include "KeyPresser.h"
 using RVTK::KeyPresser;
+#include "rVTK_Export.h"
 
 
 namespace RVTK
 {
 
-class FlightInteractor : public vtkInteractorStyleFlight
+class rVTK_EXPORT FlightInteractor : public vtkInteractorStyleFlight
 {
 public:
     static FlightInteractor *New();

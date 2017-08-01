@@ -4,7 +4,7 @@
  * Richard Palmer
  * 24 May 2011
  */
-#pragma once
+
 #ifndef RVTK_DATA_READER_H
 #define RVTK_DATA_READER_H
 // Disable warnings about MSVC compiler not implementing exception specifications

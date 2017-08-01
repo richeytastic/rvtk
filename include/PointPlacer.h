@@ -5,7 +5,6 @@
  * March 2015
  ***/
 
-#pragma once
 #ifndef RVTK_POINT_PLACER_H
 #define RVTK_POINT_PLACER_H
 
@@ -34,7 +33,10 @@ public:
     static Ptr create( const vtkSmartPointer<vtkRenderer>);
     static Ptr create( const vtkSmartPointer<vtkRenderer>, vtkSmartPointer<vtkPolygonalSurfacePointPlacer>);
 
-    void setModel( const vtkSmartPointer<vtkActor>);
+    void setModel( const vtkSmartPointer<vtkActor>);    // Set provided actor as the only one
+    void addModel( const vtkSmartPointer<vtkActor>);    // Add an actor
+    void clearModels(); // Remove all actors
+
     bool hasModel() const { return _pplacer->GetNumberOfProps() > 0;}
 
     // Calculate the surface position on the model from x,y display coords and set worldPos with the result.

@@ -3,85 +3,107 @@
 #include <vtkCommand.h>
 #include <vtkOrientedGlyphContourRepresentation.h>
 #include <vtkPolygonalSurfacePointPlacer.h>
+#include <vtkProperty.h>
 #include <vtkBezierContourLineInterpolator.h>
 #include <vtkPolygonalSurfaceContourLineInterpolator.h> // Doesn't work!...
 #include "DijkstraShortestPathLineInterpolator.h"   // RVTK
 using RVTK::ModelPathDrawer;
 
-// public
-ModelPathDrawer::Ptr ModelPathDrawer::create( const vtkSmartPointer<vtkRenderer> r)
+
+// Handle interaction events
+class ModelPathCommandSender : public vtkCommand
 {
-    return ModelPathDrawer::Ptr( new ModelPathDrawer( r));
+public:
+    vtkTypeMacro( ModelPathCommandSender, vtkCommand);
+
+    static ModelPathCommandSender* New()
+    {
+        return new ModelPathCommandSender;
+    }   // end New()
+
+    virtual void Execute( vtkObject *vtkNotUsed(caller), unsigned long eventId, void *vtkNotUsed(callData))
+    {
+        if ( !_peo)
+            return;
+
+        switch ( eventId)
+        {
+            case vtkCommand::StartInteractionEvent:
+                _peo->startInteraction();
+                break;
+            case vtkCommand::EndInteractionEvent:
+                _peo->endInteraction();
+                break;
+            case vtkCommand::InteractionEvent:
+                _peo->interactionEvent();
+                break;
+            default:
+                break;
+        }   // end switch
+    }   // end Execute
+
+    void setModelPathEventObserver( RVTK::ModelPathEventObserver* peo)
+    {
+        _peo = peo;
+    }   // end setModelPathEventObserver
+
+private:
+    ModelPathCommandSender() : _peo(NULL) {}
+    RVTK::ModelPathEventObserver* _peo;
+};  // end class
+
+
+
+// public
+ModelPathDrawer::Ptr ModelPathDrawer::create( const RVTK::ClosestPointFinder* cpf)
+{
+    ModelPathDrawer::Ptr mpd = ModelPathDrawer::Ptr( new ModelPathDrawer());
+    mpd->setModel( cpf);
+    return mpd;
 }   // end create
 
 
 // private
-ModelPathDrawer::ModelPathDrawer( const vtkSmartPointer<vtkRenderer> r)
-    : _renderer(r), _endInteractionObserver(NULL), _closedLoop(false)
+ModelPathDrawer::ModelPathDrawer() : _closedLoop(false)
 {
-    _contourWidget = vtkSmartPointer<vtkContourWidget>::New();
-    //_contourWidget->SetInteractor( i);
-    vtkSmartPointer<vtkOrientedGlyphContourRepresentation> rep0 =
-        vtkOrientedGlyphContourRepresentation::SafeDownCast( _contourWidget->GetRepresentation());
-    rep0->GetLinesProperty()->SetColor(0.5,0.4, 1.0);
-    rep0->GetLinesProperty()->SetLineWidth(4.0);
+    _cWidget = vtkSmartPointer<vtkContourWidget>::New();
+    //_cWidget->SetInteractor( i);
+    vtkSmartPointer<vtkOrientedGlyphContourRepresentation> rep =
+        vtkOrientedGlyphContourRepresentation::SafeDownCast( _cWidget->GetRepresentation());
+    rep->GetLinesProperty()->SetColor(0.5, 0.4, 1.0);
+    rep->GetLinesProperty()->SetLineWidth(4.0);
 
-    rep0->GetProperty()->SetPointSize(6);
-    //rep0->GetActiveProperty()->SetPointSize(17);
-
-    _contourWidget->GetContourRepresentation()->SetHandleSize( 0.013);  // Size that handle expands to when mouse hovers over it
+    rep->GetProperty()->SetPointSize(6);
+    //rep->GetActiveProperty()->SetPointSize(17);
+    _cWidget->GetContourRepresentation()->SetHandleSize( 0.013);  // Size that handle expands to when mouse hovers over it
 }   // end ctor
 
 
 // public
 ModelPathDrawer::~ModelPathDrawer()
 {
-    _endInteractionObserver = NULL;
+    _cWidget->SetEnabled(false);
 }   // end ctor
 
 
 // public
-void ModelPathDrawer::setInteractor( const vtkSmartPointer<vtkRenderWindowInteractor> i)
+void ModelPathDrawer::setInteractor( vtkRenderWindowInteractor* i)
 {
-    _contourWidget->SetInteractor(i);
-    const bool oldenabled = _contourWidget->GetEnabled() != 0;
-    _contourWidget->SetEnabled(true);
-    _contourWidget->Initialize();
-    _contourWidget->SetWidgetState( 1); // Manipulate
-    _contourWidget->SetEnabled(oldenabled); // Reset previous state
+    _cWidget->SetInteractor(i);
+    const bool oldenabled = _cWidget->GetEnabled() != 0;
+    _cWidget->SetEnabled(true);
+    _cWidget->Initialize();
+    _cWidget->SetWidgetState( 1); // Manipulate
+    _cWidget->SetEnabled(oldenabled); // Reset previous state
 }   // end setInteractor
 
 
-using RVTK::MBInteractionObserver;
-vtkStandardNewMacro( MBInteractionObserver);
-
-
-MBInteractionObserver::MBInteractionObserver() : vtkObject(), _mb(NULL)
-{}    // end ctor
-
-MBInteractionObserver::~MBInteractionObserver()
-{}    // end dtor
-
-void MBInteractionObserver::setModelPathDrawer( const ModelPathDrawer* mb)
+// private
+void ModelPathDrawer::setModel( const RVTK::ClosestPointFinder* cpf)
 {
-    _mb = mb;
-}   // end setModelPathDrawer
-
-
-void MBInteractionObserver::endInteractionCallback()
-{
-    if ( _mb->_endInteractionObserver)
-        _mb->_endInteractionObserver->callback();
-}   // end endInteractionCallback
-
-
-// public
-void ModelPathDrawer::setModel( const RVTK::VtkModel::Ptr model)
-{
-    _model = model;
     vtkSmartPointer<vtkPolygonalSurfacePointPlacer> pplacer = vtkPolygonalSurfacePointPlacer::New();
-    pplacer->AddProp( model->getSurfaceActor());
-    _contourWidget->GetContourRepresentation()->SetPointPlacer( pplacer);
+    pplacer->AddProp( cpf->getSurfaceActor());
+    _cWidget->GetContourRepresentation()->SetPointPlacer( pplacer);
 
     //vtkSmartPointer<vtkBezierContourLineInterpolator> interpolator =
     //                            vtkSmartPointer<vtkBezierContourLineInterpolator>::New();
@@ -92,21 +114,29 @@ void ModelPathDrawer::setModel( const RVTK::VtkModel::Ptr model)
 
     vtkSmartPointer<RVTK::DijkstraShortestPathLineInterpolator> interpolator = 
                                 vtkSmartPointer<RVTK::DijkstraShortestPathLineInterpolator>::New();
-    interpolator->setModel( model);
 
-    _contourWidget->GetContourRepresentation()->SetLineInterpolator( interpolator);
-    // TODO adjust how the contour widget operates?
+    interpolator->setModel( cpf);
 
-    // Set a callback for whenever the user ends interaction with the widget
-    _iobserver = vtkSmartPointer<MBInteractionObserver>::New();
-    _iobserver->setModelPathDrawer(this);
+    _cWidget->GetContourRepresentation()->SetLineInterpolator( interpolator);
 }   // end setModel
+
+
+// public
+void ModelPathDrawer::setEventObserver( RVTK::ModelPathEventObserver* peo)
+{
+    vtkSmartPointer<ModelPathCommandSender> commandSender = vtkSmartPointer<ModelPathCommandSender>::New();
+    commandSender->setModelPathEventObserver( peo);
+    _cWidget->AddObserver( vtkCommand::StartInteractionEvent, commandSender);
+    _cWidget->AddObserver( vtkCommand::EndInteractionEvent, commandSender);
+    _cWidget->AddObserver( vtkCommand::InteractionEvent, commandSender);
+    _cWidget->AddObserver( vtkCommand::PlacePointEvent, commandSender);
+}   // end setEventObserver
 
 
 // public
 void ModelPathDrawer::setPathHandles( const std::vector<cv::Vec3f>& nodes)
 {
-    vtkSmartPointer<vtkContourRepresentation> rep =_contourWidget->GetContourRepresentation();
+    vtkSmartPointer<vtkContourRepresentation> rep =_cWidget->GetContourRepresentation();
     rep->ClearAllNodes();
     rep->SetClosedLoop(false);
 
@@ -118,14 +148,14 @@ void ModelPathDrawer::setPathHandles( const std::vector<cv::Vec3f>& nodes)
     }   // end for
 
     if ( isClosed())
-        _contourWidget->CloseLoop();
+        _cWidget->CloseLoop();
 }   // end setPathHandles
 
 
 // public
 int ModelPathDrawer::getPathHandles( std::vector<cv::Vec3f>& nodes) const
 {
-    vtkSmartPointer<vtkContourRepresentation> rep =_contourWidget->GetContourRepresentation();
+    vtkSmartPointer<vtkContourRepresentation> rep =_cWidget->GetContourRepresentation();
     const int n = rep->GetNumberOfNodes();
     int j = (int)nodes.size();
     nodes.resize( j + n);
@@ -142,7 +172,7 @@ int ModelPathDrawer::getPathHandles( std::vector<cv::Vec3f>& nodes) const
 // public
 int ModelPathDrawer::getNumHandles() const
 {
-    return _contourWidget->GetContourRepresentation()->GetNumberOfNodes();
+    return _cWidget->GetContourRepresentation()->GetNumberOfNodes();
 }   // end getNumHandles
 
 /*
@@ -243,7 +273,7 @@ int ModelPathDrawer::resetFullBoundaryToRequiredNodes( std::vector<int>& uvids)
 // public
 int ModelPathDrawer::getAllPathVertices( std::vector<cv::Vec3f>& vs) const
 {
-    const vtkSmartPointer<vtkContourRepresentation> rep = _contourWidget->GetContourRepresentation();
+    const vtkSmartPointer<vtkContourRepresentation> rep = _cWidget->GetContourRepresentation();
     const int numNodes = rep->GetNumberOfNodes();
 
     int count = 0;
@@ -270,20 +300,12 @@ int ModelPathDrawer::getAllPathVertices( std::vector<cv::Vec3f>& vs) const
 // public
 void ModelPathDrawer::setVisibility( bool visible)
 {
-    _contourWidget->SetEnabled(visible);
+    _cWidget->SetEnabled(visible);
 }   // end setVisibility
 
 
 // public
 bool ModelPathDrawer::getVisibility() const
 {
-    return _contourWidget->GetEnabled() != 0;
+    return _cWidget->GetEnabled() != 0;
 }   // end getVisibility
-
-
-// public
-void ModelPathDrawer::setEndInteractionObserver( RVTK::InteractionObserver* io)
-{
-    _endInteractionObserver = io;
-}   // end setEndInteractionObserver
-#include "ModelPathDrawer.h"

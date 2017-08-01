@@ -1,4 +1,7 @@
 #include "VtkModel.h"
+#include "VtkActorCreator.h"
+#include "VtkTools.h"
+#include "ClosestPointFinder.h"
 using RVTK::VtkModel;
 using RFeatures::ObjModel;
 #include <vtkSelectPolyData.h>
@@ -6,8 +9,8 @@ using RFeatures::ObjModel;
 #include <vtkExtractPolyDataGeometry.h>
 #include <vtkImplicitSelectionLoop.h>
 #include <vtkPolyDataConnectivityFilter.h>
+#include <vtkProperty.h>
 #include <iostream>
-#include <boost/foreach.hpp>
 
 
 // public static
@@ -18,31 +21,44 @@ VtkModel::Ptr VtkModel::create(const ObjModel::Ptr model)
 
 
 // private
-VtkModel::VtkModel( const ObjModel::Ptr model)
-    : _actorFactory( new VtkActorFactory(model))
+VtkModel::VtkModel( const ObjModel::Ptr model) : _omodel(model)
 {
-    _basicActor = _actorFactory->generateBasicActor();
-    _basicActor->GetProperty()->SetLineWidth(0.7);  // OpenGL only
-    _basicActor->GetProperty()->SetPointSize(1.3);
-    //_basicActor->GetProperty()->SetInterpolationToPhong();
+    RVTK::VtkActorCreator actorCreator;
 
-    _texturedActor = _actorFactory->generateTexturedActor();
+    actorCreator.setVtkUniqueVertexIdSet( &_uvidxs);
+    actorCreator.setVtkUniqueFaceIdSet( &_ufidxs);
+    actorCreator.setObjToVTKUniqueVertexMap( &_uvmappings);     // Object to VTK unique vertex index mapping
+    actorCreator.setObjToVTKUniqueFaceMap( &_ufmappings);       // Object to VTK face index mapping
+    actorCreator.setObjToVTKUniqueVertexRMap( &_ruvmappings);   // VTK to Object unique vertex index mapping
+    actorCreator.setObjToVTKUniqueFaceRMap( &_rufmappings);     // VTK to Object face index mapping
+    // Face mappings currently not used
+    //actorCreator.setObjToVTKFaceMap( &_fmappings);
+    //actorCreator.setObjToVTKFaceRMap( &_rfmappings);
+
+    _surfaceActor = actorCreator.generateSurfaceActor( model);
+    _surfaceActor->GetProperty()->SetLineWidth(0.7);  // OpenGL only
+    _surfaceActor->GetProperty()->SetPointSize(1.3);
+    //_surfaceActor->GetProperty()->SetInterpolationToPhong();
+
+    actorCreator.generateTexturedActors( model, _texturedActors);
+
+    _unqcpf = new RVTK::ClosestPointFinder( _surfaceActor);
 
     /*
     const int ncols = 500;
     const vtkColor3ub scol( 255, 255,   0);
     const vtkColor3ub fcol( 0,     0, 255);
     vtkSmartPointer<vtkLookupTable> coloursLut = RVTK::createColoursLookupTable( ncols, scol, fcol);
-    RVTK::setLookupTable( _basicActor, coloursLut);
+    RVTK::setLookupTable( _surfaceActor, coloursLut);
 
     // Set the curvature information on the actor
     CurvFaceValuer cfv( model);
-    vtkSmartPointer<vtkFloatArray> cvals = _actorFactory->createFaceLookupTableIndices( &cfv);
+    vtkSmartPointer<vtkFloatArray> cvals = _actorCreator->createFaceLookupTableIndices( &cfv);
     cvals->SetName( "Curvature");
-    RVTK::getPolyData(_basicActor)->GetCellData()->AddArray( cvals);
+    RVTK::getPolyData(_surfaceActor)->GetCellData()->AddArray( cvals);
 
     // Set the colours (white) for the basic actor
-    const int ncells = RVTK::getPolyData( _basicActor)->GetPolys()->GetNumberOfCells();
+    const int ncells = RVTK::getPolyData( _surfaceActor)->GetPolys()->GetNumberOfCells();
                     
     _basicColours = vtkSmartPointer<vtkUnsignedCharArray>::New();
     _transColours = vtkSmartPointer<vtkUnsignedCharArray>::New();
@@ -58,85 +74,65 @@ VtkModel::VtkModel( const ObjModel::Ptr model)
         _transColours->InsertNextTupleValue( uctrans);
     }   // end for
 
-    RVTK::getPolyData( _basicActor)->GetCellData()->AddArray( _basicColours);
-    RVTK::getPolyData( _basicActor)->GetCellData()->AddArray( _transColours);
+    RVTK::getPolyData( _surfaceActor)->GetCellData()->AddArray( _basicColours);
+    RVTK::getPolyData( _surfaceActor)->GetCellData()->AddArray( _transColours);
     */
-
-    _unqcpf = new RVTK::ClosestPointFinder( RVTK::getPolyData( _basicActor));
-    _tcpf = new RVTK::ClosestPointFinder( RVTK::getPolyData( _texturedActor));
 }   // end ctor
 
 
 // public
 VtkModel::~VtkModel()
 {
-    delete _tcpf;
-    delete _unqcpf;
-    delete _actorFactory;
+    // Delete the closest point finder
+    if ( _unqcpf)
+        delete _unqcpf;
 }   // end dtor
 
 
 // public
 int VtkModel::getVtkBasicIdxFromObjFaceIdx( int objFaceIdx) const
 {
-    return _actorFactory->getVtkBasicIdxFromObjFaceIdx( objFaceIdx);
+    return _ufmappings.at( objFaceIdx);
 }   // end getVtkBasicIdxFromObjFaceIdx
 
 
 // public
 int VtkModel::getVtkIdxFromObjUniqueVtx( int objUvidx) const
 {
-    return _actorFactory->getVtkIdxFromObjUniqueVtx( objUvidx);
+    return _uvmappings.at( objUvidx);
 }   // end getVtkIdxFromObjUniqueVtx
 
 
 // public
 int VtkModel::getObjIdxFromVtkUniqueVtx( int vtkUvidx) const
 {
-    return _actorFactory->getObjIdxFromVtkUniqueVtx( vtkUvidx);
+    return _ruvmappings.at( vtkUvidx);
 }   // end getObjIdxFromVtkUniqueVtx
 
 
 // public
 int VtkModel::getObjIdxFromVtkUniqueFace( int vtkFaceIdx) const
 {
-    return _actorFactory->getObjIdxFromVtkUniqueFace( vtkFaceIdx);
+    return _rufmappings.at( vtkFaceIdx);
 }   // end getObjIdxFromVtkUniqueFace
 
 
 // public
 int VtkModel::getClosestObjUniqueVertexIdx( const double v[3]) const
 {
-    const int uvtkid = _unqcpf->getClosestVertex(v);
-    return _actorFactory->getObjIdxFromVtkUniqueVtx( uvtkid);
+    return _ruvmappings.at( _unqcpf->getClosestVertex(v));
 }   // end getClosestObjUniqueVertexIdx
 
 // public
 int VtkModel::getClosestObjUniqueVertexIdx( const cv::Vec3f& v) const
 {
-    const int uvtkid = _unqcpf->getClosestVertex(v);
-    return _actorFactory->getObjIdxFromVtkUniqueVtx( uvtkid);
+    return _ruvmappings.at( _unqcpf->getClosestVertex(v));
 }   // end getClosestObjUniqueVertexIdx
-
-// public
-int VtkModel::getClosestObjVertexIdx( const double v[3]) const
-{
-    const int vtkid = _tcpf->getClosestVertex(v);
-    return _actorFactory->getObjIdxFromVtkVtx( vtkid);
-}   // end getClosestObjVertexIdx
-
-// public
-int VtkModel::getClosestObjVertexIdx( const cv::Vec3f& v) const
-{
-    double v0[3] = {v[0], v[1], v[2]};
-    return getClosestObjVertexIdx(v0);
-}   // end getClosestObjVertexIdx
 
 // public
 int VtkModel::getClosestObjFaceIdx( const double v[3]) const
 {
-    const int cid = _unqcpf->getClosestCell(v);
-    return _actorFactory->getObjIdxFromVtkUniqueFace( cid);
+    return _rufmappings.at( _unqcpf->getClosestCell(v));
 }   // end getClosestObjFaceIdx
 
 // public
@@ -156,27 +152,12 @@ cv::Vec3f VtkModel::getClosestPoint( const cv::Vec3f& v) const
 }   // end getClosestPoint
 
 
-// public
-const boost::unordered_set<int>& VtkModel::getVtkUniqueVertexIds() const
-{
-    return _actorFactory->getVtkUniqueVertexIds();
-}   // end getVtkUniqueVertexIds
-
-
-// public
-const boost::unordered_set<int>& VtkModel::getVtkUniqueFaceIds() const
-{
-    return _actorFactory->getVtkUniqueFaceIds();
-}   // end getVtkUniqueFaceIds
-
-
-
 /*
 // public
 void VtkModel::colourObjectFace( int fid, const cv::Vec4b& rgba)
 {
-    // Get the VTK poly ID for the correct face on the _basicActor
-    const int cid = _actorFactory->getVtkBasicIdxFromObjFaceIdx(fid);
+    // Get the VTK poly ID for the correct face on the _surfaceActor
+    const int cid = _actorCreator->getVtkBasicIdxFromObjFaceIdx(fid);
     const unsigned char ucol[4] = {rgba[0],rgba[1],rgba[2],rgba[3]}; // R,G,B,Opacity
     _transColours->SetTupleValue( cid, ucol);
 }   // end colourObjectFace
@@ -187,7 +168,7 @@ void VtkModel::colourObjectFace( int fid, const cv::Vec4b& rgba)
 // public
 VtkModel::Ptr VtkModel::segmentOnContour( const vtkSmartPointer<vtkPoints>& boundaryPts) const
 {
-    vtkPolyData* pdata = RVTK::getPolyData( _basicActor);
+    vtkPolyData* pdata = RVTK::getPolyData( _surfaceActor);
 
     vtkSmartPointer<vtkImplicitSelectionLoop> isloop = vtkSmartPointer<vtkImplicitSelectionLoop>::New();
     isloop->SetLoop( boundaryPts);

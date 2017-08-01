@@ -8,7 +8,7 @@ using RVTK::DijkstraShortestPathLineInterpolator;
 
 
 // private
-DijkstraShortestPathLineInterpolator::DijkstraShortestPathLineInterpolator() : _spfinder(NULL), _pathVtxs(NULL)
+DijkstraShortestPathLineInterpolator::DijkstraShortestPathLineInterpolator() : _spfinder(NULL), _pathVtxs(NULL), _cpf(NULL)
 {}   // end ctor
 
 
@@ -31,26 +31,29 @@ DijkstraShortestPathLineInterpolator* DijkstraShortestPathLineInterpolator::New(
 
 
 // public
-void DijkstraShortestPathLineInterpolator::setModel( const RVTK::VtkModel::Ptr& vmodel)
+bool DijkstraShortestPathLineInterpolator::setModel( const RVTK::ClosestPointFinder* cpf)
 {
-    _vmodel = vmodel;
+    if ( !cpf->canReverseMapToObjectIndices())
+        return false;
+
+    _cpf = cpf;
     if ( _spfinder)
     {
         delete _spfinder;
         delete _pathVtxs;
     }   // end if
-    _spfinder = new RFeatures::DijkstraShortestPathFinder( _vmodel->getObjectModel());
+    _spfinder = new RFeatures::DijkstraShortestPathFinder( _cpf->getObject());
     _pathVtxs = new std::vector<int>;
+    return true;
 }   // end setModel
 
 
 // public
 int DijkstraShortestPathLineInterpolator::InterpolateLine( vtkRenderer* ren, vtkContourRepresentation* rep, int n0, int n1)
 {
-    if ( !_vmodel)
+    if ( !_cpf)
     {
-        std::cerr << "[ERROR] DijkstraShortestPathLineInterpolator::InterpolateLine:"
-                  << "\n\tMust setModel() first!" << std::endl;
+        std::cerr << "[ERROR] DijkstraShortestPathLineInterpolator::InterpolateLine: Must setModel() first!" << std::endl;
         return 0;
     }   // end if
 
@@ -62,18 +65,17 @@ int DijkstraShortestPathLineInterpolator::InterpolateLine( vtkRenderer* ren, vtk
     double p0[3], p1[3];
     if (!rep->GetNthNodeWorldPosition( n0, p0) || !rep->GetNthNodeWorldPosition( n1, p1))
     {
-        std::cerr << "[ERROR] DijkstraShortestPathLineInterpolator::InterpolateLine:"
-                  << "\n\tFailed to get Nth node world position!" << std::endl;
+        std::cerr << "[ERROR] DijkstraShortestPathLineInterpolator::InterpolateLine: Failed to get Nth node world position!\n";
         return 0;
     }   // end if
 
     // Get the closest vertices on the model to the contour nodes
-    const int uv0 = _vmodel->getClosestObjUniqueVertexIdx( p0);
-    const int uv1 = _vmodel->getClosestObjUniqueVertexIdx( p1);
-    if ( !_spfinder->setEndPointUniqueVertexIndices( uv0, uv1))
+    const int uv0 = _cpf->getClosestObjVertexId( p0);
+    const int uv1 = _cpf->getClosestObjVertexId( p1);
+    if ( !_spfinder->setEndPointVertexIndices( uv0, uv1))
     {
-        std::cerr << "[ERROR] DijkstraShortestPathLineInterpolator::InterpolateLine:"
-                  << "\n\tFailed to set end point uvidxs in _spfinder of " << uv0 << " and " << uv1 << std::endl;
+        std::cerr << "[ERROR] DijkstraShortestPathLineInterpolator::InterpolateLine: "
+                  << "Failed to set end point uvidxs in _spfinder of " << uv0 << " and " << uv1 << std::endl;
         assert(false);
     }   // end if
 
@@ -83,19 +85,19 @@ int DijkstraShortestPathLineInterpolator::InterpolateLine( vtkRenderer* ren, vtk
     int retVal = 0;
     if ( pathLen < 0)
     {
-        std::cerr << "[ERROR] DijkstraShortestPathLineInterpolator::InterpolateLine:"
-                  << "\n\tNo path found between unqiue vertices " << uv0 << " and " << uv1 << std::endl;
+        std::cerr << "[ERROR] DijkstraShortestPathLineInterpolator::InterpolateLine: "
+                  << "No path found between unqiue vertices " << uv0 << " and " << uv1 << std::endl;
     }   // end if
     else
     {
         // Add the intermediate points
         // (Reverse the shortest path (since its actually uv1 to uv0 inclusive))
-        const RFeatures::ObjModel::Ptr omodel = _vmodel->getObjectModel();
+        const RFeatures::ObjModel::Ptr obj = _cpf->getObject();
         double wpos[3];
         for ( int i = pathLen-1; i > 0; --i)
         {
             const int uvidx = _pathVtxs->at(i);
-            const cv::Vec3f& v = omodel->getUniqueVertex( uvidx);
+            const cv::Vec3f& v = obj->getVertex( uvidx);
             wpos[0] = v[0]; wpos[1] = v[1]; wpos[2] = v[2];
             rep->AddIntermediatePointWorldPosition( n0, wpos);
         }   // end for

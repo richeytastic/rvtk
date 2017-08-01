@@ -5,19 +5,11 @@
  * June/December 2011
  */
 
-#pragma once
 #ifndef RVTK_VIEWER_H
 #define RVTK_VIEWER_H
 
 #include "VTKTypes.h"
-#include <vector>
-using std::vector;
-typedef unsigned char byte;
 #include <boost/shared_ptr.hpp>
-#include <boost/foreach.hpp>
-#include <boost/unordered_map.hpp>
-#include <map>
-#include <boost/unordered_set.hpp>
 #include <opencv2/opencv.hpp>
 #include "rVTK_Export.h"
 
@@ -25,20 +17,15 @@ typedef unsigned char byte;
 namespace RVTK
 {
 
-// A struct describing an actor and a subset of its cells.
-// Used for picking operations (see pickActorCells() below).
-struct ActorSubset
-{
-    vtkSmartPointer<vtkActor> actor;
-    vector<int> cellIds;
-};  // end struct
-
-
 class rVTK_EXPORT Viewer
 {
 public:
     typedef boost::shared_ptr<Viewer> Ptr;
     static Ptr create();
+
+    // Check for multi-texturing support.
+    bool getSupportsMultiTexturing() const;
+    int getNumFixedTextureUnits() const;
 
     // Add the provided actor. If this is the first actor,
     // subsequent actors will be placed relative to it.
@@ -105,9 +92,6 @@ public:
     void setInteractor( vtkSmartPointer<vtkRenderWindowInteractor>);
     void setInteractorStyle( vtkSmartPointer<vtkInteractorStyle>);
 
-	// Prints details of the camera to provided output stream.
-	void printCameraDetails( ostream &os) const;
-
 	// Change background colour to something between 0 and 255.
 	void changeBackground( double c);
 
@@ -133,26 +117,6 @@ public:
 
     // Extract Z buffer actual depth values - ensure camera clipping range is set properly prior to using!
     cv::Mat_<float> extractZBuffer() const;
-
-    // Given an array of 2D pixel coordinates (assuming BOTTOM LEFT origin),
-    // find the actors and their cell IDs pointed to by these locations. The number
-    // of actors found at the given 2D coordinates (the number of entries appended to
-    // output parameter picked) is returned.
-    int pickActorCells( const vector<cv::Point>& points2d, vector<ActorSubset>& picked) const;
-
-    // Given an array of 2D pixel coordinates (assuming BOTTOM LEFT origin), and a specified actor,
-    // find the cell IDs being addressed, returning the number appended to cellIds.
-    int pickActorCells( const vector<cv::Point>& points2d, const vtkActor* actor, vector<int>& cellIds) const;
-
-    // Given a 2D point using a BOTTOM LEFT origin, find the actor being pointed to.
-    // NULL is returned if no actor found.
-    vtkSmartPointer<vtkActor> pickActor( const cv::Point& point) const;
-
-    // As above, but only selects the actor from the given list.
-    vtkSmartPointer<vtkActor> pickActor( const cv::Point& point, const vector<vtkSmartPointer<vtkActor> >& possActors) const;
-
-    // Pick an actor's cell returning its ID. Returns -1 if no cell found.
-    int pickCell( const cv::Point& point) const;
 
 private:
     vtkSmartPointer<vtkRenderer> _ren;

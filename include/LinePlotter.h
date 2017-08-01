@@ -1,4 +1,3 @@
-#pragma once
 #ifndef RVTK_LINE_PLOTTER_H
 #define RVTK_LINE_PLOTTER_H
 #include "VTKTypes.h"

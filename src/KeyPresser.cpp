@@ -30,10 +30,7 @@ bool KeyPresser::handleKeyPress( const string& ckey)
         handled = true;
     }   // end else if
     else if ( ckey == "c")
-    {
-        m_pv->printCameraDetails( std::cout);
         handled = true;
-    }   // end else if
 
     return handled;
 }  // end handleKeyPress

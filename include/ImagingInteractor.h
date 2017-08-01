@@ -4,7 +4,6 @@
  * October 2012
  */
 
-#pragma once
 #ifndef RVTK_IMAGING_INTERACTOR_H
 #define RVTK_IMAGING_INTERACTOR_H
 
@@ -19,7 +18,7 @@ using RVTK::Viewer;
 namespace RVTK
 {
 
-class ImagingInteractor : public InteractorC1
+class rVTK_EXPORT ImagingInteractor : public InteractorC1
 {
 public:
     static ImagingInteractor *New();

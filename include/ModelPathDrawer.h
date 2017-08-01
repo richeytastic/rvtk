@@ -1,34 +1,36 @@
-#pragma once
 #ifndef RVTK_MODEL_PATH_DRAWER_H
 #define RVTK_MODEL_PATH_DRAWER_H
 
-#include "VtkModel.h"   // RVTK
-#include <vtkRenderer.h>
+#include <vector>
+#include <vtkObject.h>
+#include <vtkRenderWindowInteractor.h>
 #include <vtkContourWidget.h>
+#include <vtkObjectFactory.h>
+#include <boost/shared_ptr.hpp>
+#include "ClosestPointFinder.h"
 
 namespace RVTK
 {
 
 // Public callback observer for ModelPathDrawer
-class InteractionObserver
+class rVTK_EXPORT ModelPathEventObserver
 {
 public:
-    virtual void callback() = 0;
-};  // end clas
+    virtual void startInteraction() {}
+    virtual void endInteraction() {}
+    virtual void interactionEvent() {}  // Moving after selecting something
+};  // end class
 
-
-class MBInteractionObserver;    // Used internally only
 
 class rVTK_EXPORT ModelPathDrawer
 {
 public:
     typedef boost::shared_ptr<ModelPathDrawer> Ptr;
-    static Ptr create( const vtkSmartPointer<vtkRenderer>);
-
+    static Ptr create( const ClosestPointFinder*);
     ~ModelPathDrawer();
 
-    void setInteractor( const vtkSmartPointer<vtkRenderWindowInteractor>);
-    void setModel( const RVTK::VtkModel::Ptr);
+    void setInteractor( vtkRenderWindowInteractor*);
+    void setEventObserver( ModelPathEventObserver*);
 
     // Set/get whether the path is closed (end points are joined to form a loop).
     void setClosed( bool closed) { _closedLoop = closed;}
@@ -45,46 +47,15 @@ public:
     void setVisibility( bool visible);
     bool getVisibility() const;
 
-    // Set an optional callback for when user has ended interaction with the model bounder.
-    void setEndInteractionObserver( InteractionObserver* io);
-
 private:
-    const vtkSmartPointer<vtkRenderer> _renderer;
-    vtkSmartPointer<vtkContourWidget> _contourWidget;
+    vtkSmartPointer<vtkContourWidget> _cWidget;
     bool _closedLoop;
 
-    RVTK::VtkModel::Ptr _model;
-    friend class MBInteractionObserver;
-    vtkSmartPointer<MBInteractionObserver> _iobserver;  // Internal VTK observer
-    InteractionObserver* _endInteractionObserver;
+    ModelPathDrawer();
+    ModelPathDrawer( const ModelPathDrawer&);   // No copy
+    void operator=( const ModelPathDrawer&);    // No copy
 
-    explicit ModelPathDrawer( const vtkSmartPointer<vtkRenderer>);
-    ModelPathDrawer( const ModelPathDrawer&); // Not implemented
-    void operator=( const ModelPathDrawer&);   // Not implemented
-};  // end class
-
-
-// Define an object to listen to events on ModelPathDrawer objects
-class MBInteractionObserver : public vtkObject
-{
-public:
-    static MBInteractionObserver* New();
-    vtkTypeMacro( MBInteractionObserver, vtkObject);
-
-    void setModelPathDrawer( const ModelPathDrawer*);
-
-    void endInteractionCallback();
-
-protected:
-    MBInteractionObserver();
-    virtual ~MBInteractionObserver();
-
-private:
-    const ModelPathDrawer *_mb;
-
-    // Not implemented
-    MBInteractionObserver( const MBInteractionObserver&);
-    void operator=( const MBInteractionObserver&);
+    void setModel( const ClosestPointFinder*);
 };  // end class
 
 }   // end namespace

@@ -34,6 +34,18 @@ void PointPlacer::setModel( const vtkSmartPointer<vtkActor> p)
 }   // end setModel
 
 
+void PointPlacer::addModel( const vtkSmartPointer<vtkActor> p)
+{
+    _pplacer->AddProp( p);
+}   // end addModel
+
+
+void PointPlacer::clearModels()
+{
+    _pplacer->RemoveAllProps();
+}   // end clearModels
+
+
 bool PointPlacer::calcSurfacePosition( int x, int y, float* worldPos, RVTK::DisplayOrigin dispOrig) const
 {
     if ( _pplacer->GetNumberOfProps() == 0)

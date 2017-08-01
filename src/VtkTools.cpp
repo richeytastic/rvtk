@@ -1,8 +1,7 @@
 #include "VtkTools.h"
-#include "ClosestPointFinder.h"
-#include <iostream>
 #include <cassert>
-#include <vtkTriangle.h>
+#include <vtkOctreePointLocator.h>
+#include <vtkFeatureEdges.h>
 #include <vtkFloatArray.h>
 #include <vtkPolyDataNormals.h>
 #include <vtkWindowToImageFilter.h>
@@ -78,7 +77,10 @@ vtkSmartPointer<vtkTexture> RVTK::convertToTexture( const cv::Mat& image, bool X
     // Only accepts either cv::Mat_<cv::Vec3b> or cv::Mat_<byte> images for now
     const int numChannels = image.channels();
     if ( (image.depth() != CV_8U) || !image.isContinuous() || ( numChannels != 1 && numChannels != 3))
-        return texture;
+    {
+        std::cerr << "[WARNING] RVTK::convertToTexture(): Unable to create texture from image!" << std::endl;
+        return vtkSmartPointer<vtkTexture>();
+    }   // end if
 
     // Flip the input image vertically.
     cv::Mat img;
@@ -100,8 +102,20 @@ vtkSmartPointer<vtkTexture> RVTK::convertToTexture( const cv::Mat& image, bool X
     // Make the texture from the image
     vtkSmartPointer<vtkImageImport> imageImporter = RVTK::makeImageImporter( img);
     texture->SetInputConnection( imageImporter->GetOutputPort());
+    texture->Update();
     return texture;
 }   // end convertToTexture
+
+
+
+vtkSmartPointer<vtkTexture> RVTK::loadTexture( const std::string& fname, bool XFLIP)
+{
+    cv::Mat m = cv::imread( fname, true);
+    if ( m.empty())
+        return vtkSmartPointer<vtkTexture>();
+    return convertToTexture( m, XFLIP);
+}   // end loadTexture
+
 
 
 void RVTK::extractBoundaryVertices( const vtkSmartPointer<vtkPolyData>& pdata, std::vector<int>& bvids)
@@ -119,15 +133,18 @@ void RVTK::extractBoundaryVertices( const vtkSmartPointer<vtkPolyData>& pdata, s
     vfe->Update();
     vtkPolyData* odata = vfe->GetOutput();
 
-    RVTK::ClosestPointFinder cpfinder( pdata);
-    const int npts = odata->GetNumberOfPoints();
+    vtkOctreePointLocator* plocator = vtkOctreePointLocator::New();
+    plocator->SetDataSet( pdata);
+
     double x[3];
+    const int npts = odata->GetNumberOfPoints();
     for ( int i = 0; i < npts; ++i)
     {
         odata->GetPoint( i, x);
-        const int uvid = cpfinder.getClosestVertex( x);
-        bvids.push_back( uvid);
+        bvids.push_back( plocator->FindClosestPoint(x));
     }   // end for
+
+    plocator->Delete();
 }   // end extractBoundaryVertices
 
 
@@ -149,10 +166,11 @@ vtkSmartPointer<vtkPolyData> RVTK::generateNormals( vtkSmartPointer<vtkPolyData>
 
 
 
-cv::Mat_<cv::Vec3b> RVTK::extractImage( vtkRenderWindow* renWin)
+cv::Mat_<cv::Vec3b> RVTK::extractImage( const vtkRenderWindow* renWin)
 {
+    vtkRenderWindow* rw = const_cast<vtkRenderWindow*>( renWin);
     vtkSmartPointer<vtkWindowToImageFilter> filter = vtkSmartPointer<vtkWindowToImageFilter>::New();
-    filter->SetInput( renWin);
+    filter->SetInput( rw);
     filter->SetMagnification(1);
     filter->SetInputBufferTypeToRGB();  // Extract RGB info
 
@@ -164,8 +182,8 @@ cv::Mat_<cv::Vec3b> RVTK::extractImage( vtkRenderWindow* renWin)
     exporter->SetInputConnection( scale->GetOutputPort());
     exporter->SetImageLowerLeft(false); // Flip vertically for OpenCV
 
-    const int cols = renWin->GetSize()[0];
-    const int rows = renWin->GetSize()[1];
+    const int cols = rw->GetSize()[0];
+    const int rows = rw->GetSize()[1];
     cv::Mat_<cv::Vec3b> img( rows, cols);
     exporter->SetExportVoidPointer( img.ptr());
     exporter->Export();
@@ -178,10 +196,11 @@ cv::Mat_<cv::Vec3b> RVTK::extractImage( vtkRenderWindow* renWin)
 
 
 
-cv::Mat_<float> RVTK::extractZBuffer( vtkRenderWindow* renWin)
+cv::Mat_<float> RVTK::extractZBuffer( const vtkRenderWindow* renWin)
 {
+    vtkRenderWindow* rw = const_cast<vtkRenderWindow*>( renWin);
     vtkSmartPointer<vtkWindowToImageFilter> filter = vtkSmartPointer<vtkWindowToImageFilter>::New();
-    filter->SetInput( renWin);
+    filter->SetInput( rw);
     filter->SetMagnification(1);
     filter->SetInputBufferTypeToZBuffer();
 
@@ -193,11 +212,48 @@ cv::Mat_<float> RVTK::extractZBuffer( vtkRenderWindow* renWin)
     exporter->SetInputConnection( scale->GetOutputPort());
     exporter->SetImageLowerLeft(false); // Flip vertically for OpenCV
 
-    const int cols = renWin->GetSize()[0];
-    const int rows = renWin->GetSize()[1];
+    const int cols = rw->GetSize()[0];
+    const int rows = rw->GetSize()[1];
     cv::Mat_<float> rngMap( rows, cols);
     exporter->SetExportVoidPointer( rngMap.ptr());
     exporter->Export();
 
     return rngMap;
 }   // end extractZBuffer
+
+
+
+void RVTK::printCameraDetails( vtkCamera* cam, std::ostream &os)
+{
+    using std::endl;
+    os << "*********************************************" << endl;
+	double *camPos = cam->GetPosition();
+	os << "Camera Position (x,y,z):          " << camPos[0] << ", " << camPos[1] << ", " << camPos[2] << endl;
+	double *camFoc = cam->GetFocalPoint();
+	os << "Camera Focus (x,y,z):             " << camFoc[0] << ", " << camFoc[1] << ", " << camFoc[2] << endl;
+    double focDist = cam->GetDistance();  // Distance of focal point to camera position
+    os << "Focal point distance (from cam):  " << focDist << endl;
+    double *normal = cam->GetViewPlaneNormal();
+    os << "Camera View Plane Normal (x,y,z): " << normal[0] << ", " << normal[1] << ", " << normal[2] << endl;
+    double *projDir = cam->GetDirectionOfProjection();
+    os << "Direction of projection:          " << projDir[0] << ", " << projDir[1] << ", " << projDir[2] << endl;
+    double *camUp = cam->GetViewUp();
+    os << "Camera View Up Vector (x,y,z):    " << camUp[0] << ", " << camUp[1] << ", " << camUp[2] << endl;
+    double *camOr = cam->GetOrientationWXYZ();
+    os << "Camera Orientation (w,x,y,z):     " << camOr[0] << ", " << camOr[1] << ", " << camOr[2] << ", " << camOr[3] << endl;
+
+	if ( cam->GetParallelProjection())
+	{
+		os << "Cam Projection:                   ORTHOGONAL" << endl;
+		double ps = cam->GetParallelScale();
+		os << "Cam Parallel Scale:           " << ps << " metres (viewport height)" << endl;
+	}	// end if
+	else
+	{
+		os << "Cam Projection:                   PERSPECTIVE" << endl;
+		double va = cam->GetViewAngle();
+		os << "Cam View Angle:                   " << va << " degrees" << endl;
+	}	// end else
+    os << "*********************************************" << endl;
+}	// end printCameraDetails
+

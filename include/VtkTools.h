@@ -1,25 +1,19 @@
-#pragma once
 #ifndef RVTK_VTK_TOOLS_H
 #define RVTK_VTK_TOOLS_H
 
-#include <boost/unordered_set.hpp>
 #include <opencv2/opencv.hpp>
 #include <vector>
+#include <iostream>
 #include <vtkTexture.h>
-#include <vtkImageImport.h>
 #include <vtkActor.h>
-#include <vtkProperty.h>
+#include <vtkImageImport.h>
 #include <vtkPolyData.h>
-#include <vtkCellArray.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkLookupTable.h>
 #include <vtkSmartPointer.h>
-#include <vtkTriangleFilter.h>
 #include <vtkColor.h>
-#include <vtkIdList.h>
-#include <vtkFeatureEdges.h>
+#include <vtkCamera.h>
 #include "rVTK_Export.h"
-#include <ObjModel.h>   // RFeatures
 
 namespace RVTK
 {
@@ -48,6 +42,7 @@ rVTK_EXPORT vtkSmartPointer<vtkImageImport> makeImageImporter( const cv::Mat img
 // top left as origin), ensure XFLIP is set to false.
 // For CV_8UC3 images, byte order colours should be BGR (normal OpenCV style).
 rVTK_EXPORT vtkSmartPointer<vtkTexture> convertToTexture( const cv::Mat& img, bool XFLIP=true);
+rVTK_EXPORT vtkSmartPointer<vtkTexture> loadTexture( const std::string& fname, bool XFLIP=true);
 
 // Extract the vertex IDs of points in pdata that lie on edges used only by one polygon.
 rVTK_EXPORT void extractBoundaryVertices( const vtkSmartPointer<vtkPolyData>& pdata, std::vector<int>& pts);
@@ -56,8 +51,10 @@ rVTK_EXPORT void extractBoundaryVertices( const vtkSmartPointer<vtkPolyData>& pd
 rVTK_EXPORT vtkSmartPointer<vtkPolyData> generateNormals( vtkSmartPointer<vtkPolyData> pdata);
 
 // Dump a colour or Z buffer image from the provided render window.
-rVTK_EXPORT cv::Mat_<cv::Vec3b> extractImage( vtkRenderWindow*);
-rVTK_EXPORT cv::Mat_<float> extractZBuffer( vtkRenderWindow*);
+rVTK_EXPORT cv::Mat_<cv::Vec3b> extractImage( const vtkRenderWindow*);
+rVTK_EXPORT cv::Mat_<float> extractZBuffer( const vtkRenderWindow*);
+
+rVTK_EXPORT void printCameraDetails( vtkCamera*, std::ostream&);    // Print camera details to the given stream
 
 }   // end namespace
 
