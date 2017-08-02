@@ -11,4 +11,7 @@ C++ wrapper functionality for VTK.
   (many apps. carry with them Qt shared libraries which can screw with automatic detection
   if those apps are on the system PATH).
   
+  In addition, ensure that separate debug and release builds are compiled. When integrating with
+  Qt, QApplication will whinge if mixing build types (app will fail to start).
+  
 - [rFeatures](../../../rFeatures)
