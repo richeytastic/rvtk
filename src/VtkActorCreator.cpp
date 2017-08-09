@@ -396,15 +396,17 @@ struct SingleMaterialData
     // Create the required VTK data from
     SingleMaterialData( const ObjModel::Ptr model, int matId, Mappings& mappings)
     {
-        const RFeatures::ObjModel::Material& mat = model->getMaterial(matId);
+        const std::vector<cv::Mat>& ambient = model->getMaterialAmbient(matId);
+        const std::vector<cv::Mat>& diffuse = model->getMaterialDiffuse(matId);
+        const std::vector<cv::Mat>& specular = model->getMaterialSpecular(matId);
 
         // Only take one of the texture maps
-        if ( !mat.ambient.empty())  // Ambient texture
-            texture = RVTK::convertToTexture( mat.ambient[0]);
-        else if ( !mat.diffuse.empty())  // Diffuse texture
-            texture = RVTK::convertToTexture( mat.diffuse[0]);
-        else if ( !mat.specular.empty()) // Specular texture
-            texture = RVTK::convertToTexture( mat.specular[0]);
+        if ( !ambient.empty())  // Ambient texture
+            texture = RVTK::convertToTexture( ambient[0]);
+        else if ( !diffuse.empty())  // Diffuse texture
+            texture = RVTK::convertToTexture( diffuse[0]);
+        else if ( !specular.empty()) // Specular texture
+            texture = RVTK::convertToTexture( specular[0]);
 
         points = vtkSmartPointer<vtkPoints>::New();
         uvs = vtkSmartPointer<vtkFloatArray>::New();
@@ -413,9 +415,6 @@ struct SingleMaterialData
         std::ostringstream oss;
         oss << "TCoords_" << matId;
         uvs->SetName( oss.str().c_str());
-
-        typedef std::pair<int, cv::Vec3i> FaceVertexOrder;
-        typedef std::pair<int, cv::Vec6f> FaceUV;
 
         // There should be a one-to-one mapping between material vertices and texture
         // offsets - even if texture offsets xor vertex IDs are duplicated. This map
@@ -426,24 +425,20 @@ struct SingleMaterialData
         faces = vtkSmartPointer<vtkCellArray>::New();
         int vtkFaceId = 0;
         int vtkPointId = 0;
-        BOOST_FOREACH ( const FaceUV& faceUV, mat.txOffsets)
+        const IntSet& mfaceIds = model->getMaterialFaceIds(matId);
+        BOOST_FOREACH ( int fid, mfaceIds)
         {
-            const int fid = faceUV.first;
-            const cv::Vec6f& txs = faceUV.second;
-            const cv::Vec3i& vtxs = mat.faceVertexOrder.at(fid);
-
             //std::cerr << " OBJ F_" << fid << " with OBJ-->VTK vertex mappings:" << std::endl;
             faces->InsertNextCell( 3);
             mappings.mapFaceIndices( fid, vtkFaceId++);
 
+            const int* uvids = model->getFaceUVs(fid);
+            const int* vtxs = model->getFaceVertices(fid);
             for ( int i = 0; i < 3; ++i)
             {
                 const int vid = vtxs[i];
-                assert( model->getVertexIds().count(vid) == 1);
-
-                const float uvx = txs[2*i+0];
-                const float uvy = txs[2*i+1];
-                RFeatures::Key3L okey = RFeatures::toKey( double(uvx), double(uvy), double(vid), 6); // Concatenate texture offset with vertex index
+                const cv::Vec2f& uv = model->uv( matId, uvids[i]);
+                RFeatures::Key3L okey = RFeatures::toKey( double(uv[0]), double(uv[1]), double(vid), 6); // Concatenate texture offset with vertex index
                 if ( !uniqueVtkVertexMap.count(okey))
                     uniqueVtkVertexMap[okey] = vtkPointId++;
 
@@ -453,7 +448,7 @@ struct SingleMaterialData
 
                 faces->InsertCellPoint( vtkId);
                 points->InsertPoint( vtkId, &model->getVertex( vid)[0]);
-                uvs->InsertTuple2( vtkId, uvx, uvy);
+                uvs->InsertTuple2( vtkId, uv[0], uv[1]);
             }   // end for
         }   // end foreach
 
@@ -474,7 +469,6 @@ size_t VtkActorCreator::generateTexturedActors( const ObjModel::Ptr model, std::
     Mappings mappings( _vmappings, _rvmappings, _fmappings, _rfmappings);
     mappings.clear();
 
-    //std::vector<vtkSmartPointer<vtkActor> > mactors;
     const IntSet& materialIds = model->getMaterialIds();
     BOOST_FOREACH ( const int& mid, materialIds)
     {
