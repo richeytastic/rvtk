@@ -428,7 +428,6 @@ struct SingleMaterialData
         const IntSet& mfaceIds = model->getMaterialFaceIds(matId);
         BOOST_FOREACH ( int fid, mfaceIds)
         {
-            //std::cerr << " OBJ F_" << fid << " with OBJ-->VTK vertex mappings:" << std::endl;
             faces->InsertNextCell( 3);
             mappings.mapFaceIndices( fid, vtkFaceId++);
 
@@ -444,7 +443,6 @@ struct SingleMaterialData
 
                 const int vtkId = uniqueVtkVertexMap.at(okey);
                 mappings.mapVertexIndices( vid, vtkId);
-                //std::cerr << "  " << std::setw(2) << vid << "-->" << std::setw(2) << vtkId << std::endl;
 
                 faces->InsertCellPoint( vtkId);
                 points->InsertPoint( vtkId, &model->getVertex( vid)[0]);
