@@ -26,6 +26,7 @@ set( INCLUDE_FILES
     "${INCLUDE_DIR}/ModelPathDrawer.h"
     "${INCLUDE_DIR}/PointCloudMapper.h"
     "${INCLUDE_DIR}/PointPlacer.h"
+    "${INCLUDE_DIR}/PolySurfaceCurvScalarMapper.h"
     "${INCLUDE_DIR}/RendererPicker.h"
     "${INCLUDE_DIR}/ScalarLegend.h"
     "${INCLUDE_DIR}/SnapshotKeyPresser.h"
@@ -55,6 +56,7 @@ set( SRC_FILES
     ${SRC_DIR}/ModelPathDrawer
     ${SRC_DIR}/PointCloudMapper
     ${SRC_DIR}/PointPlacer
+    ${SRC_DIR}/PolySurfaceCurvScalarMapper
     ${SRC_DIR}/RendererPicker
     ${SRC_DIR}/ScalarLegend
     ${SRC_DIR}/SnapshotKeyPresser

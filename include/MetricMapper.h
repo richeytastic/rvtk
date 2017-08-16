@@ -34,15 +34,19 @@ namespace RVTK
 class MetricMapper;
 class VtkActorCreator;
 
-// Don't inherit from directly - use PolygonMapper or VertexMapper.
+// Don't inherit from directly - use PolygonMapper or VertexMapper and just implement operator().
 class rVTK_EXPORT MetricInterface
 {
 public:
-    virtual std::string getMetricName() const = 0;
-    virtual int getNumMetricComponents() const = 0;            // How many scalars per metric
-    virtual float operator()( int id, int c=0) = 0;            // Returns component c metric value.
-    virtual MetricMapper* getMapper() = 0;                     // Return pointer to either PolygonMetricMapper or VertexMetricMapper
-    virtual const RFeatures::ObjModel::Ptr getObject() = 0;    // Get the object that metrics are mapped against
+    virtual float operator()( int id, int c=0) = 0;          // Returns component c metric value.
+
+    virtual vtkSmartPointer<vtkActor> makeActor() = 0;       // Implemented in PolyMapper and VertexMapper
+    virtual std::string getMetricName() const = 0;           // Implemented in PolyMapper and VertexMapper
+
+protected:
+    virtual int getNumMetricComponents() const = 0;          // How many scalars per metric
+    virtual const RFeatures::ObjModel::Ptr getObject() = 0;  // Get the object that metrics are mapped against
+    friend class MetricMapper;
 };  // end class
 
 
@@ -82,9 +86,11 @@ public:
     PolyMapper( const RFeatures::ObjModel::Ptr m, const std::string& metricName, int nComponents)
         : _model(m), _mname(metricName), _nComponents(nComponents) {}
 
+    vtkSmartPointer<vtkActor> makeActor() { return _mmapper.createSurfaceActor(this);}
+
+protected:
     virtual std::string getMetricName() const { return _mname;}
     virtual int getNumMetricComponents() const { return _nComponents;}
-    virtual MetricMapper* getMapper() { return &_mmapper;}
     virtual const RFeatures::ObjModel::Ptr getObject() { return _model;}
 
 private:
@@ -101,9 +107,11 @@ public:
     VertexMapper( const RFeatures::ObjModel::Ptr m, const std::string& metricName, int nComponents)
         : _model(m), _mname(metricName), _nComponents(nComponents) {}
 
+    vtkSmartPointer<vtkActor> makeActor() { return _mmapper.createSurfaceActor(this);}
+
+protected:
     virtual std::string getMetricName() const { return _mname;}
     virtual int getNumMetricComponents() const { return _nComponents;}
-    virtual MetricMapper* getMapper() { return &_mmapper;}
     virtual const RFeatures::ObjModel::Ptr getObject() { return _model;}
 
 private:
