@@ -41,7 +41,7 @@ rVTK_EXPORT void setColoursLookupTable( vtkSmartPointer<vtkLookupTable>,
                                         int numColours, const vtkColor3ub& startCol, const vtkColor3ub& endCol);
 
 // Return of poly data object from actor
-rVTK_EXPORT vtkPolyData* getPolyData( const vtkSmartPointer<vtkActor>& actor);
+rVTK_EXPORT vtkPolyData* getPolyData( const vtkActor*);
 
 // VTK version independent creation of mapper object from poly data
 rVTK_EXPORT vtkSmartPointer<vtkPolyDataMapper> createMapper( const vtkSmartPointer<vtkPolyData>& data);

@@ -46,15 +46,14 @@ class rVTK_EXPORT PointPlacer
 {
 public:
     typedef boost::shared_ptr<PointPlacer> Ptr;
-
     static Ptr create( const vtkSmartPointer<vtkRenderer>);
     static Ptr create( const vtkSmartPointer<vtkRenderer>, vtkSmartPointer<vtkPolygonalSurfacePointPlacer>);
 
-    void setModel( const vtkSmartPointer<vtkActor>);    // Set provided actor as the only one
-    void addModel( const vtkSmartPointer<vtkActor>);    // Add an actor
-    void clearModels(); // Remove all actors
+    void set( const vtkProp*);    // Set prop as the only one
+    void add( const vtkProp*);    // Add a prop
+    void clear(); // Remove all props
 
-    bool hasModel() const { return _pplacer->GetNumberOfProps() > 0;}
+    bool hasProps() const;
 
     // Calculate the surface position on the model from x,y display coords and set worldPos with the result.
     // Returns true if x,y is a valid display coordinate on the model.
@@ -72,9 +71,8 @@ protected:
 private:
     explicit PointPlacer( const vtkSmartPointer<vtkRenderer>);
     PointPlacer( const vtkSmartPointer<vtkRenderer>, vtkSmartPointer<vtkPolygonalSurfacePointPlacer>);
-
-    PointPlacer( const PointPlacer&);   // Not implemented
-    void operator=( const PointPlacer&);    // Not implemented
+    PointPlacer( const PointPlacer&);       // No copy
+    void operator=( const PointPlacer&);    // No copy
 };  // end class
 
 }   // end namespace

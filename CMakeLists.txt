@@ -22,14 +22,16 @@ set( INCLUDE_FILES
     "${INCLUDE_DIR}/KeyPresser.h"
     "${INCLUDE_DIR}/LinePlotter.h"
     "${INCLUDE_DIR}/LinesMapper.h"
-    "${INCLUDE_DIR}/MetricMapper.h"
     "${INCLUDE_DIR}/ModelPathDrawer.h"
     "${INCLUDE_DIR}/PointCloudMapper.h"
     "${INCLUDE_DIR}/PointPlacer.h"
     "${INCLUDE_DIR}/PolySurfaceCurvScalarMapper.h"
+    "${INCLUDE_DIR}/PolySurfaceDistanceScalarMapper.h"
     "${INCLUDE_DIR}/RendererPicker.h"
     "${INCLUDE_DIR}/ScalarLegend.h"
     "${INCLUDE_DIR}/SnapshotKeyPresser.h"
+    "${INCLUDE_DIR}/SurfaceMapper.h"
+    "${INCLUDE_DIR}/SurfaceMapperInterface.h"
     #"${INCLUDE_DIR}/SurfacePathInterpolator.h"
     "${INCLUDE_DIR}/Viewer.h"
     "${INCLUDE_DIR}/ViewerProjector.h"
@@ -52,14 +54,16 @@ set( SRC_FILES
     ${SRC_DIR}/KeyPresser
     ${SRC_DIR}/LinePlotter
     ${SRC_DIR}/LinesMapper
-    ${SRC_DIR}/MetricMapper
     ${SRC_DIR}/ModelPathDrawer
     ${SRC_DIR}/PointCloudMapper
     ${SRC_DIR}/PointPlacer
     ${SRC_DIR}/PolySurfaceCurvScalarMapper
+    ${SRC_DIR}/PolySurfaceDistanceScalarMapper
     ${SRC_DIR}/RendererPicker
     ${SRC_DIR}/ScalarLegend
     ${SRC_DIR}/SnapshotKeyPresser
+    ${SRC_DIR}/SurfaceMapper
+    ${SRC_DIR}/SurfaceMapperInterface
     #${SRC_DIR}/SurfacePathInterpolator
     ${SRC_DIR}/Viewer
     ${SRC_DIR}/ViewerProjector

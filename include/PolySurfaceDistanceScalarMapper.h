@@ -15,31 +15,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#ifndef RVTK_POLY_SURFACE_CURV_SCALAR_MAPPER_H
-#define RVTK_POLY_SURFACE_CURV_SCALAR_MAPPER_H
+#ifndef RVTK_POLY_SURFACE_DISTANCE_SCALAR_MAPPER_H
+#define RVTK_POLY_SURFACE_DISTANCE_SCALAR_MAPPER_H
 
 #include "SurfaceMapper.h"
-#include <ObjModelCurvatureMetrics.h>   // RFeatures
 
 
 namespace RVTK
 {
 
-class rVTK_EXPORT PolySurfaceCurvScalarMapper : public SurfaceMapper
+class rVTK_EXPORT PolySurfaceDistanceScalarMapper : public SurfaceMapper
 {
 public:
-    PolySurfaceCurvScalarMapper( const RFeatures::ObjModelCurvatureMetrics::Ptr cm, const std::string& metricName);
-    virtual ~PolySurfaceCurvScalarMapper(){}
+    PolySurfaceDistanceScalarMapper( const RFeatures::ObjModel::Ptr model,
+                                     const boost::unordered_map<int,double>& dvals,
+                                     const std::string& metricName);
 
     float getMappedRange( float* minv=NULL, float* maxv=NULL) const;
 
-protected:
-    const RFeatures::ObjModelCurvatureMetrics::Ptr _cmetrics;
-    virtual float getCurvMetric( int faceIdx) const = 0;
-
 private:
-    boost::unordered_map<int,float> _cvals;
-    virtual float getMetric( int, int);   // Implements SufaceMapper::getMetric
+    const RFeatures::ObjModel::Ptr _model;
+    const boost::unordered_map<int,double>& _dvals;
+    virtual float getMetric( int, int);
 };   // end class
 
 }   // end namespace

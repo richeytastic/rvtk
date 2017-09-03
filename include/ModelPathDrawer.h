@@ -18,24 +18,27 @@
 #ifndef RVTK_MODEL_PATH_DRAWER_H
 #define RVTK_MODEL_PATH_DRAWER_H
 
+#include "rVTK_Export.h"
+#include <opencv2/opencv.hpp>
 #include <vector>
-#include <vtkObject.h>
-#include <vtkRenderWindowInteractor.h>
+#include <vtkActor.h>
+#include <vtkSmartPointer.h>
 #include <vtkContourWidget.h>
-#include <vtkObjectFactory.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkOrientedGlyphContourRepresentation.h>
 #include <boost/shared_ptr.hpp>
-#include "ClosestPointFinder.h"
 
 namespace RVTK
 {
 
+class ModelPathDrawer;
+
 // Public callback observer for ModelPathDrawer
 class rVTK_EXPORT ModelPathEventObserver
-{
-public:
-    virtual void startInteraction() {}
-    virtual void endInteraction() {}
-    virtual void interactionEvent() {}  // Moving after selecting something
+{ public:
+    virtual void startInteraction( const ModelPathDrawer*){}
+    virtual void endInteraction( const ModelPathDrawer*){}
+    virtual void interactionEvent( const ModelPathDrawer*){}  // Moving after selecting something
 };  // end class
 
 
@@ -43,36 +46,44 @@ class rVTK_EXPORT ModelPathDrawer
 {
 public:
     typedef boost::shared_ptr<ModelPathDrawer> Ptr;
-    static Ptr create( const ClosestPointFinder*);
-    ~ModelPathDrawer();
+    static Ptr create( vtkSmartPointer<vtkRenderWindowInteractor>);
 
-    void setInteractor( vtkRenderWindowInteractor*);
-    void setEventObserver( ModelPathEventObserver*);
+    void setModel( const vtkActor*);
+    void addEventObserver( ModelPathEventObserver*);
+
+    void setLineWidth( double);
+    void setLineColour( double r, double g, double b);  // Values in [0,1]
+    void setPointSize( double);
+    void setPointColour( double r, double g, double b);  // Values in [0,1]
+
+    void setVisibility( bool visible);
+    bool getVisibility() const;
+    void setProcessEvents( bool enable); // Turns interaction on/off independently of visibility
+    bool getProcessEvents() const;
 
     // Set/get whether the path is closed (end points are joined to form a loop).
-    void setClosed( bool closed) { _closedLoop = closed;}
-    bool isClosed() const { return _closedLoop;}
+    void setClosed( bool closed);
+    bool isClosed() const;
+    int getNumHandles() const;  // Returns the number of handles
 
     // Set/get the boundary handles.
     void setPathHandles( const std::vector<cv::Vec3f>&);
     int getPathHandles( std::vector<cv::Vec3f>&) const; // Returns number of handles.
-    int getNumHandles() const;  // Returns the number of handles
 
     // Get all of the boundary vertices (nodes plus intermediate points).
     int getAllPathVertices( std::vector<cv::Vec3f>&) const;
-
-    void setVisibility( bool visible);
-    bool getVisibility() const;
 
 private:
     vtkSmartPointer<vtkContourWidget> _cWidget;
     bool _closedLoop;
 
-    ModelPathDrawer();
+    vtkSmartPointer<vtkOrientedGlyphContourRepresentation> getRep();
+    const vtkSmartPointer<vtkOrientedGlyphContourRepresentation> getRep() const;
+    ModelPathDrawer( vtkSmartPointer<vtkRenderWindowInteractor>);
+    ~ModelPathDrawer();
     ModelPathDrawer( const ModelPathDrawer&);   // No copy
     void operator=( const ModelPathDrawer&);    // No copy
-
-    void setModel( const ClosestPointFinder*);
+    class Deleter;
 };  // end class
 
 }   // end namespace

@@ -15,32 +15,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include <PolySurfaceCurvScalarMapper.h>
+#include <PolySurfaceDistanceScalarMapper.h>
 #include <algorithm>
-using RVTK::PolySurfaceCurvScalarMapper;
-using RFeatures::ObjModelCurvatureMetrics;
-using RFeatures::ObjModelCurvatureMap;
+using RVTK::PolySurfaceDistanceScalarMapper;
 using RFeatures::ObjModel;
 
 
 // public
-PolySurfaceCurvScalarMapper::PolySurfaceCurvScalarMapper( const ObjModelCurvatureMetrics::Ptr cm, const std::string& mname)
-    : RVTK::SurfaceMapper( cm->getObject(), mname, RVTK::PolygonMetricMapper(1)), _cmetrics(cm)
+PolySurfaceDistanceScalarMapper::PolySurfaceDistanceScalarMapper( const ObjModel::Ptr model,
+                                                                  const boost::unordered_map<int,double>& dvals,
+                                                                  const std::string& mname)
+    : RVTK::SurfaceMapper( model, mname, RVTK::PolygonMetricMapper(1)), _model(model), _dvals(dvals)
 {
 }   // end ctor
 
 
 // private
-float PolySurfaceCurvScalarMapper::getMetric( int faceIdx, int notused)
+float PolySurfaceDistanceScalarMapper::getMetric( int faceIdx, int notused)
 {
-    if ( _cvals.count(faceIdx) == 0)
-        _cvals[faceIdx] = getCurvMetric(faceIdx);
-    return _cvals.at(faceIdx);
+    const int* vidxs = _model->getFaceVertices(faceIdx);
+    const double v = (_dvals.at(vidxs[0]) + _dvals.at(vidxs[1]) + _dvals.at(vidxs[2]))/3;
+    return float(v);
 }   // end getMetric
 
 
 // public
-float PolySurfaceCurvScalarMapper::getMappedRange( float* minv, float* maxv) const
+float PolySurfaceDistanceScalarMapper::getMappedRange( float* minv, float* maxv) const
 {
     const float lowv = getMin(0);
     const float highv = getMax(0);
@@ -50,4 +50,5 @@ float PolySurfaceCurvScalarMapper::getMappedRange( float* minv, float* maxv) con
         *maxv = highv;
     return highv - lowv;
 }   // end getMappedRange
+
 

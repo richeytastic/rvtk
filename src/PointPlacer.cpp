@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include "PointPlacer.h"
+#include <PointPlacer.h>
 using RVTK::PointPlacer;
 
 
@@ -44,23 +44,29 @@ PointPlacer::PointPlacer( const vtkSmartPointer<vtkRenderer> r, vtkSmartPointer<
 {}   // end ctor
 
 
-void PointPlacer::setModel( const vtkSmartPointer<vtkActor> p)
+void PointPlacer::set( const vtkProp* p)
 {
     _pplacer->RemoveAllProps();
-    _pplacer->AddProp( p);
-}   // end setModel
+    _pplacer->AddProp( const_cast<vtkProp*>(p));
+}   // end set
 
 
-void PointPlacer::addModel( const vtkSmartPointer<vtkActor> p)
+void PointPlacer::add( const vtkProp* p)
 {
-    _pplacer->AddProp( p);
-}   // end addModel
+    _pplacer->AddProp( const_cast<vtkProp*>(p));
+}   // end add
 
 
-void PointPlacer::clearModels()
+void PointPlacer::clear()
 {
     _pplacer->RemoveAllProps();
-}   // end clearModels
+}   // end clear
+
+
+bool PointPlacer::hasProps() const
+{
+    return _pplacer->GetNumberOfProps() > 0;
+}   // end hasProps
 
 
 bool PointPlacer::calcSurfacePosition( int x, int y, float* worldPos, RVTK::DisplayOrigin dispOrig) const

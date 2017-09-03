@@ -48,9 +48,9 @@ void RVTK::setColoursLookupTable( vtkSmartPointer<vtkLookupTable> lut,
 }   // end createColoursLookupTable
 
 
-vtkPolyData* RVTK::getPolyData( const vtkSmartPointer<vtkActor>& actor)
+vtkPolyData* RVTK::getPolyData( const vtkActor* actor)
 {
-    vtkPolyDataMapper* mapper = (vtkPolyDataMapper*)actor->GetMapper();
+    vtkPolyDataMapper* mapper = (vtkPolyDataMapper*)const_cast<vtkActor*>(actor)->GetMapper();
     return mapper->GetInput();
 }   // end getPolyData
 

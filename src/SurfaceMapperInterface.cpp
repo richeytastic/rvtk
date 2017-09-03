@@ -15,28 +15,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include "MetricMapper.h"
+#include <SurfaceMapperInterface.h>
+#include <VtkActorCreator.h>
+#include <VtkTools.h>
 using RVTK::MetricMapper;
-using RVTK::PolygonMetricMapper;
-using RVTK::VertexMetricMapper;
 using RVTK::MetricInterface;
-using RVTK::VtkActorCreator;
+#include <vtkPointData.h>
+#include <vtkCellData.h>
 #include <vtkProperty.h>
 #include <vtkFloatArray.h>
-#include "VtkTools.h"
-#include "VtkActorCreator.h"
 #include <boost/foreach.hpp>
+using RFeatures::ObjModel;
 
 
-MetricMapper::MetricMapper()
+// protected
+MetricMapper::MetricMapper( size_t nc) : _numComponents(nc)
 {
 }   // end ctor
 
 
-vtkSmartPointer<vtkActor> MetricMapper::createSurfaceActor( MetricInterface* mint)
+// protected
+vtkSmartPointer<vtkActor> MetricMapper::createSurfaceActor( MetricInterface* mint) const
 {
-    const RFeatures::ObjModel::Ptr model = mint->getObject();
-    VtkActorCreator actorCreator;
+    const ObjModel::Ptr model = mint->getObject();
+    RVTK::VtkActorCreator actorCreator;
     IntIntMap lookupMap;    // Object index to VTK index (for cells or vertices)
     this->setLookup( &actorCreator, &lookupMap);
     vtkSmartPointer<vtkActor> actor = actorCreator.generateSurfaceActor(model);
@@ -44,8 +46,8 @@ vtkSmartPointer<vtkActor> MetricMapper::createSurfaceActor( MetricInterface* min
     vtkSmartPointer<vtkFloatArray> cvals = vtkSmartPointer<vtkFloatArray>::New();
     cvals->SetName( mint->getMetricName().c_str());
 
-    const int nc = mint->getNumMetricComponents();
-    const IntSet& objids = this->getMappingsIds(model);
+    const int nc = (int)getNumComponents();
+    const IntSet& objids = *this->getMappingIds(model);
 
     if ( nc > 1)
     {
@@ -66,7 +68,7 @@ vtkSmartPointer<vtkActor> MetricMapper::createSurfaceActor( MetricInterface* min
         cvals->SetNumberOfValues( objids.size());
         BOOST_FOREACH ( int objid, objids)
         {
-            mval = mint->operator()( objid);
+            mval = mint->operator()( objid, 0);
             cvals->SetValue( lookupMap.at(objid), mval);
         }   // end foreach
     }   // end else if
@@ -86,14 +88,9 @@ vtkSmartPointer<vtkActor> MetricMapper::createSurfaceActor( MetricInterface* min
 
 
 // protected
-void PolygonMetricMapper::setLookup( VtkActorCreator *actorCreator, IntIntMap* lookupMap) const
-{
-    actorCreator->setObjToVTKUniqueFaceMap( lookupMap);
-}   // end setLookup
+vtkDataSetAttributes* MetricMapper::getDataSet( vtkPolyData*) const { return NULL;}
+const IntSet* MetricMapper::getMappingIds( const ObjModel::Ptr) const { return NULL;}
+void MetricMapper::setLookup( RVTK::VtkActorCreator*, IntIntMap*) const {}
+size_t MetricMapper::getNumComponents() const { return _numComponents;}
 
 
-// protected
-void VertexMetricMapper::setLookup( VtkActorCreator *actorCreator, IntIntMap* lookupMap) const
-{
-    actorCreator->setObjToVTKUniqueVertexMap( lookupMap);
-}   // end setLookup
