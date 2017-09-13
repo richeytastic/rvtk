@@ -25,6 +25,7 @@
 #include <vtkImageShiftScale.h>
 #include <vtkImageExport.h>
 #include <vtkRenderWindow.h>
+#include <vtkRenderer.h>
 
 
 void RVTK::setColoursLookupTable( vtkSmartPointer<vtkLookupTable> lut,
@@ -273,4 +274,64 @@ void RVTK::printCameraDetails( vtkCamera* cam, std::ostream &os)
 	}	// end else
     os << "*********************************************" << endl;
 }	// end printCameraDetails
+
+
+
+RVTK::Light::Light()
+    : light( vtkSmartPointer<vtkLight>::New())
+{
+    light->SetLightTypeToHeadlight();
+    light->SetColor(1,1,1);
+    light->SetAmbientColor(1,1,1);
+    light->SetIntensity(1);
+}   // end ctor
+
+
+RVTK::Light::Light( const cv::Vec3f& pos, const cv::Vec3f& foc)
+    : light( vtkSmartPointer<vtkLight>::New())
+{
+    light->SetLightTypeToSceneLight();
+    light->SetColor(1,1,1);
+    light->SetAmbientColor(1,1,1);
+    light->SetIntensity(1);
+    light->SetPosition( pos[0], pos[1], pos[2]);
+    light->SetFocalPoint( foc[0], foc[1], foc[2]);
+}   // end ctor
+
+
+void RVTK::Light::toCamera( bool enable)
+{
+    if ( enable)
+        light->SetLightTypeToCameraLight();
+    else
+        light->SetLightTypeToSceneLight();
+}   // end toCamera
+
+
+void RVTK::resetLights( vtkRenderer* ren, const std::vector<Light>& lights)
+{
+    ren->RemoveAllLights();
+    const int n = (int)lights.size();
+    for ( int i = 0; i < n; ++i)
+        ren->AddLight( lights[i].light);
+}   // end resetLights
+
+
+void RVTK::createBoxLights( float d, std::vector<Light>& lights, bool toCamera)
+{
+    const cv::Vec3f focus(0,0,0);
+    lights.resize(6);
+    lights[0] = RVTK::Light( cv::Vec3f( 0, 0, d), focus);  // From +Z
+    lights[1] = RVTK::Light( cv::Vec3f( 0, 0,-d), focus);  // From -Z
+    lights[2] = RVTK::Light( cv::Vec3f( 0, d, 0), focus);  // From +Y
+    lights[3] = RVTK::Light( cv::Vec3f( 0,-d, 0), focus);  // From -Y
+    lights[4] = RVTK::Light( cv::Vec3f( d, 0, 0), focus);  // From +X
+    lights[5] = RVTK::Light( cv::Vec3f(-d, 0, 0), focus);  // From -X
+    lights[0].toCamera(toCamera);
+    lights[1].toCamera(toCamera);
+    lights[2].toCamera(toCamera);
+    lights[3].toCamera(toCamera);
+    lights[4].toCamera(toCamera);
+    lights[5].toCamera(toCamera);
+}   // end createBoxLights
 

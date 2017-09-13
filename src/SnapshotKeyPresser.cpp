@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include "SnapshotKeyPresser.h"
+#include <SnapshotKeyPresser.h>
 using RVTK::SnapshotKeyPresser;
 #include <cmath>
 #include <iostream>
@@ -29,7 +29,8 @@ using std::endl;
 void SnapshotKeyPresser::resetCamera()
 {
     const cv::Vec3d focPoint = _camPos + _focalDir * 1e-10;
-    getViewer()->resetCamera( _camPos, focPoint, _viewUp, _fov);
+    const RFeatures::CameraParams cp( _camPos, focPoint, _viewUp, _fov);
+    getViewer()->setCamera( cp);
 }   // end resetCamera
 
 

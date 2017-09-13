@@ -29,12 +29,15 @@ using RVTK::RendererPicker;
 using RVTK::ActorSubset;
 
 
-RendererPicker::RendererPicker( vtkRenderer* ren, PointOrigin po)
-    : _ren(ren), _pointOrigin(po), _tolerance(0.0005)
-{
-}   // end ctor
+// private
+cv::Point RendererPicker::toPxls( const cv::Point2f& p) const { return cv::Point( p.x * _ren->GetSize()[0], p.y * _ren->GetSize()[1]);}
 
 
+// public
+RendererPicker::RendererPicker( vtkRenderer* ren, PointOrigin po, double t) : _ren(ren), _pointOrigin(po), _tolerance(t){}
+
+
+namespace {
 cv::Point changeOriginOfPoint( vtkRenderer* ren, const cv::Point& p, RendererPicker::PointOrigin po)
 {
     if ( po == RendererPicker::BOTTOM_LEFT)
@@ -47,6 +50,7 @@ cv::Point changeOriginOfPoint( vtkRenderer* ren, const cv::Point& p, RendererPic
     np.y = nrows - p.y - 1;
     return np;
 }   // end changeOriginOfPoint
+}   // end namespace
 
 
 // public
@@ -124,6 +128,7 @@ int RendererPicker::pickActorCells( const std::vector<cv::Point>& points2d,
 }   // end pickActorCells
 
 
+
 // public
 vtkActor* RendererPicker::pickActor( const cv::Point& p) const
 {
@@ -136,6 +141,11 @@ vtkActor* RendererPicker::pickActor( const cv::Point& p) const
 }   // end pickActor
 
 
+// public
+vtkActor* RendererPicker::pickActor( const cv::Point2f& p) const { return pickActor( toPxls(p));}
+
+
+namespace {
 vtkPropCollection* createPropCollection( const std::vector<vtkActor*>& possActors)
 {
     vtkPropCollection* pickFrom = vtkPropCollection::New();
@@ -164,6 +174,8 @@ vtkActor* pick( const cv::Point& p, vtkPropCollection* pickFrom, vtkRenderer* re
     propPicker->Delete();
     return act;
 }   // end pick
+}   // end namespace
+
 
 
 // public
@@ -174,11 +186,7 @@ vtkActor* RendererPicker::pickActor( const cv::Point& p, const std::vector<vtkAc
 
 
 // public
-vtkSmartPointer<vtkActor> RendererPicker::pickActor( const cv::Point& p,
-                                                     const std::vector<vtkSmartPointer<vtkActor> >& possActors) const
-{
-    return pick( p, createPropCollection( possActors), _ren, _pointOrigin);
-}   // end pickActor
+vtkActor* RendererPicker::pickActor( const cv::Point2f& p, const std::vector<vtkActor*>& possActors) const { return pickActor( toPxls(p), possActors);} 
 
 
 // public
@@ -191,35 +199,11 @@ int RendererPicker::pickCell( const cv::Point& p) const
     const int cid = picker->GetCellId();
     picker->Delete();
     return cid;
-
-    /*
-    if ( picker->GetCellId() == -1)
-        return -1;
-
-    vtkSmartPointer<vtkIdTypeArray> ids = vtkSmartPointer<vtkIdTypeArray>::New();
-    ids->SetNumberOfComponents( 1);
-    ids->InsertNextValue( picker->GetCellId());
-                             
-    vtkSmartPointer<vtkSelectionNode> selectionNode = vtkSmartPointer<vtkSelectionNode>::New();
-    selectionNode->SetFieldType( vtkSelectionNode::CELL);
-    selectionNode->SetContentType( vtkSelectionNode::INDICES);
-    selectionNode->SetSelectionList( ids);
-                                                             
-    vtkSmartPointer<vtkSelection> selection = vtkSmartPointer<vtkSelection>::New();
-    selection->AddNode( selectionNode);
-
-    vtkSmartPointer<vtkActor> actor = this->pickActor(p);
-    vtkSmartPointer<vtkExtractSelection> extractSelection = vtkSmartPointer<vtkExtractSelection>::New();
-#if VTK_MAJOR_VERSION <= 5
-    extractSelection->SetInput(0, actor->GetMapper()->GetInput());
-    extractSelection->SetInput(1, selection);
-#else
-    extractSelection->SetInputData(0, actor->GetMapper()->GetInputData());
-    extractSelection->SetInputData(1, selection);
-#endif
-    extractSelection->Update();
-    */
 }   // end pickCell
+
+
+// public
+int RendererPicker::pickCell( const cv::Point2f& p) const { return pickCell( toPxls(p));}
 
 
 // public
@@ -233,6 +217,10 @@ cv::Vec3f RendererPicker::pickWorldPosition( const cv::Point& p) const
     picker->Delete();
     return v;
 }   // end pickWorldPosition
+
+
+// public
+cv::Vec3f RendererPicker::pickWorldPosition( const cv::Point2f& p) const { return pickWorldPosition( toPxls(p));}
 
 
 
@@ -250,6 +238,10 @@ cv::Vec3f RendererPicker::pickNormal( const cv::Point& p) const
     picker->Delete();
     return v;
 }   // end pickNormal
+
+
+// public
+cv::Vec3f RendererPicker::pickNormal( const cv::Point2f& p) const { return pickNormal( toPxls(p));}
 
 
 // public

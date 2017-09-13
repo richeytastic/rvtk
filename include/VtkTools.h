@@ -21,15 +21,16 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <iostream>
-#include <vtkTexture.h>
 #include <vtkActor.h>
-#include <vtkImageImport.h>
+#include <vtkColor.h>
+#include <vtkLight.h>
+#include <vtkCamera.h>
+#include <vtkTexture.h>
 #include <vtkPolyData.h>
-#include <vtkPolyDataMapper.h>
+#include <vtkImageImport.h>
 #include <vtkLookupTable.h>
 #include <vtkSmartPointer.h>
-#include <vtkColor.h>
-#include <vtkCamera.h>
+#include <vtkPolyDataMapper.h>
 #include "rVTK_Export.h"
 
 namespace RVTK
@@ -73,6 +74,21 @@ rVTK_EXPORT cv::Mat_<float> extractZBuffer( const vtkRenderWindow*);
 
 rVTK_EXPORT void printCameraDetails( vtkCamera*, std::ostream&);    // Print camera details to the given stream
 
+// Replace the lights in the given renderer with the given lights.
+// The default light is a scene light that's white with intensity of 1.
+struct rVTK_EXPORT Light
+{
+    Light();    // Default is a headlight
+    Light( const cv::Vec3f& pos, const cv::Vec3f& foc); // Creates a scene light with given position and focus
+    void toCamera(bool);    // Switch between camera(true) and scene(false)
+    vtkSmartPointer<vtkLight> light;
+};  // end struct
+
+rVTK_EXPORT void resetLights( vtkRenderer*, const std::vector<Light>&);
+
+// Create six lights all of which are d units from the origin (which is the focus).
+// By default, the lights are of the scene type, but can be set as camera lights.
+rVTK_EXPORT void createBoxLights( float d, std::vector<Light>&, bool toCamera=false);
 }   // end namespace
 
 #endif

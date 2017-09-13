@@ -48,7 +48,7 @@ public:
 
     // Use the PointOrigin parameter to let the picking algorithms know if the provided
     // points are given with a bottom left origin (VTK default) or a top left origin.
-    RendererPicker( vtkRenderer*, PointOrigin po=BOTTOM_LEFT);
+    RendererPicker( vtkRenderer*, PointOrigin po=BOTTOM_LEFT, double tolerance=0.0005);
 
     // Given array of 2D pixel coordinates, find the actors and their cell IDs
     // pointed to by these locations. Returns number of actors found at the given 2D
@@ -63,24 +63,26 @@ public:
                         std::vector<int>& cellIds) const;
 
     // Given a 2D point, find the actor being pointed to. Returns NULL if no actor found.
-    vtkActor* pickActor( const cv::Point& point) const;
+    vtkActor* pickActor( const cv::Point&) const;
+    vtkActor* pickActor( const cv::Point2f&) const;
 
     // As above, but only selects the actor from the given vector of actors.
-    vtkActor* pickActor( const cv::Point& point,
-                         const std::vector<vtkActor*>& possActors) const;
-    vtkSmartPointer<vtkActor> pickActor( const cv::Point& point,
-                         const std::vector<vtkSmartPointer<vtkActor> >& possActors) const;
+    vtkActor* pickActor( const cv::Point& point, const std::vector<vtkActor*>&) const;
+    vtkActor* pickActor( const cv::Point2f&, const std::vector<vtkActor*>&) const;
 
     // Pick an actor's cell returning its ID. Returns -1 if no cell found.
-    int pickCell( const cv::Point& point) const;
+    int pickCell( const cv::Point&) const;
+    int pickCell( const cv::Point2f&) const;
 
     // Given a 2D point, find the intersecting world position. Note that a position
     // in space is always returned even if the point does not intersect with a prop/actor!
-    cv::Vec3f pickWorldPosition( const cv::Point& point) const;
+    cv::Vec3f pickWorldPosition( const cv::Point&) const;
+    cv::Vec3f pickWorldPosition( const cv::Point2f&) const;
 
     // Pick the normal vector to the surface at the given point.
     // If no 3D point intersects, return the zero vector.
-    cv::Vec3f pickNormal( const cv::Point& point) const;
+    cv::Vec3f pickNormal( const cv::Point&) const;
+    cv::Vec3f pickNormal( const cv::Point2f&) const;
 
     // Project v to the rendering image plane. Point is returned using
     // the coordinates origin set in the constructor.
@@ -88,8 +90,9 @@ public:
 
 private:
     vtkRenderer* _ren;
-    PointOrigin _pointOrigin;
+    const PointOrigin _pointOrigin;
     const double _tolerance;
+    cv::Point toPxls( const cv::Point2f&) const;
 };  // end class
 
 }   // end namespace

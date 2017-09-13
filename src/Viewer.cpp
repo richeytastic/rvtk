@@ -15,11 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include "Viewer.h"
-#include "VtkTools.h"
-using RVTK::Viewer;
+#include <Viewer.h>
+#include <VtkTools.h>
 #include <vtkFollower.h>
 #include <vtkOpenGLRenderWindow.h>
+#include <vtkGraphicsFactory.h>
+using RVTK::Viewer;
 
 
 class Viewer::Deleter
@@ -32,36 +33,30 @@ public:
 };  // end Deleter
 
 
-Viewer::Ptr Viewer::create()
+Viewer::Ptr Viewer::create( bool offscreen)
 {
-    Viewer::Ptr ptr( new Viewer(), Viewer::Deleter());
+    Viewer::Ptr ptr( new Viewer( offscreen), Viewer::Deleter());
     return ptr;
 }   // end create
 
 
-Viewer::Viewer() :
+Viewer::Viewer( bool offscreen) :
 	_ren( vtkSmartPointer<vtkOpenGLRenderer>::New()),
-    _renWin( vtkSmartPointer<vtkRenderWindow>::New()),
-    _headlight( vtkSmartPointer<vtkLight>::New())
+    _renWin( vtkSmartPointer<vtkRenderWindow>::New())
 {
+    vtkGraphicsFactory::SetOffScreenOnlyMode(offscreen);
+    //vtkGraphicsFactory::setUseMesaClasses(true);
+    _renWin->SetOffScreenRendering(offscreen);
+    // For temporary offscreen, use:
+    // _renWin->SetUseOffScreenBuffers(true);
+
 	_ren->SetBackground( 0.0, 0.0, 0.0);
     _renWin->SetPointSmoothing( false);
 	_renWin->AddRenderer( _ren);
 
     _ren->SetTwoSidedLighting( true);  // Don't light occluded sides
     _ren->SetAutomaticLightCreation( true);
-
-    // Make a headlight and add it to the renderer
-    _headlight->SetLightTypeToHeadlight();
-    _ren->AddLight( _headlight);
-    _ren->SetLightFollowCamera(true);   // Set the headlight to follow the camera
-    setHeadlightEnabled(false);
 }  // end ctor
-
-
-Viewer::~Viewer()
-{
-}   // end dtor
 
 
 bool Viewer::getSupportsMultiTexturing() const
@@ -107,40 +102,16 @@ void Viewer::clear()
 }	// end clear
 
 
-void Viewer::resetCamera( const cv::Vec3f& camPos, const cv::Vec3f& focus, const cv::Vec3f& vUp, double fov)
+void Viewer::setCamera( const RFeatures::CameraParams& cp)
 {
 	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
-    cam->SetFocalPoint( focus[0], focus[1], focus[2]);
-    cam->SetPosition( camPos[0], camPos[1], camPos[2]);
+    cam->SetFocalPoint( cp.focus[0], cp.focus[1], cp.focus[2]);
+    cam->SetPosition( cp.pos[0], cp.pos[1], cp.pos[2]);
     cam->ComputeViewPlaneNormal();
-    cam->SetViewUp( vUp[0], vUp[1], vUp[2]);
+    cam->SetViewUp( cp.up[0], cp.up[1], cp.up[2]);
     _ren->ResetCameraClippingRange();
-    cam->SetViewAngle( fov);
-}   // end resetCamera
-
-
-void Viewer::resetSceneLights( int numLights, const cv::Vec3f* pos, const cv::Vec3f* focus, const double* intensities)
-{
-    _ren->RemoveAllLights();
-    for ( int i = 0; i < numLights; ++i)
-    {
-        vtkSmartPointer<vtkLight> light = vtkSmartPointer<vtkLight>::New();
-        light->SetLightTypeToSceneLight();
-        light->SetColor( 1, 1, 1);
-        light->SetAmbientColor( 1, 1, 1);
-        light->SetIntensity( intensities[i]);
-        light->SetPosition( pos[i][0], pos[i][1], pos[i][2]);
-        light->SetFocalPoint( focus[i][0], focus[i][1], focus[i][2]);
-        _ren->AddLight(light);
-    }   // end for
-    _ren->AddLight( _headlight);
-}   // end resetSceneLights
-
-
-void Viewer::setHeadlightEnabled( bool enabled)
-{
-    _headlight->SetSwitch( enabled);
-}   // end setHeadlightEnabled
+    cam->SetViewAngle( cp.fov);
+}   // end setCamera
 
 
 double Viewer::getClipNear() const
@@ -189,71 +160,28 @@ void Viewer::addCameraRoll( double roll)
 }   // end addCameraRoll
 
 
-void Viewer::setCameraPosition( const cv::Vec3f &pos)
+void Viewer::setClippingRange( double near, double far)
 {
+    assert( near <= far);
 	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
-	cam->SetPosition( pos[0], pos[1], pos[2]);
-}   // end setCameraPosition
-
-
-void Viewer::setCameraFocus( const cv::Vec3f& foc)
-{
-	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
-    cam->SetClippingRange(0,500);
-    cam->SetFocalPoint( foc[0], foc[1], foc[2]);
+    cam->SetClippingRange( near, far);
     cam->ComputeViewPlaneNormal();
-}   // end setCameraFocus
+}   // end setClippingRange
 
 
-void Viewer::setCameraViewUp( const cv::Vec3f& vu)
+RFeatures::CameraParams Viewer::getCamera() const
 {
-	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
-	cam->SetViewUp( vu[0], vu[1], vu[2]);
-}   // end setCameraViewUp
-
-
-void Viewer::getCamera( cv::Vec3f &absPos, cv::Vec3f &focus, cv::Vec3f &vu)
-{
+    RFeatures::CameraParams cp;
 	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
     double *arr = cam->GetPosition();
-    absPos = cv::Vec3f( arr[0], arr[1], arr[2]);
+    cp.pos = cv::Vec3f( arr[0], arr[1], arr[2]);
     arr = cam->GetFocalPoint();
-    focus = cv::Vec3f( arr[0], arr[1], arr[2]);
+    cp.focus = cv::Vec3f( arr[0], arr[1], arr[2]);
     arr = cam->GetViewUp();
-    vu = cv::Vec3f( arr[0], arr[1], arr[2]);
+    cv::normalize( cv::Vec3f( arr[0], arr[1], arr[2]), cp.up);  // Ensure normalized
+    cp.fov = cam->GetViewAngle();
+    return cp;
 }   // end getCamera
-
-
-cv::Vec3f Viewer::getCameraPosition() const
-{
-	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
-    const double *arr = cam->GetPosition();
-    return cv::Vec3f( arr[0], arr[1], arr[2]);
-}   // end getCameraPosition
-
-
-cv::Vec3f Viewer::getCameraViewUp() const
-{
-	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
-    const double *arr = cam->GetViewUp();
-    const cv::Vec3f vup = cv::Vec3f( arr[0], arr[1], arr[2]);
-    return vup / cv::norm(vup); // Ensure normalised
-}   // end getCameraViewUp
-
-
-cv::Vec3f Viewer::getCameraFocus() const
-{
-	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
-    const double *arr = cam->GetFocalPoint();
-    return cv::Vec3f( arr[0], arr[1], arr[2]);
-}   // end getCameraFocus
-
-
-cv::Vec3f Viewer::getCameraDirection() const
-{
-    const cv::Vec3f dirVec = getCameraFocus() - getCameraPosition();
-    return dirVec / cv::norm(dirVec);
-}   // end getCameraDirection
 
 
 void Viewer::setPerspective( bool enabled)
@@ -265,20 +193,6 @@ void Viewer::setPerspective( bool enabled)
 	else if (enabled && cam->GetParallelProjection())
 		cam->ParallelProjectionOff();
 }	// end setPerspective
-
-
-void Viewer::setFieldOfView( double angle)
-{
-	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
-    cam->SetViewAngle( angle);
-}   // end setFieldOfView
-
-
-double Viewer::getFieldOfView() const
-{
-	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
-    return cam->GetViewAngle();
-}   // end getFieldOfView
 
 
 void Viewer::setParallelScale( double scale)
@@ -337,6 +251,13 @@ int Viewer::getHeight() const
 {
     return _renWin->GetSize()[1];
 }   // end getHeight
+
+
+cv::Size Viewer::getSize() const
+{
+    const int* sz = _renWin->GetSize();
+    return cv::Size( sz[0], sz[1]);
+}   // end getSize
 
 
 void Viewer::updateRender()

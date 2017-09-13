@@ -26,6 +26,7 @@
 #define RVTK_VIEWER_H
 
 #include "VTKTypes.h"
+#include <CameraParams.h>   // RFeatures
 #include <boost/shared_ptr.hpp>
 #include <opencv2/opencv.hpp>
 #include "rVTK_Export.h"
@@ -38,7 +39,7 @@ class rVTK_EXPORT Viewer
 {
 public:
     typedef boost::shared_ptr<Viewer> Ptr;
-    static Ptr create();
+    static Ptr create( bool offscreenRendering=false);
 
     // Check for multi-texturing support.
     bool getSupportsMultiTexturing() const;
@@ -51,53 +52,22 @@ public:
     void removeActor( const vtkSmartPointer<vtkActor> actor);
     void clear();	// Remove all actors
 
-    void resetCamera( const cv::Vec3f& camPos, const cv::Vec3f& focus, const cv::Vec3f& viewUp, double fov);
+    void setCamera( const RFeatures::CameraParams&);
+    RFeatures::CameraParams getCamera() const;
 
-    // Reset the static (scene) lighting array. All white lights.
-    void resetSceneLights( int numLights=0, const cv::Vec3f* lightPositions=NULL,
-            const cv::Vec3f* lightFocalPoints=NULL, const double* intensities=NULL);
-
-    // Turn the camera headlight on or off.
-    void setHeadlightEnabled( bool enable);
-
-    // Get the near and far clipping range values
+    // Get/set the near and far clipping range values
     double getClipNear() const;
     double getClipFar() const;
+    void setClippingRange( double near, double far);    // Default is 0.1, 1000
 
-    void setCameraPosition( const cv::Vec3f&);
-    void setCameraViewUp( const cv::Vec3f&);
-    void setCameraFocus( const cv::Vec3f&);
-
-    // Affects the direction the camera is looking in (i.e. modifies the focal vector and up vector).
+    // Affects direction camera is looking in (i.e. modifies focus and up vector).
     void setCameraOrientation( double pitch, double yaw, double roll);
     void addCameraYaw( double yaw);
     void addCameraPitch( double pitch);
     void addCameraRoll( double roll);
 
-    // Get the camera's parameters into the provided reference vectors.
-    void getCamera( cv::Vec3f &pos, cv::Vec3f &focus, cv::Vec3f &viewUp);
-
-    // Return the position of the camera in the world.
-    cv::Vec3f getCameraPosition() const;
-
-    // Return the normalised up vector for the camera in standard position.
-    cv::Vec3f getCameraViewUp() const;
-
-    // Return the focus of the camera in the world.
-    cv::Vec3f getCameraFocus() const;
-
-    // Return a normalised vector describing the direction the camera
-    // is pointing in (into the scene) in standard position. This function
-    // takes into account the current position of the camera.
-    // Simply returns normalised vector getCameraFocus() - getCameraPosition().
-    cv::Vec3f getCameraDirection() const;
-
     // Set perspective to be enabled if true or parallel projection if false.
     void setPerspective( bool enabled);
-
-    // Set field of view angle in degrees (only matters in perspective projection mode).
-    void setFieldOfView( double angle);
-    double getFieldOfView() const;
 
     // Set view scale for orthogonal view (only matters in parallel projection mode).
     void setParallelScale( double scale);
@@ -119,6 +89,7 @@ public:
     void setSize( int width, int height);
     int getWidth() const;
     int getHeight() const;
+    cv::Size getSize() const;
 
 	// Update the rendered image after making changes.
 	void updateRender();
@@ -132,19 +103,16 @@ public:
     // Create and return an image of the current window
     cv::Mat_<cv::Vec3b> extractImage() const;
 
-    // Extract Z buffer actual depth values - ensure camera clipping range is set properly prior to using!
+    // Extract Z buffer - ensure camera clipping range is set properly prior to using!
     cv::Mat_<float> extractZBuffer() const;
 
 private:
     vtkSmartPointer<vtkRenderer> _ren;
     vtkSmartPointer<vtkRenderWindow> _renWin;
-    vtkSmartPointer<vtkLight> _headlight;
 
-    Viewer();
-    ~Viewer();
-    Viewer( const Viewer&);
-    void operator=( const Viewer &);
-
+    Viewer( bool);
+    Viewer( const Viewer&);             // No copy
+    void operator=( const Viewer &);    // No copy
     class Deleter;
 };  // end class
 
