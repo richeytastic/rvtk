@@ -18,8 +18,8 @@
 #include <Viewer.h>
 #include <VtkTools.h>
 #include <vtkFollower.h>
-#include <vtkOpenGLRenderWindow.h>
-#include <vtkGraphicsFactory.h>
+//#include <vtkOpenGLRenderWindow.h>
+//#include <vtkGraphicsFactory.h>
 using RVTK::Viewer;
 
 
@@ -41,14 +41,15 @@ Viewer::Ptr Viewer::create( bool offscreen)
 
 
 Viewer::Viewer( bool offscreen) :
-	_ren( vtkSmartPointer<vtkOpenGLRenderer>::New()),
+	//_ren( vtkSmartPointer<vtkOpenGLRenderer>::New()),
+	_ren( vtkSmartPointer<vtkRenderer>::New()),
     _renWin( vtkSmartPointer<vtkRenderWindow>::New())
 {
-    vtkGraphicsFactory::SetOffScreenOnlyMode(offscreen);
+    //vtkGraphicsFactory::SetOffScreenOnlyMode(offscreen);
     //vtkGraphicsFactory::setUseMesaClasses(true);
     _renWin->SetOffScreenRendering(offscreen);
     // For temporary offscreen, use:
-    // _renWin->SetUseOffScreenBuffers(true);
+    //_renWin->SetUseOffScreenBuffers(offscreen);
 
 	_ren->SetBackground( 0.0, 0.0, 0.0);
     _renWin->SetPointSmoothing( false);
@@ -57,6 +58,12 @@ Viewer::Viewer( bool offscreen) :
     _ren->SetTwoSidedLighting( true);  // Don't light occluded sides
     _ren->SetAutomaticLightCreation( true);
 }  // end ctor
+
+
+Viewer::~Viewer()
+{
+    //_renWin->SetUseOffScreenBuffers(false);
+}   // end dtor
 
 
 bool Viewer::getSupportsMultiTexturing() const
@@ -107,7 +114,6 @@ void Viewer::setCamera( const RFeatures::CameraParams& cp)
 	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
     cam->SetFocalPoint( cp.focus[0], cp.focus[1], cp.focus[2]);
     cam->SetPosition( cp.pos[0], cp.pos[1], cp.pos[2]);
-    cam->ComputeViewPlaneNormal();
     cam->SetViewUp( cp.up[0], cp.up[1], cp.up[2]);
     _ren->ResetCameraClippingRange();
     cam->SetViewAngle( cp.fov);
@@ -165,7 +171,6 @@ void Viewer::setClippingRange( double near, double far)
     assert( near <= far);
 	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
     cam->SetClippingRange( near, far);
-    cam->ComputeViewPlaneNormal();
 }   // end setClippingRange
 
 

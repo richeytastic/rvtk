@@ -15,8 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include "VtkTools.h"
-#include <cassert>
+#include <VtkTools.h>
 #include <vtkOctreePointLocator.h>
 #include <vtkFeatureEdges.h>
 #include <vtkFloatArray.h>
@@ -26,6 +25,7 @@
 #include <vtkImageExport.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
+#include <cassert>
 
 
 void RVTK::setColoursLookupTable( vtkSmartPointer<vtkLookupTable> lut,
@@ -47,6 +47,33 @@ void RVTK::setColoursLookupTable( vtkSmartPointer<vtkLookupTable> lut,
         lut->SetTableValue( i, rgb[0], rgb[1], rgb[2], 1);
     }   // end for
 }   // end createColoursLookupTable
+
+
+RFeatures::ObjModel::Ptr RVTK::makeObject( const vtkSmartPointer<vtkActor> actor)
+{
+    RFeatures::ObjModel::Ptr model = RFeatures::ObjModel::create();
+    vtkSmartPointer<vtkPolyData> pdata = getPolyData(actor);
+    vtkPoints* points = pdata->GetPoints();
+    vtkCellArray* faces = pdata->GetPolys();
+
+    boost::unordered_map<int,int> vmap; // VTK to ObjModel vertex IDs
+    double p[3];
+    const int npoints = points->GetNumberOfPoints();
+    for ( int i = 0; i < npoints; ++i)
+    {
+        points->GetPoint( i, p);
+        vmap[i] = model->addVertex( p[0], p[1], p[2]);
+    }   // end for
+
+    faces->InitTraversal();
+    int cid;
+    vtkIdType npts;
+    vtkIdType *vidxs;
+    while ( faces->GetNextCell( npts, vidxs) > 0)
+        model->setFace( vmap[vidxs[0]], vmap[vidxs[1]], vmap[vidxs[2]]);
+
+    return model;
+}   // end makeObject
 
 
 vtkPolyData* RVTK::getPolyData( const vtkActor* actor)

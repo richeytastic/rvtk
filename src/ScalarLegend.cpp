@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include "ScalarLegend.h"
+#include <ScalarLegend.h>
 using RVTK::ScalarLegend;
 #include <vtkTextProperty.h>
 #include <vtkColor.h>
@@ -30,13 +30,15 @@ ScalarLegend::ScalarLegend( vtkRenderer* r) : _ren(r)
 
     _legend->GetLabelTextProperty()->SetFontFamilyToArial();
     _legend->GetLabelTextProperty()->SetItalic(false);
-    _legend->GetLabelTextProperty()->SetFontSize(10);
+    _legend->GetLabelTextProperty()->SetFontSize(12);
     _legend->SetNumberOfLabels( 10);
-    _legend->SetMaximumWidthInPixels( 60);
+    _legend->SetMaximumWidthInPixels( 80);
     _legend->SetUnconstrainedFontSize(true);
     _legend->DrawTickLabelsOn();
-    _legend->SetPosition(0.87, 0.3);
+    _legend->SetPosition(0.85, 0.3);
     _legend->SetHeight(0.6);
+
+    _shown = false;
 }   // end dtor
 
 
@@ -50,8 +52,8 @@ ScalarLegend::~ScalarLegend()
 // public
 void ScalarLegend::setTitle( const std::string& title)
 {
-    _legend->GetTitleTextProperty()->SetFontFamilyToTimes();
-    _legend->GetTitleTextProperty()->SetFontSize(10);
+    _legend->GetTitleTextProperty()->SetFontFamilyToArial();
+    _legend->GetTitleTextProperty()->SetFontSize(13);
     _legend->GetTitleTextProperty()->SetBold(false);
     _legend->GetTitleTextProperty()->SetItalic(false);
     _legend->SetTitle( title.c_str());
@@ -81,7 +83,7 @@ void ScalarLegend::setColours( int ncols, const vtkColor3ub& scol, const vtkColo
 
 
 // public
-void ScalarLegend::setLookupTable( vtkMapper* m, float minv, float maxv)
+void ScalarLegend::setLookupTable( vtkMapper* mapper, float minv, float maxv)
 {
     const int maxWidth = 6;
     int ndecimals = maxWidth - (int)(logf(maxv - minv) + 1);
@@ -90,8 +92,8 @@ void ScalarLegend::setLookupTable( vtkMapper* m, float minv, float maxv)
     std::ostringstream oss;
     oss << "% " << maxWidth << "." << ndecimals << "f";
     _legend->SetLabelFormat(oss.str().c_str());
-    m->SetScalarRange( minv, maxv);
-    m->SetLookupTable( _lut);
+    mapper->SetScalarRange( minv, maxv);
+    mapper->SetLookupTable( _lut);
 }   // end setLookupTable
 
 
@@ -99,6 +101,7 @@ void ScalarLegend::setLookupTable( vtkMapper* m, float minv, float maxv)
 void ScalarLegend::show()
 {
     _ren->AddActor2D( _legend);
+    _shown = true;
 }   // end show
 
 
@@ -106,5 +109,13 @@ void ScalarLegend::show()
 void ScalarLegend::hide()
 {
     _ren->RemoveActor2D( _legend);
+    _shown = false;
 }   // end hide
+
+
+// public
+bool ScalarLegend::isShown() const
+{
+    return _shown;
+}   // end isShown
 

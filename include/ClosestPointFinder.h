@@ -19,7 +19,7 @@
 #define RVTK_CLOSEST_POINT_FINDER_H
 
 #include <ObjModel.h>   // RFeatures
-#include <vtkActor.h>
+#include <vtkPolyData.h>
 #include <vtkSmartPointer.h>
 #include <vtkOctreePointLocator.h>
 #include <vtkCellLocator.h>
@@ -32,11 +32,9 @@ namespace RVTK
 class rVTK_EXPORT ClosestPointFinder
 {
 public:
-    explicit ClosestPointFinder( const vtkSmartPointer<vtkActor>);
+    explicit ClosestPointFinder( const vtkPolyData*);
     explicit ClosestPointFinder( const RFeatures::ObjModel::Ptr);
     ~ClosestPointFinder();
-
-    const vtkSmartPointer<vtkActor> getSurfaceActor() const { return _sactor;}
 
     // Returns VTK index of closest vertex (i.e., from the poly data)
     int getClosestVertex( const cv::Vec3f& pos) const;
@@ -69,7 +67,7 @@ private:
     vtkSmartPointer<vtkCellLocator> _clocator;
     vtkSmartPointer<vtkActor> _sactor;
 
-    void init( const vtkSmartPointer<vtkActor>);
+    void init( const vtkPolyData*);
 };   // end class
 
 }   // end namespace

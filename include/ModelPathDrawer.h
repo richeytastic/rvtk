@@ -19,14 +19,14 @@
 #define RVTK_MODEL_PATH_DRAWER_H
 
 #include "rVTK_Export.h"
-#include <opencv2/opencv.hpp>
-#include <vector>
 #include <vtkActor.h>
 #include <vtkSmartPointer.h>
 #include <vtkContourWidget.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkOrientedGlyphContourRepresentation.h>
 #include <boost/shared_ptr.hpp>
+#include <opencv2/opencv.hpp>
+#include <vector>
 
 namespace RVTK
 {
@@ -36,9 +36,9 @@ class ModelPathDrawer;
 // Public callback observer for ModelPathDrawer
 class rVTK_EXPORT ModelPathEventObserver
 { public:
-    virtual void startInteraction( const ModelPathDrawer*){}
-    virtual void endInteraction( const ModelPathDrawer*){}
-    virtual void interactionEvent( const ModelPathDrawer*){}  // Moving after selecting something
+    virtual void startInteraction( ModelPathDrawer*){}
+    virtual void endInteraction( ModelPathDrawer*){}
+    virtual void interactionEvent( ModelPathDrawer*){}  // Moving after selecting something
 };  // end class
 
 
@@ -48,7 +48,7 @@ public:
     typedef boost::shared_ptr<ModelPathDrawer> Ptr;
     static Ptr create( vtkSmartPointer<vtkRenderWindowInteractor>);
 
-    void setModel( const vtkActor*);
+    void setActor( const vtkSmartPointer<vtkActor>);
     void addEventObserver( ModelPathEventObserver*);
 
     void setLineWidth( double);
@@ -61,22 +61,18 @@ public:
     void setProcessEvents( bool enable); // Turns interaction on/off independently of visibility
     bool getProcessEvents() const;
 
-    // Set/get whether the path is closed (end points are joined to form a loop).
-    void setClosed( bool closed);
-    bool isClosed() const;
     int getNumHandles() const;  // Returns the number of handles
 
     // Set/get the boundary handles.
-    void setPathHandles( const std::vector<cv::Vec3f>&);
-    int getPathHandles( std::vector<cv::Vec3f>&) const; // Returns number of handles.
+    bool setPathHandles( const std::vector<cv::Point>&); // Display positions with top left origin
+    int getPathHandles( std::vector<cv::Vec3f>&) const;  // World positions (returns number of handles)
+    int getPathHandles( std::vector<cv::Point>&) const;  // Display positions (returns number of handles)
 
     // Get all of the boundary vertices (nodes plus intermediate points).
     int getAllPathVertices( std::vector<cv::Vec3f>&) const;
 
 private:
     vtkSmartPointer<vtkContourWidget> _cWidget;
-    bool _closedLoop;
-
     vtkSmartPointer<vtkOrientedGlyphContourRepresentation> getRep();
     const vtkSmartPointer<vtkOrientedGlyphContourRepresentation> getRep() const;
     ModelPathDrawer( vtkSmartPointer<vtkRenderWindowInteractor>);

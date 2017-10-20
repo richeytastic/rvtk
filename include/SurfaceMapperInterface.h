@@ -36,15 +36,15 @@ class MetricMapper;
 class rVTK_EXPORT MetricInterface
 {
 public:
-    virtual vtkSmartPointer<vtkActor> makeActor() = 0;
+    virtual vtkSmartPointer<vtkActor> mapActor() = 0;
     virtual std::string getMetricName() const = 0;
 
-protected:
-    virtual int getNumMetricComponents() const = 0;
     virtual float getMin( int) const = 0;
     virtual float getMax( int) const = 0;
-    virtual const RFeatures::ObjModel::Ptr getObject() = 0;
-    virtual float operator()( int, int) = 0;
+    virtual int getNumMetricComponents() const = 0;
+
+protected:
+    virtual float val( int, int) = 0;
     friend class MetricMapper;
 };  // end class
 
@@ -54,16 +54,19 @@ class SurfaceMapper;
 
 class rVTK_EXPORT MetricMapper
 {
+public:
+    typedef boost::shared_ptr<MetricMapper> Ptr;
 protected:
-    explicit MetricMapper( size_t nc);
-    vtkSmartPointer<vtkActor> createSurfaceActor( MetricInterface*) const;
-    virtual vtkDataSetAttributes* getDataSet( vtkPolyData*) const;
-    virtual const IntSet* getMappingIds( const RFeatures::ObjModel::Ptr) const;
-    virtual void setLookup( VtkActorCreator*, IntIntMap*) const;
-    size_t getNumComponents() const;
+    explicit MetricMapper( size_t nc) : _nc(nc) {}
+    virtual const IntSet* getMappingIds( const RFeatures::ObjModel::Ptr) const { return NULL;}
+    virtual vtkDataSetAttributes* getDataSet( vtkPolyData*) const { return NULL;}
+    virtual void setLookupMap( VtkActorCreator*, IntIntMap*) const {}
+    size_t getNumComponents() const { return _nc;}
     friend class SurfaceMapper;
 private:
-    const size_t _numComponents;
+    const size_t _nc;
+    MetricMapper( const MetricMapper&);     // No copy
+    void operator=( const MetricMapper&);   // No copy
 };  // end class
 
 

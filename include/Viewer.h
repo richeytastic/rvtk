@@ -111,6 +111,7 @@ private:
     vtkSmartPointer<vtkRenderWindow> _renWin;
 
     Viewer( bool);
+    ~Viewer();
     Viewer( const Viewer&);             // No copy
     void operator=( const Viewer &);    // No copy
     class Deleter;

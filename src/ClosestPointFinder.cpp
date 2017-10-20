@@ -15,30 +15,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include "ClosestPointFinder.h"
-#include "VtkActorCreator.h"
-#include "VtkTools.h"
+#include <ClosestPointFinder.h>
+#include <VtkActorCreator.h>
+#include <VtkTools.h>
 using RVTK::ClosestPointFinder;
 
 // private
-void ClosestPointFinder::init( const vtkSmartPointer<vtkActor> actor)
+void ClosestPointFinder::init( vtkPolyData* pdata)
 {
     _plocator = vtkSmartPointer<vtkOctreePointLocator>::New();
     _clocator = vtkSmartPointer<vtkCellLocator>::New();
-    vtkSmartPointer<vtkPolyData> data = RVTK::getPolyData(actor);
-    _plocator->SetDataSet( data);
-    _clocator->SetDataSet( data);
+    _plocator->SetDataSet( pdata);
+    _clocator->SetDataSet( pdata);
     _plocator->BuildLocator();
     _clocator->BuildLocator();
     _sactor = actor;
 }   // end init
 
 
-ClosestPointFinder::ClosestPointFinder( const vtkSmartPointer<vtkActor> actor)
+ClosestPointFinder::ClosestPointFinder( vtkPolyData* pdata)
 {
     _ruvmappings = NULL;
     _rufmappings = NULL;
-    init( actor);
+    init( pdata);
 }   // end ctor
 
 
@@ -49,7 +48,8 @@ ClosestPointFinder::ClosestPointFinder( const RFeatures::ObjModel::Ptr obj) : _o
     RVTK::VtkActorCreator acreator;
     acreator.setObjToVTKUniqueVertexRMap( _ruvmappings);
     acreator.setObjToVTKUniqueFaceRMap( _rufmappings);
-    init( acreator.generateSurfaceActor( obj));
+    _sactor = acreator.generateSurfaceActor( obj);
+    init( RVTK::getPolyData( _sactor));
 }   // end ctor
 
 

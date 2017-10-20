@@ -15,30 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include "DijkstraShortestPathLineInterpolator.h"
+#include <DijkstraShortestPathLineInterpolator.h>
+#include <DijkstraShortestPathFinder.h>
 #include <iostream>
 #include <algorithm>
-#include <vtkCommand.h>
-#include <vtkOrientedGlyphContourRepresentation.h>
-#include <DijkstraShortestPathFinder.h> // RFeatures
 using RVTK::DijkstraShortestPathLineInterpolator;
 
-
 // private
-DijkstraShortestPathLineInterpolator::DijkstraShortestPathLineInterpolator() : _spfinder(NULL), _pathVtxs(NULL), _cpf(NULL)
+DijkstraShortestPathLineInterpolator::DijkstraShortestPathLineInterpolator() : vtkContourLineInterpolator()
 {}   // end ctor
-
-
-// protected
-DijkstraShortestPathLineInterpolator::~DijkstraShortestPathLineInterpolator()
-{
-    if ( _spfinder)
-    {
-        delete _spfinder;
-        delete _pathVtxs;
-    }   // end if
-}   // end ctor
-
 
 // public
 DijkstraShortestPathLineInterpolator* DijkstraShortestPathLineInterpolator::New()
@@ -46,31 +31,16 @@ DijkstraShortestPathLineInterpolator* DijkstraShortestPathLineInterpolator::New(
     return new DijkstraShortestPathLineInterpolator;
 }   // end New
 
-
 // public
-bool DijkstraShortestPathLineInterpolator::setModel( const RVTK::ClosestPointFinder* cpf)
-{
-    if ( !cpf->canReverseMapToObjectIndices())
-        return false;
-
-    _cpf = cpf;
-    if ( _spfinder)
-    {
-        delete _spfinder;
-        delete _pathVtxs;
-    }   // end if
-    _spfinder = new RFeatures::DijkstraShortestPathFinder( _cpf->getObject());
-    _pathVtxs = new std::vector<int>;
-    return true;
-}   // end setModel
+void DijkstraShortestPathLineInterpolator::setModel( RFeatures::ObjModelKDTree::Ptr kdtree) { _kdtree = kdtree;}
 
 
 // public
 int DijkstraShortestPathLineInterpolator::InterpolateLine( vtkRenderer* ren, vtkContourRepresentation* rep, int n0, int n1)
 {
-    if ( !_cpf)
+    if ( !_kdtree)
     {
-        std::cerr << "[ERROR] DijkstraShortestPathLineInterpolator::InterpolateLine: Must setModel() first!" << std::endl;
+        std::cerr << "[ERROR] RVTK::DijkstraShortestPathLineInterpolator::InterpolateLine: Model not set!" << std::endl;
         return 0;
     }   // end if
 
@@ -78,44 +48,40 @@ int DijkstraShortestPathLineInterpolator::InterpolateLine( vtkRenderer* ren, vtk
     if ( n0 < 0 || n1 < 0 || n0 >= numNodes || n1 >= numNodes)
         return 0;
 
-    // Get the actual world positions of the contour nodes
-    double p0[3], p1[3];
-    if (!rep->GetNthNodeWorldPosition( n0, p0) || !rep->GetNthNodeWorldPosition( n1, p1))
+    cv::Vec3d p0, p1; // Get the actual world positions of the contour nodes
+    if (!rep->GetNthNodeWorldPosition( n0, &p0[0]) || !rep->GetNthNodeWorldPosition( n1, &p1[0]))
     {
-        std::cerr << "[ERROR] DijkstraShortestPathLineInterpolator::InterpolateLine: Failed to get Nth node world position!\n";
+        std::cerr << "[ERROR] RVTK::DijkstraShortestPathLineInterpolator::InterpolateLine: Failed to get Nth node world position!\n";
+        assert(false);
         return 0;
     }   // end if
 
     // Get the closest vertices on the model to the contour nodes
-    const int uv0 = _cpf->getClosestObjVertexId( p0);
-    const int uv1 = _cpf->getClosestObjVertexId( p1);
-    if ( !_spfinder->setEndPointVertexIndices( uv0, uv1))
-    {
-        std::cerr << "[ERROR] DijkstraShortestPathLineInterpolator::InterpolateLine: "
-                  << "Failed to set end point uvidxs in _spfinder of " << uv0 << " and " << uv1 << std::endl;
+    const int uv0 = _kdtree->find(p0);
+    const int uv1 = _kdtree->find(p1);
+
+    const RFeatures::ObjModel::Ptr model = _kdtree->getObject();
+    RFeatures::DijkstraShortestPathFinder spfinder( model);
+    if ( !spfinder.setEndPointVertexIndices( uv0, uv1))
         assert(false);
-    }   // end if
 
     // Get the path vertices (inclusive of uv0 and uv1)
-    const int pathLen = _spfinder->findShortestPath( *_pathVtxs);
+    std::vector<int> pathVtxs;
+    const int pathLen = spfinder.findShortestPath( pathVtxs);
 
     int retVal = 0;
     if ( pathLen < 0)
-    {
-        std::cerr << "[ERROR] DijkstraShortestPathLineInterpolator::InterpolateLine: "
-                  << "No path found between unqiue vertices " << uv0 << " and " << uv1 << std::endl;
-    }   // end if
+        std::cerr << "[WARNING] RVTK::DijkstraShortestPathLineInterpolator::InterpolateLine: No path between vertices " << uv0 << " and " << uv1 << std::endl;
     else
     {
-        // Add the intermediate points
-        // (Reverse the shortest path (since its actually uv1 to uv0 inclusive))
-        const RFeatures::ObjModel::Ptr obj = _cpf->getObject();
+        // Add the intermediate points: Reverse shortest path (since it's actually uv1 to uv0 inclusive)
         double wpos[3];
         for ( int i = pathLen-1; i > 0; --i)
         {
-            const int uvidx = _pathVtxs->at(i);
-            const cv::Vec3f& v = obj->getVertex( uvidx);
-            wpos[0] = v[0]; wpos[1] = v[1]; wpos[2] = v[2];
+            const cv::Vec3f& v = model->vtx( pathVtxs[i]);
+            wpos[0] = v[0];
+            wpos[1] = v[1];
+            wpos[2] = v[2];
             rep->AddIntermediatePointWorldPosition( n0, wpos);
         }   // end for
         retVal = 1;

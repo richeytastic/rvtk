@@ -16,7 +16,6 @@
  ************************************************************************/
 
 #include <PolySurfaceCurvScalarMapper.h>
-#include <algorithm>
 using RVTK::PolySurfaceCurvScalarMapper;
 using RFeatures::ObjModelCurvatureMetrics;
 using RFeatures::ObjModelCurvatureMap;
@@ -24,8 +23,11 @@ using RFeatures::ObjModel;
 
 
 // public
-PolySurfaceCurvScalarMapper::PolySurfaceCurvScalarMapper( const ObjModelCurvatureMetrics::Ptr cm, const std::string& mname)
-    : RVTK::SurfaceMapper( cm->getObject(), mname, RVTK::PolygonMetricMapper(1)), _cmetrics(cm)
+PolySurfaceCurvScalarMapper::PolySurfaceCurvScalarMapper( const ObjModelCurvatureMetrics::Ptr cm,
+                                                          vtkSmartPointer<vtkActor> actor,
+                                                          const IntIntMap* lookupMap,
+                                                          const std::string& mname)
+    : RVTK::SurfaceMapper( cm->getObject(), actor, lookupMap, mname, RVTK::PolygonMetricMapper::create(1)), _cmetrics(cm)
 {
 }   // end ctor
 

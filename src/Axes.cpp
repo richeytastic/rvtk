@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include "Axes.h"
+#include <Axes.h>
 using RVTK::Axes;
 
 
@@ -63,4 +63,11 @@ void Axes::hide()
         _widget->InteractiveOff();
     }   // end if
 }   // end hide
+
+
+// public
+bool Axes::isShown() const
+{
+    return _actor && _actor->GetVisibility();
+}   // end isShown
 

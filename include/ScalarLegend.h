@@ -41,11 +41,13 @@ public:
 
     void show();
     void hide();
+    bool isShown() const;
 
 private:
     vtkRenderer* _ren;
     vtkScalarBarActor* _legend;
     vtkLookupTable* _lut;
+    bool _shown;
 };  // end class
 
 }   // end namespace

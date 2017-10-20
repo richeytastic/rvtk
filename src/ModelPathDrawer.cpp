@@ -17,15 +17,19 @@
 
 #include <ModelPathDrawer.h>
 #include <VtkTools.h>
+#include <VtkActorCreator.h>
 #include <algorithm>
 #include <vtkCommand.h>
 #include <vtkProperty.h>
+#include <vtkRenderWindow.h>
 #include <vtkObjectFactory.h>
 #include <vtkTriangleFilter.h>
+#include <vtkRendererCollection.h>
 #include <vtkPolyDataCollection.h>
 #include <vtkOrientedGlyphContourRepresentation.h>
 #include <vtkPolygonalSurfacePointPlacer.h>
-#include <vtkPolygonalSurfaceContourLineInterpolator.h>
+//#include <vtkPolygonalSurfaceContourLineInterpolator.h>
+#include <DijkstraShortestPathLineInterpolator.h>
 using RVTK::ModelPathDrawer;
 
 
@@ -40,7 +44,7 @@ public:
         return new ModelPathCommandSender;
     }   // end New()
 
-    void setModelPathEventObserver( const ModelPathDrawer* mpd, RVTK::ModelPathEventObserver* peo) { _mpd = mpd; _peo = peo; }
+    void setModelPathEventObserver( ModelPathDrawer* mpd, RVTK::ModelPathEventObserver* peo) { _mpd = mpd; _peo = peo; }
 
     virtual void Execute( vtkObject *vtkNotUsed(caller), unsigned long eventId, void *vtkNotUsed(callData))
     {
@@ -65,7 +69,7 @@ public:
 
 private:
     ModelPathCommandSender() : _peo(NULL) {}
-    const ModelPathDrawer *_mpd;
+    ModelPathDrawer *_mpd;
     RVTK::ModelPathEventObserver* _peo;
 };  // end class
 
@@ -79,11 +83,15 @@ class ModelPathDrawer::Deleter
 ModelPathDrawer::Ptr ModelPathDrawer::create( vtkSmartPointer<vtkRenderWindowInteractor> rwi) { return Ptr( new ModelPathDrawer( rwi), Deleter());}
 
 // private
-ModelPathDrawer::ModelPathDrawer( vtkSmartPointer<vtkRenderWindowInteractor> rwi) : _closedLoop(false)
+ModelPathDrawer::ModelPathDrawer( vtkSmartPointer<vtkRenderWindowInteractor> rwi)
 {
+    vtkSmartPointer<vtkOrientedGlyphContourRepresentation> rep = vtkSmartPointer<vtkOrientedGlyphContourRepresentation>::New();
+    rep->SetRenderer( rwi->GetRenderWindow()->GetRenderers()->GetFirstRenderer());
+    rep->GetProperty()->SetRenderPointsAsSpheres(true);
+
     _cWidget = vtkSmartPointer<vtkContourWidget>::New();
+    _cWidget->SetRepresentation( rep);
     _cWidget->SetInteractor(rwi);
-    getRep()->GetProperty()->SetRenderPointsAsSpheres(true);
 }   // end ctor
 
 // private
@@ -110,31 +118,24 @@ bool ModelPathDrawer::getVisibility() const { return _cWidget->GetEnabled() != 0
 void ModelPathDrawer::setProcessEvents( bool pevents) { _cWidget->SetProcessEvents(pevents);}
 bool ModelPathDrawer::getProcessEvents() const { return _cWidget->GetProcessEvents();}
 int ModelPathDrawer::getNumHandles() const { return getRep()->GetNumberOfNodes();}
-void ModelPathDrawer::setClosed( bool closed) { _closedLoop = closed;}
-bool ModelPathDrawer::isClosed() const { return _closedLoop;}
 
 
 // public
-void ModelPathDrawer::setModel( const vtkActor* inactor)
+void ModelPathDrawer::setActor( const vtkSmartPointer<vtkActor> actor)
 {
-    /*
-    // Dijkstra interpolator won't accept not triangle cells
-    vtkSmartPointer<vtkTriangleFilter> triangleFilter = vtkSmartPointer<vtkTriangleFilter>::New();
-    triangleFilter->SetInputData( RVTK::getPolyData(inactor));
-    triangleFilter->Update();
-    vtkSmartPointer<vtkPolyData> tpd = triangleFilter->GetOutput();
-    */
-    vtkPolyData* tpd = RVTK::getPolyData(inactor);
-
+    assert( actor != NULL);
     vtkSmartPointer<vtkPolygonalSurfacePointPlacer> pointPlacer = vtkSmartPointer<vtkPolygonalSurfacePointPlacer>::New();
-    pointPlacer->AddProp( const_cast<vtkActor*>(inactor));
-    pointPlacer->GetPolys()->AddItem( tpd);
+    pointPlacer->AddProp( actor);
+    vtkPolyData* pdata = RVTK::getPolyData( actor);
+    assert(pdata != NULL);
+    pointPlacer->GetPolys()->AddItem( pdata);
     getRep()->SetPointPlacer( pointPlacer);
 
-    vtkSmartPointer<vtkPolygonalSurfaceContourLineInterpolator> interpolator = vtkSmartPointer<vtkPolygonalSurfaceContourLineInterpolator>::New();
-    interpolator->GetPolys()->AddItem( tpd);
+    vtkSmartPointer<DijkstraShortestPathLineInterpolator> interpolator = vtkSmartPointer<DijkstraShortestPathLineInterpolator>::New();
+    const RFeatures::ObjModel::Ptr model = RVTK::makeObject( actor);
+    interpolator->setModel( RFeatures::ObjModelKDTree::create( model));
     getRep()->SetLineInterpolator( interpolator);
-}   // end setModel
+}   // end setActor
 
 
 // public
@@ -150,20 +151,23 @@ void ModelPathDrawer::addEventObserver( RVTK::ModelPathEventObserver* peo)
 
 
 // public
-void ModelPathDrawer::setPathHandles( const std::vector<cv::Vec3f>& nodes)
+bool ModelPathDrawer::setPathHandles( const std::vector<cv::Point>& nodes)
 {
     getRep()->ClearAllNodes();
     getRep()->SetClosedLoop(false);
+    const int rows = getRep()->GetRenderer()->GetSize()[1] - 1;
 
     const int n = (int)nodes.size();
     for ( int i = 0; i < n; ++i)
     {
-        const cv::Vec3f& wv = nodes[i];
-        getRep()->AddNodeAtWorldPosition( wv[0], wv[1], wv[2]);
+        const cv::Point& p = nodes[i];
+        // Need to flip p.y for VTK display origin at bottom left
+        if ( !getRep()->AddNodeAtDisplayPosition( p.x, rows - p.y))
+            return false;
     }   // end for
 
-    if ( isClosed())
-        _cWidget->CloseLoop();
+    _cWidget->CloseLoop();
+    return true;
 }   // end setPathHandles
 
 
@@ -178,6 +182,22 @@ int ModelPathDrawer::getPathHandles( std::vector<cv::Vec3f>& nodes) const
         double v[3];
         getRep()->GetNthNodeWorldPosition( i, v);
         nodes[j] = cv::Vec3f(v[0], v[1], v[2]);
+    }   // end for
+    return n;
+}   // end getPathHandles
+
+
+// public
+int ModelPathDrawer::getPathHandles( std::vector<cv::Point>& nodes) const
+{
+    const int n = getRep()->GetNumberOfNodes();
+    int j = (int)nodes.size();
+    nodes.resize( j + n);
+    for ( int i = 0; i < n; ++i, ++j)
+    {
+        double v[2];
+        getRep()->GetNthNodeDisplayPosition( i, v);
+        nodes[j] = cv::Point(v[0], v[1]);
     }   // end for
     return n;
 }   // end getPathHandles

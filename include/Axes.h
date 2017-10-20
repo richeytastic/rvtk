@@ -37,6 +37,7 @@ public:
 
     void show();
     void hide();
+    bool isShown() const;
 
 private:
     vtkRenderer* _ren;

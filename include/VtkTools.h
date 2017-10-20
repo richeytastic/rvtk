@@ -18,7 +18,7 @@
 #ifndef RVTK_VTK_TOOLS_H
 #define RVTK_VTK_TOOLS_H
 
-#include <opencv2/opencv.hpp>
+#include <ObjModel.h>
 #include <vector>
 #include <iostream>
 #include <vtkActor.h>
@@ -40,6 +40,9 @@ namespace RVTK
 // Colour values should be specified in RGB order.
 rVTK_EXPORT void setColoursLookupTable( vtkSmartPointer<vtkLookupTable>,
                                         int numColours, const vtkColor3ub& startCol, const vtkColor3ub& endCol);
+
+// Make an object (no texture) from an actor's polydata.
+rVTK_EXPORT RFeatures::ObjModel::Ptr makeObject( const vtkSmartPointer<vtkActor>);
 
 // Return of poly data object from actor
 rVTK_EXPORT vtkPolyData* getPolyData( const vtkActor*);
