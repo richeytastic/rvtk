@@ -91,7 +91,7 @@ SurfaceMapper::SurfaceMapper( const ObjModel::Ptr m, vtkSmartPointer<vtkActor> a
 // public
 float SurfaceMapper::getMin( int c) const { return _min[c];}
 float SurfaceMapper::getMax( int c) const { return _max[c];}
-int SurfaceMapper::getNumMetricComponents() const { return _mmapper->getNumComponents();}
+int SurfaceMapper::getNumMetricComponents() const { return (int)_mmapper->getNumComponents();}
 
 
 // protected
@@ -113,7 +113,7 @@ vtkSmartPointer<vtkActor> SurfaceMapper::mapActor()
 {
     vtkSmartPointer<vtkFloatArray> cvals = vtkSmartPointer<vtkFloatArray>::New();
     cvals->SetName( _mname.c_str());
-    const int nc = _mmapper->getNumComponents();
+    const int nc = (int)_mmapper->getNumComponents();
     const IntSet& objids = *_mmapper->getMappingIds( _model);
 
     if ( nc > 1)    // Vectors

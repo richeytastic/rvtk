@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include "VtkActorCreator.h"
-#include "VtkTools.h"
+#include <VtkActorCreator.h>
+#include <VtkTools.h>
 using RVTK::VtkActorCreator;
 #include <cassert>
 #include <algorithm>
@@ -427,7 +427,7 @@ struct SingleMaterialData
         BOOST_FOREACH ( int fid, mfaceIds)
         {
             faces->InsertNextCell( 3);
-            mappings.mapFaceIndices( fid, vtkFaceId++);
+            mappings.mapFaceIndices( fid, vtkFaceId);
 
             const int* uvids = model->getFaceUVs(fid);
             const int* vtxs = model->getFaceVertices(fid);
@@ -436,20 +436,25 @@ struct SingleMaterialData
                 const int vid = vtxs[i];
                 const cv::Vec2f& uv = model->uv( matId, uvids[i]);
                 RFeatures::Key3L okey = RFeatures::toKey( double(uv[0]), double(uv[1]), double(vid), 6); // Concatenate texture offset with vertex index
-                if ( !uniqueVtkVertexMap.count(okey))
-                    uniqueVtkVertexMap[okey] = vtkPointId++;
+                if ( uniqueVtkVertexMap.count(okey) == 0)
+                {
+                    uniqueVtkVertexMap[okey] = vtkPointId;
+                    vtkPointId++;
+                }   // end if
 
                 const int vtkId = uniqueVtkVertexMap.at(okey);
                 mappings.mapVertexIndices( vid, vtkId);
 
                 faces->InsertCellPoint( vtkId);
-                points->InsertPoint( vtkId, &model->getVertex( vid)[0]);
+                points->InsertPoint( vtkId, &(model->vtx( vid)[0]));
                 uvs->InsertTuple2( vtkId, uv[0], uv[1]);
             }   // end for
+
+            vtkFaceId++;
         }   // end foreach
 
-        std::cerr << "[INFO] RVTK::SingleMaterialData::SingleMaterialData: "
-                  << "Created " << uniqueVtkVertexMap.size() << " points with texture coordinates from material ID " << matId << std::endl;
+        //std::cerr << "[INFO] RVTK::SingleMaterialData::SingleMaterialData: "
+        //          << "Created " << uniqueVtkVertexMap.size() << " points with texture coordinates from material ID " << matId << std::endl;
     }   // end ctor
 };  // end struct
 
@@ -468,10 +473,12 @@ size_t VtkActorCreator::generateTexturedActors( const ObjModel::Ptr model, std::
     mappings.clear();
 
     const IntSet& materialIds = model->getMaterialIds();
+    /*
     std::cerr << "[INFO] RVTK::VtkActorCreator::generateTexturedActors: "
         << materialIds.size() << " material"
         << (materialIds.size() > 1 ? "s" : "")
         << " in object" << std::endl;
+    */
 
     BOOST_FOREACH ( int mid, materialIds)
     {

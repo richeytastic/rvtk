@@ -36,8 +36,22 @@ public:
     virtual ~ScalarLegend();
 
     void setTitle( const std::string& title);
-    void setColours( int ncols, const vtkColor3ub& scol, const vtkColor3ub& fcol);
+
+    // Set simple colour range from minCol to maxCol over ncols.
+    void setColours( const vtkColor3ub& minCol, const vtkColor3ub& maxCol, int ncols);
+
+    // Specify a colour midway between the start and end colours.
+    // If two values for the number of colours are used, ncols0 and ncols1,
+    // ncols0 specifies the number of colour values below the middle value
+    // and ncols1 specifies the number of colour values above the middle value.
+    void setColours( const vtkColor3ub& minCol,  // Colour at min value
+                     const vtkColor3ub& midCol,  // Colour at midway value
+                     const vtkColor3ub& maxCol,  // Colour at max value
+                     int ncols0, int ncols1=0);
+
     void setLookupTable( vtkMapper*, float minv, float maxv);
+
+    int getNumColours() const;
 
     void show();
     void hide();

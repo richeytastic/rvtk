@@ -116,7 +116,7 @@ void ModelPathDrawer::setPointColour( double r, double g, double b) { getRep()->
 void ModelPathDrawer::setVisibility( bool visible) { _cWidget->SetEnabled(visible);}
 bool ModelPathDrawer::getVisibility() const { return _cWidget->GetEnabled() != 0;}
 void ModelPathDrawer::setProcessEvents( bool pevents) { _cWidget->SetProcessEvents(pevents);}
-bool ModelPathDrawer::getProcessEvents() const { return _cWidget->GetProcessEvents();}
+bool ModelPathDrawer::getProcessEvents() const { return _cWidget->GetProcessEvents() != 0;}
 int ModelPathDrawer::getNumHandles() const { return getRep()->GetNumberOfNodes();}
 
 

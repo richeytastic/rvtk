@@ -26,6 +26,7 @@
 #define RVTK_DATA_READER_H
 // Disable warnings about MSVC compiler not implementing exception specifications
 #ifdef _WIN32
+#pragma warning( disable : 4275)
 #pragma warning( disable : 4290)
 #endif
 
