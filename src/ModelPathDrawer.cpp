@@ -121,11 +121,11 @@ int ModelPathDrawer::getNumHandles() const { return getRep()->GetNumberOfNodes()
 
 
 // public
-void ModelPathDrawer::setActor( const vtkSmartPointer<vtkActor> actor)
+void ModelPathDrawer::setActor( const vtkActor* actor)
 {
     assert( actor != NULL);
     vtkSmartPointer<vtkPolygonalSurfacePointPlacer> pointPlacer = vtkSmartPointer<vtkPolygonalSurfacePointPlacer>::New();
-    pointPlacer->AddProp( actor);
+    pointPlacer->AddProp( const_cast<vtkActor*>(actor));
     vtkPolyData* pdata = RVTK::getPolyData( actor);
     assert(pdata != NULL);
     pointPlacer->GetPolys()->AddItem( pdata);
@@ -151,10 +151,9 @@ void ModelPathDrawer::addEventObserver( RVTK::ModelPathEventObserver* peo)
 
 
 // public
-bool ModelPathDrawer::setPathHandles( const std::vector<cv::Point>& nodes)
+bool ModelPathDrawer::setPathHandles( const std::vector<cv::Point>& nodes, bool closeLoop)
 {
     getRep()->ClearAllNodes();
-    getRep()->SetClosedLoop(false);
     const int rows = getRep()->GetRenderer()->GetSize()[1] - 1;
 
     const int n = (int)nodes.size();
@@ -167,6 +166,7 @@ bool ModelPathDrawer::setPathHandles( const std::vector<cv::Point>& nodes)
     }   // end for
 
     _cWidget->CloseLoop();
+    getRep()->SetClosedLoop(closeLoop);
     return true;
 }   // end setPathHandles
 

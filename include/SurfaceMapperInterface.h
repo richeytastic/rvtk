@@ -20,8 +20,8 @@
 
 #include "rVTK_Export.h"
 #include <vtkDataSetAttributes.h>
-#include <vtkSmartPointer.h>
 #include <vtkPolyData.h>
+#include <vtkCellData.h>
 #include <vtkActor.h>
 #include <ObjModel.h>   // RFeatures
 typedef boost::unordered_map<int,int> IntIntMap;
@@ -36,7 +36,7 @@ class MetricMapper;
 class rVTK_EXPORT MetricInterface
 {
 public:
-    virtual vtkSmartPointer<vtkActor> mapActor() = 0;
+    virtual void mapActor() = 0;
     virtual std::string getMetricName() const = 0;
 
     virtual float getMin( int) const = 0;

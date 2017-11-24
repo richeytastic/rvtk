@@ -19,55 +19,22 @@
 using RVTK::Axes;
 
 
-Axes::Axes( vtkRenderer* ren) : _ren(ren), _actor( vtkAxesActor::New()), _widget(NULL)
+Axes::Axes( vtkRenderWindowInteractor* rwint)
 {
+    _actor = vtkSmartPointer<vtkAxesActor>::New();
+    _widget = vtkSmartPointer<vtkOrientationMarkerWidget>::New();
+    _widget->SetOutlineColor( 0.9, 0.5, 0.1);
+    _widget->SetOrientationMarker(_actor);
+    if ( rwint)
+        _widget->SetInteractor( rwint);
+    _widget->SetViewport( 0.0, 0.0, 0.4, 0.4);
+    _widget->SetEnabled( 0);
 }   // end ctor
 
 
-Axes::~Axes()
-{
-    if ( _widget)
-        _widget->Delete();
-    _actor->Delete();
-}   // end dtor
-
-
-void Axes::setInteractor( vtkRenderWindowInteractor* i)
-{
-    _widget = vtkOrientationMarkerWidget::New();
-    _widget->SetOutlineColor( 0.9, 0.5, 0.1);
-    _widget->SetOrientationMarker(_actor);
-    _widget->SetInteractor(i);
-    _widget->SetViewport( 0.0, 0.0, 0.4, 0.4);
-    _widget->SetEnabled( 1);
-}   // end setInteractor
-
-
-// public
-void Axes::show()
-{
-    if ( _widget)
-    {
-        _actor->SetVisibility(true);
-        _widget->InteractiveOn();
-    }   // end if
-}   // end show
-
-
-// public
-void Axes::hide()
-{
-    if ( _widget)
-    {
-        _actor->SetVisibility(false);
-        _widget->InteractiveOff();
-    }   // end if
-}   // end hide
-
-
-// public
-bool Axes::isShown() const
-{
-    return _actor && _actor->GetVisibility();
-}   // end isShown
+void Axes::setEnabled( bool v) { _widget->SetEnabled((int)v);}
+bool Axes::getEnabled() const { return isShown();}
+void Axes::show() { _widget->SetEnabled( 1);}
+void Axes::hide() { _widget->SetEnabled( 0);}
+bool Axes::isShown() const { return _widget->GetEnabled() > 0;}
 

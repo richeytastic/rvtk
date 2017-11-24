@@ -18,10 +18,10 @@
 #ifndef RVTK_AXES_H
 #define RVTK_AXES_H
 
-#include <vtkRenderer.h>
 #include <vtkAxesActor.h>
 #include <vtkOrientationMarkerWidget.h>
 #include <vtkRenderWindowInteractor.h>
+#include <vtkSmartPointer.h>
 #include "rVTK_Export.h"
 
 namespace RVTK
@@ -30,19 +30,17 @@ namespace RVTK
 class rVTK_EXPORT Axes
 {
 public:
-    explicit Axes( vtkRenderer*);
-    virtual ~Axes();
+    explicit Axes( vtkRenderWindowInteractor *rwint=NULL);
 
-    void setInteractor( vtkRenderWindowInteractor*);
-
+    void setEnabled(bool);
     void show();
     void hide();
     bool isShown() const;
+    bool getEnabled() const;
 
 private:
-    vtkRenderer* _ren;
-    vtkAxesActor* _actor;
-    vtkOrientationMarkerWidget* _widget;
+    vtkSmartPointer<vtkAxesActor> _actor;
+    vtkSmartPointer<vtkOrientationMarkerWidget> _widget;
 };  // end class
 
 }   // end namespace

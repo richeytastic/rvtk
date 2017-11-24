@@ -48,7 +48,7 @@ public:
     typedef boost::shared_ptr<ModelPathDrawer> Ptr;
     static Ptr create( vtkSmartPointer<vtkRenderWindowInteractor>);
 
-    void setActor( const vtkSmartPointer<vtkActor>);
+    void setActor( const vtkActor*);
     void addEventObserver( ModelPathEventObserver*);
 
     void setLineWidth( double);
@@ -63,8 +63,8 @@ public:
 
     int getNumHandles() const;  // Returns the number of handles
 
-    // Set/get the boundary handles.
-    bool setPathHandles( const std::vector<cv::Point>&); // Display positions with top left origin
+    // Set/get the boundary handles with loop closure.
+    bool setPathHandles( const std::vector<cv::Point>&, bool closeLoop); // Display positions with top left origin
     int getPathHandles( std::vector<cv::Vec3f>&) const;  // World positions (returns number of handles)
     int getPathHandles( std::vector<cv::Point>&) const;  // Display positions (returns number of handles)
 

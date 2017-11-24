@@ -28,6 +28,8 @@ class rVTK_EXPORT PolySurfaceDistanceScalarMapper : public SurfaceMapper
 {
 public:
     PolySurfaceDistanceScalarMapper( const RFeatures::ObjModel::Ptr model,
+                                     vtkActor* actor,
+                                     const IntIntMap* lookupMap,
                                      const boost::unordered_map<int,double>& dvals,
                                      const std::string& metricName);
 

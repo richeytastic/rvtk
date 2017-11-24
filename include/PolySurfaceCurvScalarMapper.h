@@ -29,8 +29,8 @@ class rVTK_EXPORT PolySurfaceCurvScalarMapper : public SurfaceMapper
 {
 public:
     PolySurfaceCurvScalarMapper( const RFeatures::ObjModelCurvatureMetrics::Ptr cm,
-                                 vtkSmartPointer<vtkActor> actor,
-                                 const IntIntMap* lookupMap,    // Lookup map for ObjModel face IDs to actor poly IDs
+                                 vtkActor* actor,
+                                 const IntIntMap* lookupMap,    // Lookup actor poly IDs from ObjModel face IDs
                                  const std::string& metricName);
     virtual ~PolySurfaceCurvScalarMapper(){}
 

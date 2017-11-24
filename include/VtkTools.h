@@ -42,9 +42,9 @@ rVTK_EXPORT void setColoursLookupTable( vtkSmartPointer<vtkLookupTable>,
                                         int numColours, const vtkColor3ub& startCol, const vtkColor3ub& endCol);
 
 // Make an object (no texture) from an actor's polydata.
-rVTK_EXPORT RFeatures::ObjModel::Ptr makeObject( const vtkSmartPointer<vtkActor>);
+rVTK_EXPORT RFeatures::ObjModel::Ptr makeObject( const vtkActor*);
 
-// Return of poly data object from actor
+// Return poly data from actor
 rVTK_EXPORT vtkPolyData* getPolyData( const vtkActor*);
 
 // VTK version independent creation of mapper object from poly data

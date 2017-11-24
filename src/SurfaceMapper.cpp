@@ -22,6 +22,7 @@ using RVTK::SurfaceMapper;
 using RVTK::MetricMapper;
 using RVTK::PolygonMetricMapper;
 using RVTK::VertexMetricMapper;
+#include <vtkSmartPointer.h>
 #include <vtkFloatArray.h>
 #include <vtkPointData.h>
 #include <vtkCellData.h>
@@ -64,21 +65,7 @@ void SurfaceMapper::init()
 
 
 // public
-SurfaceMapper::SurfaceMapper( const ObjModel::Ptr m,
-                              const std::string& metricName, const MetricMapper::Ptr mmapper)
-    : _model(m), _mname(metricName), _mmapper(mmapper)
-{
-    init();
-    // Make the actor
-    RVTK::VtkActorCreator actorCreator;
-    _mmapper->setLookupMap( &actorCreator, &_clookup);
-    _actor = actorCreator.generateSurfaceActor( m);
-    _lmap = &_clookup;
-}   // end ctor
-
-
-// public
-SurfaceMapper::SurfaceMapper( const ObjModel::Ptr m, vtkSmartPointer<vtkActor> actor, const IntIntMap* lmap,
+SurfaceMapper::SurfaceMapper( const ObjModel::Ptr m, vtkActor* actor, const IntIntMap* lmap,
                               const std::string& metricName, const MetricMapper::Ptr mmapper)
     : _model(m), _mname(metricName), _mmapper(mmapper), _actor(actor), _lmap(lmap)
 {
@@ -109,7 +96,7 @@ float SurfaceMapper::val( int id, int c)
 
 
 // public
-vtkSmartPointer<vtkActor> SurfaceMapper::mapActor()
+void SurfaceMapper::mapActor()
 {
     vtkSmartPointer<vtkFloatArray> cvals = vtkSmartPointer<vtkFloatArray>::New();
     cvals->SetName( _mname.c_str());
@@ -146,5 +133,4 @@ vtkSmartPointer<vtkActor> SurfaceMapper::mapActor()
         ds->SetActiveScalars( cvals->GetName());
     else if ( nc > 1)
         ds->SetActiveVectors( cvals->GetName());
-    return _actor;
 }   // end mapActor

@@ -41,7 +41,6 @@ Viewer::Ptr Viewer::create( bool offscreen)
 
 
 Viewer::Viewer( bool offscreen) :
-	//_ren( vtkSmartPointer<vtkOpenGLRenderer>::New()),
 	_ren( vtkSmartPointer<vtkRenderer>::New()),
     _renWin( vtkSmartPointer<vtkRenderWindow>::New())
 {

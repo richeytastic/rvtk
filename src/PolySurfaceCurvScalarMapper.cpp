@@ -24,7 +24,7 @@ using RFeatures::ObjModel;
 
 // public
 PolySurfaceCurvScalarMapper::PolySurfaceCurvScalarMapper( const ObjModelCurvatureMetrics::Ptr cm,
-                                                          vtkSmartPointer<vtkActor> actor,
+                                                          vtkActor* actor,
                                                           const IntIntMap* lookupMap,
                                                           const std::string& mname)
     : RVTK::SurfaceMapper( cm->getObject(), actor, lookupMap, mname, RVTK::PolygonMetricMapper::create(1)), _cmetrics(cm)

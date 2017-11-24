@@ -49,10 +49,10 @@ void RVTK::setColoursLookupTable( vtkSmartPointer<vtkLookupTable> lut,
 }   // end createColoursLookupTable
 
 
-RFeatures::ObjModel::Ptr RVTK::makeObject( const vtkSmartPointer<vtkActor> actor)
+RFeatures::ObjModel::Ptr RVTK::makeObject( const vtkActor* actor)
 {
     RFeatures::ObjModel::Ptr model = RFeatures::ObjModel::create();
-    vtkSmartPointer<vtkPolyData> pdata = getPolyData(actor);
+    vtkPolyData* pdata = getPolyData(actor);
     vtkPoints* points = pdata->GetPoints();
     vtkCellArray* faces = pdata->GetPolys();
 
@@ -76,6 +76,8 @@ RFeatures::ObjModel::Ptr RVTK::makeObject( const vtkSmartPointer<vtkActor> actor
 
 vtkPolyData* RVTK::getPolyData( const vtkActor* actor)
 {
+    if ( !actor)
+        return NULL;
     vtkPolyDataMapper* mapper = (vtkPolyDataMapper*)const_cast<vtkActor*>(actor)->GetMapper();
     return mapper->GetInput();
 }   // end getPolyData

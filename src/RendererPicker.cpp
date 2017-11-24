@@ -56,8 +56,8 @@ cv::Point changeOriginOfPoint( vtkRenderer* ren, const cv::Point& p, RendererPic
 // public
 int RendererPicker::pickActorCells( const std::vector<cv::Point>& points2d, std::vector<ActorSubset>& picked) const
 {
-    vtkCellPicker* cellPicker = vtkCellPicker::New();
-    vtkPropPicker* propPicker = vtkPropPicker::New();
+    vtkSmartPointer<vtkCellPicker> cellPicker = vtkSmartPointer<vtkCellPicker>::New();
+    vtkSmartPointer<vtkPropPicker> propPicker = vtkSmartPointer<vtkPropPicker>::New();
     cellPicker->SetTolerance( _tolerance);
 
     boost::unordered_map<vtkActor*, boost::unordered_set<int> > actorCells;
@@ -73,9 +73,6 @@ int RendererPicker::pickActorCells( const std::vector<cv::Point>& points2d, std:
         const int cellId = cellPicker->GetCellId();
         actorCells[actor].insert(cellId);
     }   // end foreach
-
-    propPicker->Delete();
-    cellPicker->Delete();
 
     int numActorsPicked = 0;
     // Copy the picked actors and their cells to the output parameter
@@ -101,9 +98,9 @@ int RendererPicker::pickActorCells( const std::vector<cv::Point>& points2d,
     if ( !actor)
         return 0;
 
-    vtkCellPicker* cellPicker = vtkCellPicker::New();
-    vtkPropPicker* propPicker = vtkPropPicker::New();
-    vtkPropCollection* pickFrom = vtkPropCollection::New();
+    vtkSmartPointer<vtkCellPicker> cellPicker = vtkSmartPointer<vtkCellPicker>::New();
+    vtkSmartPointer<vtkPropPicker> propPicker = vtkSmartPointer<vtkPropPicker>::New();
+    vtkSmartPointer<vtkPropCollection> pickFrom = vtkSmartPointer<vtkPropCollection>::New();
     pickFrom->AddItem(actor);
     cellPicker->SetTolerance( _tolerance);
 
@@ -119,10 +116,6 @@ int RendererPicker::pickActorCells( const std::vector<cv::Point>& points2d,
         }   // end if
     }   // end foreach
 
-    pickFrom->Delete();
-    propPicker->Delete();
-    cellPicker->Delete();
-
     cellIds.insert( cellIds.end(), setCellIds.begin(), setCellIds.end());
     return (int)setCellIds.size();
 }   // end pickActorCells
@@ -132,11 +125,10 @@ int RendererPicker::pickActorCells( const std::vector<cv::Point>& points2d,
 // public
 vtkActor* RendererPicker::pickActor( const cv::Point& p) const
 {
-    vtkPropPicker* propPicker = vtkPropPicker::New();
+    vtkSmartPointer<vtkPropPicker> propPicker = vtkSmartPointer<vtkPropPicker>::New();
     const cv::Point np = changeOriginOfPoint( _ren, p, _pointOrigin);
     propPicker->Pick( np.x, np.y, 0, _ren);
     vtkActor* act = propPicker->GetActor();
-    propPicker->Delete();
     return act;
 }   // end pickActor
 
@@ -145,33 +137,33 @@ vtkActor* RendererPicker::pickActor( const cv::Point& p) const
 vtkActor* RendererPicker::pickActor( const cv::Point2f& p) const { return pickActor( toPxls(p));}
 
 
-namespace {
-vtkPropCollection* createPropCollection( const std::vector<vtkActor*>& possActors)
+namespace
 {
-    vtkPropCollection* pickFrom = vtkPropCollection::New();
+
+vtkSmartPointer<vtkPropCollection> createPropCollection( const std::vector<vtkActor*>& possActors)
+{
+    vtkSmartPointer<vtkPropCollection> pickFrom = vtkSmartPointer<vtkPropCollection>::New();
     BOOST_FOREACH ( vtkActor* actor, possActors)
         pickFrom->AddItem(actor);
     return pickFrom;
 }   // end createPropCollection
 
 
-vtkPropCollection* createPropCollection( const std::vector<vtkSmartPointer<vtkActor> >& possActors)
+vtkSmartPointer<vtkPropCollection> createPropCollection( const std::vector<vtkSmartPointer<vtkActor> >& possActors)
 {
-    vtkPropCollection* pickFrom = vtkPropCollection::New();
+    vtkSmartPointer<vtkPropCollection> pickFrom = vtkSmartPointer<vtkPropCollection>::New();
     BOOST_FOREACH ( vtkSmartPointer<vtkActor> actor, possActors)
         pickFrom->AddItem(actor.GetPointer());
     return pickFrom;
 }   // end createPropCollection
 
 
-vtkActor* pick( const cv::Point& p, vtkPropCollection* pickFrom, vtkRenderer* ren, RendererPicker::PointOrigin po)
+vtkActor* pick( const cv::Point& p, vtkSmartPointer<vtkPropCollection> pickFrom, vtkRenderer* ren, RendererPicker::PointOrigin po)
 {
     const cv::Point np = changeOriginOfPoint( ren, p, po);
-    vtkPropPicker* propPicker = vtkPropPicker::New();
+    vtkSmartPointer<vtkPropPicker> propPicker = vtkSmartPointer<vtkPropPicker>::New();
     propPicker->PickProp( np.x, np.y, ren, pickFrom);
     vtkActor* act = propPicker->GetActor();
-    pickFrom->Delete();
-    propPicker->Delete();
     return act;
 }   // end pick
 }   // end namespace
@@ -193,11 +185,10 @@ vtkActor* RendererPicker::pickActor( const cv::Point2f& p, const std::vector<vtk
 int RendererPicker::pickCell( const cv::Point& p) const
 {
     const cv::Point np = changeOriginOfPoint( _ren, p, _pointOrigin);
-    vtkCellPicker* picker = vtkCellPicker::New();
+    vtkSmartPointer<vtkCellPicker> picker = vtkSmartPointer<vtkCellPicker>::New();
     picker->SetTolerance( _tolerance);
     picker->Pick( np.x, np.y, 0, _ren);
     const int cid = picker->GetCellId();
-    picker->Delete();
     return cid;
 }   // end pickCell
 
@@ -210,11 +201,10 @@ int RendererPicker::pickCell( const cv::Point2f& p) const { return pickCell( toP
 cv::Vec3f RendererPicker::pickWorldPosition( const cv::Point& p) const
 {
     const cv::Point np = changeOriginOfPoint( _ren, p, _pointOrigin);
-    vtkWorldPointPicker* picker = vtkWorldPointPicker::New();   // Hardware accelerated
+    vtkSmartPointer<vtkWorldPointPicker> picker = vtkSmartPointer<vtkWorldPointPicker>::New();   // Hardware accelerated
     picker->Pick( np.x, np.y, 0, _ren);
     const double* wpos = picker->GetPickPosition();
     const cv::Vec3f v( (float)wpos[0], (float)wpos[1], (float)wpos[2]);
-    picker->Delete();
     return v;
 }   // end pickWorldPosition
 
@@ -228,14 +218,13 @@ cv::Vec3f RendererPicker::pickWorldPosition( const cv::Point2f& p) const { retur
 cv::Vec3f RendererPicker::pickNormal( const cv::Point& p) const
 {
     const cv::Point np = changeOriginOfPoint( _ren, p, _pointOrigin);
-    vtkCellPicker* picker = vtkCellPicker::New();
+    vtkSmartPointer<vtkCellPicker> picker = vtkSmartPointer<vtkCellPicker>::New();
     cv::Vec3f v(0,0,0);
     if ( picker->Pick( np.x, np.y, 0, _ren))
     {
         const double* normal = picker->GetPickNormal();
         v = cv::Vec3f( (float)normal[0], (float)normal[1], (float)normal[2]);
     }   // end if
-    picker->Delete();
     return v;
 }   // end pickNormal
 
@@ -247,12 +236,11 @@ cv::Vec3f RendererPicker::pickNormal( const cv::Point2f& p) const { return pickN
 // public
 cv::Point RendererPicker::projectToImagePlane( const cv::Vec3f& v) const
 {
-    vtkCoordinate* coordConverter = vtkCoordinate::New();
+    vtkSmartPointer<vtkCoordinate> coordConverter = vtkSmartPointer<vtkCoordinate>::New();
     coordConverter->SetCoordinateSystemToWorld();
     coordConverter->SetValue( v[0], v[1], v[2]);
     const int* dpos = coordConverter->GetComputedDisplayValue( _ren);
     const cv::Point p( dpos[0], dpos[1]); // Bottom left origin
-    coordConverter->Delete();
     return changeOriginOfPoint( _ren, p, _pointOrigin);
 }   // end projectToImagePlane
 

@@ -13,6 +13,7 @@ include_directories( ${INCLUDE_DIR})
 set( INCLUDE_FILES
     "${INCLUDE_DIR}/Axes.h"
     #"${INCLUDE_DIR}/ClosestPointFinder.h"
+    "${INCLUDE_DIR}/CurvatureSurfaceMapper.h"
     "${INCLUDE_DIR}/DataReader.h"
     "${INCLUDE_DIR}/DijkstraShortestPathLineInterpolator.h"
     #"${INCLUDE_DIR}/FlightInteractor.h"
@@ -45,6 +46,7 @@ set( INCLUDE_FILES
 set( SRC_FILES
     ${SRC_DIR}/Axes
     #${SRC_DIR}/ClosestPointFinder
+    ${SRC_DIR}/CurvatureSurfaceMapper
     ${SRC_DIR}/DataReader
     ${SRC_DIR}/DijkstraShortestPathLineInterpolator
     #${SRC_DIR}/FlightInteractor

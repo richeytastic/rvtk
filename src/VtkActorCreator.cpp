@@ -394,18 +394,18 @@ struct SingleMaterialData
     // Create the required VTK data from
     SingleMaterialData( const ObjModel::Ptr model, int matId, Mappings& mappings)
     {
+        // Only take one of the texture maps
         const std::vector<cv::Mat>& ambient = model->getMaterialAmbient(matId);
         const std::vector<cv::Mat>& diffuse = model->getMaterialDiffuse(matId);
         const std::vector<cv::Mat>& specular = model->getMaterialSpecular(matId);
-
-        // Only take one of the texture maps
-        if ( !ambient.empty())  // Ambient texture
-            texture = RVTK::convertToTexture( ambient[0]);
-        else if ( !diffuse.empty())  // Diffuse texture
+        if ( !diffuse.empty())  // Diffuse texture
             texture = RVTK::convertToTexture( diffuse[0]);
+        else if ( !ambient.empty())  // Ambient texture
+            texture = RVTK::convertToTexture( ambient[0]);
         else if ( !specular.empty()) // Specular texture
             texture = RVTK::convertToTexture( specular[0]);
 
+        faces = vtkSmartPointer<vtkCellArray>::New();
         points = vtkSmartPointer<vtkPoints>::New();
         uvs = vtkSmartPointer<vtkFloatArray>::New();
         uvs->SetNumberOfComponents(2);
@@ -414,47 +414,27 @@ struct SingleMaterialData
         oss << "TCoords_" << matId;
         uvs->SetName( oss.str().c_str());
 
-        // There should be a one-to-one mapping between material vertices and texture
-        // offsets - even if texture offsets xor vertex IDs are duplicated. This map
-        // stores the combined texture offset with the corresponding vertex ID and
-        // uses it to key into the vtkPointId.
-        boost::unordered_map<RFeatures::Key3L, int, RFeatures::HashKey3L> uniqueVtkVertexMap;
-
-        faces = vtkSmartPointer<vtkCellArray>::New();
-        int vtkFaceId = 0;
         int vtkPointId = 0;
         const IntSet& mfaceIds = model->getMaterialFaceIds(matId);
         BOOST_FOREACH ( int fid, mfaceIds)
         {
-            faces->InsertNextCell( 3);
-            mappings.mapFaceIndices( fid, vtkFaceId);
+            vtkIdType vtkFaceId = faces->InsertNextCell( 3);
+            mappings.mapFaceIndices( fid, (int)vtkFaceId);
 
             const int* uvids = model->getFaceUVs(fid);
             const int* vtxs = model->getFaceVertices(fid);
+
             for ( int i = 0; i < 3; ++i)
             {
                 const int vid = vtxs[i];
                 const cv::Vec2f& uv = model->uv( matId, uvids[i]);
-                RFeatures::Key3L okey = RFeatures::toKey( double(uv[0]), double(uv[1]), double(vid), 6); // Concatenate texture offset with vertex index
-                if ( uniqueVtkVertexMap.count(okey) == 0)
-                {
-                    uniqueVtkVertexMap[okey] = vtkPointId;
-                    vtkPointId++;
-                }   // end if
-
-                const int vtkId = uniqueVtkVertexMap.at(okey);
-                mappings.mapVertexIndices( vid, vtkId);
-
-                faces->InsertCellPoint( vtkId);
-                points->InsertPoint( vtkId, &(model->vtx( vid)[0]));
-                uvs->InsertTuple2( vtkId, uv[0], uv[1]);
+                mappings.mapVertexIndices( vid, vtkPointId);
+                faces->InsertCellPoint( vtkPointId);
+                points->InsertPoint( vtkPointId, &(model->vtx( vid)[0]));
+                uvs->InsertTuple2( vtkPointId, uv[0], uv[1]);
+                vtkPointId++;
             }   // end for
-
-            vtkFaceId++;
         }   // end foreach
-
-        //std::cerr << "[INFO] RVTK::SingleMaterialData::SingleMaterialData: "
-        //          << "Created " << uniqueVtkVertexMap.size() << " points with texture coordinates from material ID " << matId << std::endl;
     }   // end ctor
 };  // end struct
 
@@ -473,13 +453,6 @@ size_t VtkActorCreator::generateTexturedActors( const ObjModel::Ptr model, std::
     mappings.clear();
 
     const IntSet& materialIds = model->getMaterialIds();
-    /*
-    std::cerr << "[INFO] RVTK::VtkActorCreator::generateTexturedActors: "
-        << materialIds.size() << " material"
-        << (materialIds.size() > 1 ? "s" : "")
-        << " in object" << std::endl;
-    */
-
     BOOST_FOREACH ( int mid, materialIds)
     {
         SingleMaterialData smd( model, mid, mappings); // Read in the material data

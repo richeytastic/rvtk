@@ -71,10 +71,8 @@
 #include <vtkPropCollection.h>
 #include <vtkPropPicker.h>
 #include <vtkRenderer.h>
-#include <vtkOpenGLRenderer.h>
 #include <vtkRendererCollection.h>
 #include <vtkRenderWindow.h>
-#include <vtkOpenGLRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRotationalExtrusionFilter.h>
 #include <vtkSmartPointer.h>
