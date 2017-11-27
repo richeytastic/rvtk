@@ -28,15 +28,15 @@ ScalarLegend::ScalarLegend( vtkRenderer* r) : _ren(r)
     _lut = vtkLookupTable::New();
     _legend->SetLookupTable(_lut);
 
-    _legend->GetLabelTextProperty()->SetFontFamilyToTimes();
+    _legend->GetLabelTextProperty()->SetFontFamilyToCourier();
     _legend->GetLabelTextProperty()->SetItalic(false);
-    _legend->GetLabelTextProperty()->SetFontSize(13);
+    _legend->GetLabelTextProperty()->SetFontSize(14);
     _legend->SetNumberOfLabels( 11);
-    _legend->SetMaximumWidthInPixels( 83);
+    _legend->SetMaximumWidthInPixels( 80);
     _legend->SetUnconstrainedFontSize(true);
     _legend->DrawTickLabelsOn();
-    _legend->SetPosition(0.85, 0.3);
-    _legend->SetHeight(0.63);
+    _legend->SetPosition(0.81, 0.3);
+    _legend->SetHeight(0.65);
 
     _shown = false;
 }   // end dtor
@@ -52,8 +52,8 @@ ScalarLegend::~ScalarLegend()
 // public
 void ScalarLegend::setTitle( const std::string& title)
 {
-    _legend->GetTitleTextProperty()->SetFontFamilyToTimes();
-    _legend->GetTitleTextProperty()->SetFontSize(15);
+    _legend->GetTitleTextProperty()->SetFontFamilyToCourier();
+    _legend->GetTitleTextProperty()->SetFontSize(16);
     _legend->GetTitleTextProperty()->SetBold(false);
     _legend->GetTitleTextProperty()->SetItalic(false);
     _legend->SetTitle( title.c_str());

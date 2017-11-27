@@ -36,10 +36,10 @@ public:
     void update( int reqPixelHeight = 0);
 
     cv::Size getImageSize() const { return _colmap.size();}
-    const cv::Mat_<cv::Vec3b>& getColourMap() const { return _colmap;}
-    const cv::Mat_<byte>& getLightMap() const { return _dcmap;}
-    const cv::Mat_<float>& getDepthMap() const { return _dzmap;}
-    const cv::Mat_<byte>& getByteDepthMap() const { return _ddmap;}
+    cv::Mat_<cv::Vec3b> getColourMap() const { return _colmap;}
+    cv::Mat_<byte> getLightMap() const { return _dcmap;}
+    cv::Mat_<float> getDepthMap() const { return _dzmap;}
+    cv::Mat_<byte> getByteDepthMap() const { return _ddmap;}
 
 private:
     const vtkRenderWindow* _renWin;
