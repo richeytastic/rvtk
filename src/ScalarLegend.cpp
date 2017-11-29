@@ -152,31 +152,19 @@ void ScalarLegend::setLookupTable( vtkMapper* mapper, float minv, float maxv)
 
 
 // public
-int ScalarLegend::getNumColours() const
-{
-    return _lut->GetNumberOfTableValues();
-}   // end getNumColours
+int ScalarLegend::getNumColours() const { return _lut->GetNumberOfTableValues();}
+bool ScalarLegend::isVisible() const { return _shown;}
 
 
 // public
-void ScalarLegend::show()
+void ScalarLegend::setVisible( bool visible)
 {
-    _ren->AddActor2D( _legend);
-    _shown = true;
-}   // end show
+    if ( visible)
+        _ren->AddActor2D( _legend);
+    else
+        _ren->RemoveActor2D( _legend);
+    _shown = visible;
+}   // end setVisible
 
 
-// public
-void ScalarLegend::hide()
-{
-    _ren->RemoveActor2D( _legend);
-    _shown = false;
-}   // end hide
-
-
-// public
-bool ScalarLegend::isShown() const
-{
-    return _shown;
-}   // end isShown
 

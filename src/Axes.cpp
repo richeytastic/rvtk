@@ -28,13 +28,13 @@ Axes::Axes( vtkRenderWindowInteractor* rwint)
     if ( rwint)
         _widget->SetInteractor( rwint);
     _widget->SetViewport( 0.0, 0.0, 0.4, 0.4);
-    _widget->SetEnabled( 0);
+    setVisible(true);
+    setEnabled(true);
 }   // end ctor
 
 
-void Axes::setEnabled( bool v) { _widget->SetEnabled((int)v);}
-bool Axes::getEnabled() const { return isShown();}
-void Axes::show() { _widget->SetEnabled( 1);}
-void Axes::hide() { _widget->SetEnabled( 0);}
-bool Axes::isShown() const { return _widget->GetEnabled() > 0;}
+void Axes::setVisible( bool v) { _widget->SetEnabled((int)v);}
+bool Axes::isVisible() const { return _widget->GetEnabled() > 0;}
+void Axes::setEnabled( bool v) { _widget->SetInteractive( v);}
+bool Axes::isEnabled() const { return _widget->GetInteractive() > 0;}
 

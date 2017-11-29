@@ -54,9 +54,8 @@ public:
 
     int getNumColours() const;
 
-    void show();
-    void hide();
-    bool isShown() const;
+    void setVisible( bool);
+    bool isVisible() const;
 
 private:
     vtkRenderer* _ren;

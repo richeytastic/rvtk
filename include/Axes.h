@@ -32,11 +32,10 @@ class rVTK_EXPORT Axes
 public:
     explicit Axes( vtkRenderWindowInteractor *rwint=NULL);
 
-    void setEnabled(bool);
-    void show();
-    void hide();
-    bool isShown() const;
-    bool getEnabled() const;
+    void setEnabled( bool);
+    void setVisible( bool);
+    bool isVisible() const;
+    bool isEnabled() const;
 
 private:
     vtkSmartPointer<vtkAxesActor> _actor;
