@@ -18,6 +18,7 @@
 #ifndef RVTK_SCALAR_LEGEND_H
 #define RVTK_SCALAR_LEGEND_H
 
+#include <vtkSmartPointer.h>
 #include <vtkScalarBarActor.h>
 #include <vtkLookupTable.h>
 #include <vtkMapper.h>
@@ -33,7 +34,7 @@ class rVTK_EXPORT ScalarLegend
 {
 public:
     explicit ScalarLegend( vtkRenderer*);
-    virtual ~ScalarLegend();
+    virtual ~ScalarLegend(){}
 
     void setTitle( const std::string& title);
 
@@ -59,8 +60,8 @@ public:
 
 private:
     vtkRenderer* _ren;
-    vtkScalarBarActor* _legend;
-    vtkLookupTable* _lut;
+    vtkSmartPointer<vtkScalarBarActor> _legend;
+    vtkSmartPointer<vtkLookupTable> _lut;
     bool _shown;
 };  // end class
 

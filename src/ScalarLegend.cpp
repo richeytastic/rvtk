@@ -24,8 +24,8 @@ using RVTK::ScalarLegend;
 
 ScalarLegend::ScalarLegend( vtkRenderer* r) : _ren(r)
 {
-    _legend = vtkScalarBarActor::New();
-    _lut = vtkLookupTable::New();
+    _legend = vtkSmartPointer<vtkScalarBarActor>::New();
+    _lut = vtkSmartPointer<vtkLookupTable>::New();
     _legend->SetLookupTable(_lut);
 
     _legend->GetLabelTextProperty()->SetFontFamilyToCourier();
@@ -39,13 +39,6 @@ ScalarLegend::ScalarLegend( vtkRenderer* r) : _ren(r)
     _legend->SetHeight(0.65);
 
     _shown = false;
-}   // end dtor
-
-
-ScalarLegend::~ScalarLegend()
-{
-    _legend->Delete();
-    _lut->Delete();
 }   // end dtor
 
 
