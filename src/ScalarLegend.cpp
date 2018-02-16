@@ -18,38 +18,41 @@
 #include <ScalarLegend.h>
 using RVTK::ScalarLegend;
 #include <vtkTextProperty.h>
+#include <vtkScalarBarActor.h>
 #include <vtkColor.h>
 #include <sstream>
 
 
-ScalarLegend::ScalarLegend( vtkRenderer* r) : _ren(r)
+ScalarLegend::ScalarLegend( vtkRenderWindowInteractor* rwint)
 {
-    _legend = vtkSmartPointer<vtkScalarBarActor>::New();
+    _widget = vtkSmartPointer<vtkScalarBarWidget>::New();
+    vtkScalarBarActor* legend = _widget->GetScalarBarActor();
     _lut = vtkSmartPointer<vtkLookupTable>::New();
-    _legend->SetLookupTable(_lut);
+    legend->SetLookupTable(_lut);
 
-    _legend->GetLabelTextProperty()->SetFontFamilyToCourier();
-    _legend->GetLabelTextProperty()->SetItalic(false);
-    _legend->GetLabelTextProperty()->SetFontSize(14);
-    _legend->SetNumberOfLabels( 11);
-    _legend->SetMaximumWidthInPixels( 80);
-    _legend->SetUnconstrainedFontSize(true);
-    _legend->DrawTickLabelsOn();
-    _legend->SetPosition(0.81, 0.3);
-    _legend->SetHeight(0.65);
+    legend->GetLabelTextProperty()->SetFontFamilyToCourier();
+    legend->GetLabelTextProperty()->SetItalic(false);
+    legend->GetLabelTextProperty()->SetFontSize(14);
+    legend->SetNumberOfLabels( 11);
+    legend->SetMaximumWidthInPixels( 80);
+    legend->SetUnconstrainedFontSize(true);
+    legend->DrawTickLabelsOn();
+    legend->SetPosition(0.81, 0.3);
+    legend->SetHeight(0.65);
 
-    _shown = false;
+    _widget->SetInteractor(rwint);
 }   // end dtor
 
 
 // public
 void ScalarLegend::setTitle( const std::string& title)
 {
-    _legend->GetTitleTextProperty()->SetFontFamilyToCourier();
-    _legend->GetTitleTextProperty()->SetFontSize(16);
-    _legend->GetTitleTextProperty()->SetBold(false);
-    _legend->GetTitleTextProperty()->SetItalic(false);
-    _legend->SetTitle( title.c_str());
+    vtkScalarBarActor* legend = _widget->GetScalarBarActor();
+    legend->GetTitleTextProperty()->SetFontFamilyToCourier();
+    legend->GetTitleTextProperty()->SetFontSize(16);
+    legend->GetTitleTextProperty()->SetBold(false);
+    legend->GetTitleTextProperty()->SetItalic(false);
+    legend->SetTitle( title.c_str());
 }   // end setTitle
 
 
@@ -143,9 +146,10 @@ void ScalarLegend::setLookupTable( vtkMapper* mapper, float minv, float maxv)
     int ndecimals = std::max<int>(0, maxWidth - (int)(logf(maxv - minv) + 1));
     ndecimals = std::min<int>(ndecimals, maxWidth-1);
 
+    vtkScalarBarActor* legend = _widget->GetScalarBarActor();
     std::ostringstream oss;
     oss << "% " << maxWidth << "." << ndecimals << "f";
-    _legend->SetLabelFormat(oss.str().c_str());
+    legend->SetLabelFormat(oss.str().c_str());
     mapper->SetScalarRange( minv, maxv);
     mapper->SetLookupTable( _lut);
 }   // end setLookupTable
@@ -153,18 +157,8 @@ void ScalarLegend::setLookupTable( vtkMapper* mapper, float minv, float maxv)
 
 // public
 int ScalarLegend::getNumColours() const { return _lut->GetNumberOfTableValues();}
-bool ScalarLegend::isVisible() const { return _shown;}
-
-
-// public
-void ScalarLegend::setVisible( bool visible)
-{
-    if ( visible)
-        _ren->AddActor2D( _legend);
-    else
-        _ren->RemoveActor2D( _legend);
-    _shown = visible;
-}   // end setVisible
+bool ScalarLegend::isVisible() const { return _widget->GetEnabled() > 0;}
+void ScalarLegend::setVisible( bool visible) { _widget->SetEnabled(visible);}
 
 
 
