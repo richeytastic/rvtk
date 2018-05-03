@@ -21,18 +21,15 @@
 #include "PolySurfaceCurvScalarMapper.h"  // RVTK
 #include <ObjModelCurvatureMetrics.h>     // RFeatures
 #include <string>
-#include <map>  // std::pair
 
-namespace RVTK
-{
+namespace RVTK {
 
 class rVTK_EXPORT CurvatureSurfaceMapper
 {
 public:
     // Map must map ObjModel face IDs to VTK poly IDs.
     // Map is generated along with the VTK surface model when using RVTK::VtkActorCreator.
-    CurvatureSurfaceMapper( RFeatures::ObjModelCurvatureMetrics::Ptr,
-                            vtkActor*, const IntIntMap*);
+    CurvatureSurfaceMapper( RFeatures::ObjModelCurvatureMetrics::Ptr, vtkActor*, const IntIntMap*);
 
     // Map surface of the actor with the desired metric.
     // Pass in the lookup name for the surface metric / legend title.

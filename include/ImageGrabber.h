@@ -18,28 +18,27 @@
 #ifndef RVTK_IMAGE_GRABBER_H
 #define RVTK_IMAGE_GRABBER_H
 
-#include <opencv2/opencv.hpp>
-#include <vtkRenderWindow.h>
-#include "rVTK_Export.h"
+#include "Viewer.h"
 typedef unsigned char byte;
 
-namespace RVTK
-{
+namespace RVTK {
 
 class rVTK_EXPORT ImageGrabber
 {
 public:
-    explicit ImageGrabber( const vtkRenderWindow*);
-
     // Grabs the current set of images from the passed in render window and scales to requested height.
     // If height is left as non-positive, produced images are the same size as the render window.
-    void update( int reqPixelHeight = 0);
+    ImageGrabber( const vtkRenderWindow*, int reqPixelHeight=0);
+    ImageGrabber( const Viewer::Ptr, int reqPixelHeight=0);
 
-    cv::Size getImageSize() const { return _colmap.size();}
-    cv::Mat_<cv::Vec3b> getColourMap() const { return _colmap;}
-    cv::Mat_<byte> getLightMap() const { return _dcmap;}
-    cv::Mat_<float> getDepthMap() const { return _dzmap;}
-    cv::Mat_<byte> getByteDepthMap() const { return _ddmap;}
+    // Refresh images (only needed if render window has been updated since construction).
+    void refresh( int reqPixelHeight = 0);
+
+    cv::Size size() const { return _colmap.size();}
+    cv::Mat_<cv::Vec3b> colour() const { return _colmap;}
+    cv::Mat_<byte> light() const { return _dcmap;}
+    cv::Mat_<float> depth() const { return _dzmap;}
+    cv::Mat_<byte> depthb() const { return _ddmap;}
 
 private:
     const vtkRenderWindow* _renWin;

@@ -24,7 +24,7 @@
 #include <vtkCellData.h>
 #include <vtkActor.h>
 #include <ObjModel.h>   // RFeatures
-typedef boost::unordered_map<int,int> IntIntMap;
+typedef std::unordered_map<int,int> IntIntMap;
 
 
 namespace RVTK

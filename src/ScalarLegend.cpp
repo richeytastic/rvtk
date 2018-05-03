@@ -57,14 +57,14 @@ void ScalarLegend::setTitle( const std::string& title)
 
 
 // public
-void ScalarLegend::setColours( const vtkColor3ub& scol, const vtkColor3ub& fcol, int ncols)
+void ScalarLegend::setColours( const vtkColor3ub& scol, const vtkColor3ub& fcol, size_t ncols)
 {
     assert( ncols > 0);
     if ( ncols < 2)
         ncols = 2;
 
     // Map lookup colours to the lookup table
-    _lut->SetNumberOfTableValues( ncols);
+    _lut->SetNumberOfTableValues( (int)ncols);
     _lut->Build();
 
     float cstep[3] = {0,0,0};
@@ -76,7 +76,7 @@ void ScalarLegend::setColours( const vtkColor3ub& scol, const vtkColor3ub& fcol,
     }   // end if
 
     float rgb[3] = {0,0,0};
-    for ( int i = 0; i < ncols; ++i)
+    for ( size_t i = 0; i < ncols; ++i)
     {
         rgb[0] = (scol[0] + i*cstep[0])/255.0f;
         rgb[1] = (scol[1] + i*cstep[1])/255.0f;
@@ -87,7 +87,7 @@ void ScalarLegend::setColours( const vtkColor3ub& scol, const vtkColor3ub& fcol,
 
 
 // public
-void ScalarLegend::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol, const vtkColor3ub& fcol, int ncols0, int ncols1)
+void ScalarLegend::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol, const vtkColor3ub& fcol, size_t ncols0, size_t ncols1)
 {
     assert( ncols0 > 0);
     if ( ncols1 == 0)
@@ -96,8 +96,8 @@ void ScalarLegend::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol,
         ncols0 = ncols0 - ncols1;
     }   // end if
 
-    const int totCols = ncols0 + ncols1;
-    _lut->SetNumberOfTableValues( totCols);
+    const size_t totCols = ncols0 + ncols1;
+    _lut->SetNumberOfTableValues( (int)totCols);
     _lut->Build();
 
     float cstep[3] = {0,0,0};
@@ -111,7 +111,7 @@ void ScalarLegend::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol,
     float rgb[3] {0,0,0};
 
     // First half
-    for ( int i = 0; i < ncols0; ++i)
+    for ( size_t i = 0; i < ncols0; ++i)
     {
         rgb[0] = (scol[0] + i*cstep[0])/255.0f;
         rgb[1] = (scol[1] + i*cstep[1])/255.0f;
@@ -129,7 +129,7 @@ void ScalarLegend::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol,
         cstep[2] = (float(fcol[2]) - float(mcol[2]))/(ncols1-1);
     }   // end if
 
-    for ( int i = ncols0, j = 0; i < totCols; ++i, ++j)
+    for ( size_t i = ncols0, j = 0; i < totCols; ++i, ++j)
     {
         rgb[0] = (mcol[0] + j*cstep[0])/255.0f;
         rgb[1] = (mcol[1] + j*cstep[1])/255.0f;
@@ -156,9 +156,6 @@ void ScalarLegend::setLookupTable( vtkMapper* mapper, float minv, float maxv)
 
 
 // public
-int ScalarLegend::getNumColours() const { return _lut->GetNumberOfTableValues();}
+size_t ScalarLegend::getNumColours() const { return (size_t)_lut->GetNumberOfTableValues();}
 bool ScalarLegend::isVisible() const { return _widget->GetEnabled() > 0;}
 void ScalarLegend::setVisible( bool visible) { _widget->SetEnabled(visible);}
-
-
-

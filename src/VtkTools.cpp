@@ -25,6 +25,9 @@
 #include <vtkImageExport.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
+#include <vtkTransform.h>
+#include <vtkTransformPolyDataFilter.h>
+#include <vtkMatrixToLinearTransform.h>
 #include <cassert>
 
 
@@ -56,7 +59,7 @@ RFeatures::ObjModel::Ptr RVTK::makeObject( const vtkActor* actor)
     vtkPoints* points = pdata->GetPoints();
     vtkCellArray* faces = pdata->GetPolys();
 
-    boost::unordered_map<int,int> vmap; // VTK to ObjModel vertex IDs
+    std::unordered_map<int,int> vmap; // VTK to ObjModel vertex IDs
     double p[3];
     const int npoints = points->GetNumberOfPoints();
     for ( int i = 0; i < npoints; ++i)
@@ -83,14 +86,26 @@ vtkPolyData* RVTK::getPolyData( const vtkActor* actor)
 }   // end getPolyData
 
 
+void RVTK::transform( vtkActor* actor, const vtkMatrix4x4* m)
+{
+    if ( !m)
+        m = actor->GetMatrix();
+    vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+    transform->SetMatrix(const_cast<vtkMatrix4x4*>(m));
+
+    vtkSmartPointer<vtkTransformPolyDataFilter> tfilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
+    vtkPolyData* pdata = getPolyData(actor);
+    tfilter->SetInputData( pdata);
+    tfilter->SetTransform( transform);
+    tfilter->Update();
+    pdata->SetPoints( tfilter->GetOutput()->GetPoints());
+}   // end transform
+
+
 vtkSmartPointer<vtkPolyDataMapper> RVTK::createMapper( const vtkSmartPointer<vtkPolyData>& data)
 {
     vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-#if VTK_MAJOR_VERSION >= 6
     mapper->SetInputData( data);
-#else
-    mapper->SetInput( data);
-#endif
     return mapper;
 }   // end createMapper
 
@@ -362,3 +377,58 @@ void RVTK::createBoxLights( float d, std::vector<Light>& lights, bool toCamera)
     lights[5].toCamera(toCamera);
 }   // end createBoxLights
 
+
+vtkSmartPointer<vtkMatrix4x4> RVTK::toVTK( const cv::Matx44d& m)
+{
+    vtkSmartPointer<vtkMatrix4x4> vm = vtkSmartPointer<vtkMatrix4x4>::New();
+
+    vm->SetElement(0,0,m(0,0));
+    vm->SetElement(0,1,m(0,1));
+    vm->SetElement(0,2,m(0,2));
+    vm->SetElement(0,3,m(0,3));
+
+    vm->SetElement(1,0,m(1,0));
+    vm->SetElement(1,1,m(1,1));
+    vm->SetElement(1,2,m(1,2));
+    vm->SetElement(1,3,m(1,3));
+
+    vm->SetElement(2,0,m(2,0));
+    vm->SetElement(2,1,m(2,1));
+    vm->SetElement(2,2,m(2,2));
+    vm->SetElement(2,3,m(2,3));
+
+    vm->SetElement(3,0,m(3,0));
+    vm->SetElement(3,1,m(3,1));
+    vm->SetElement(3,2,m(3,2));
+    vm->SetElement(3,3,m(3,3));
+
+    return vm;
+}   // end toVTK
+
+
+cv::Matx44d RVTK::toCV( const vtkMatrix4x4 *m)
+{
+    cv::Matx44d cm;
+
+    cm(0,0) = m->GetElement(0,0);
+    cm(0,1) = m->GetElement(0,1);
+    cm(0,2) = m->GetElement(0,2);
+    cm(0,3) = m->GetElement(0,3);
+
+    cm(1,0) = m->GetElement(1,0);
+    cm(1,1) = m->GetElement(1,1);
+    cm(1,2) = m->GetElement(1,2);
+    cm(1,3) = m->GetElement(1,3);
+
+    cm(2,0) = m->GetElement(2,0);
+    cm(2,1) = m->GetElement(2,1);
+    cm(2,2) = m->GetElement(2,2);
+    cm(2,3) = m->GetElement(2,3);
+
+    cm(3,0) = m->GetElement(3,0);
+    cm(3,1) = m->GetElement(3,1);
+    cm(3,2) = m->GetElement(3,2);
+    cm(3,3) = m->GetElement(3,3);
+
+    return cm;
+}   // end toCV

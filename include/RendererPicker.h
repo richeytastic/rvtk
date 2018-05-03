@@ -48,6 +48,7 @@ public:
 
     // Use the PointOrigin parameter to let the picking algorithms know if the provided
     // points are given with a bottom left origin (VTK default) or a top left origin.
+    // Calls ResetCameraClippingRange() on the provided vtkRenderer to ensure picking accuracy.
     RendererPicker( vtkRenderer*, PointOrigin po=BOTTOM_LEFT, double tolerance=0.0005);
 
     // Given array of 2D pixel coordinates, find the actors and their cell IDs

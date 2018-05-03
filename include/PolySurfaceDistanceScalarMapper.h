@@ -20,9 +20,7 @@
 
 #include "SurfaceMapper.h"
 
-
-namespace RVTK
-{
+namespace RVTK {
 
 class rVTK_EXPORT PolySurfaceDistanceScalarMapper : public SurfaceMapper
 {
@@ -30,14 +28,14 @@ public:
     PolySurfaceDistanceScalarMapper( const RFeatures::ObjModel::Ptr model,
                                      vtkActor* actor,
                                      const IntIntMap* lookupMap,
-                                     const boost::unordered_map<int,double>& dvals,
+                                     const std::unordered_map<int,double>& dvals,
                                      const std::string& metricName);
 
     float getMappedRange( float* minv=NULL, float* maxv=NULL) const;
 
 private:
     const RFeatures::ObjModel::Ptr _model;
-    const boost::unordered_map<int,double>& _dvals;
+    const std::unordered_map<int,double>& _dvals;
     virtual float getMetric( int, int);
 };   // end class
 

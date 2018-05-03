@@ -15,26 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include "RendererPicker.h"
-#include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
-#include <boost/foreach.hpp>
-#include <map>
+#include <RendererPicker.h>
 #include <vtkCellPicker.h>
 #include <vtkPropPicker.h>
 #include <vtkWorldPointPicker.h>
 #include <vtkCoordinate.h>
-
+#include <unordered_map>
+#include <unordered_set>
+#include <algorithm>
 using RVTK::RendererPicker;
 using RVTK::ActorSubset;
 
 
 // private
-cv::Point RendererPicker::toPxls( const cv::Point2f& p) const { return cv::Point( p.x * _ren->GetSize()[0], p.y * _ren->GetSize()[1]);}
+cv::Point RendererPicker::toPxls( const cv::Point2f& p) const
+{
+    return cv::Point( p.x * _ren->GetSize()[0], p.y * _ren->GetSize()[1]);
+}   // end toPxls
 
 
 // public
-RendererPicker::RendererPicker( vtkRenderer* ren, PointOrigin po, double t) : _ren(ren), _pointOrigin(po), _tolerance(t){}
+RendererPicker::RendererPicker( vtkRenderer* ren, PointOrigin po, double t)
+    : _ren(ren), _pointOrigin(po), _tolerance(t)
+{
+    _ren->ResetCameraClippingRange();
+}   // end ctor
 
 
 namespace {
@@ -60,8 +65,8 @@ int RendererPicker::pickActorCells( const std::vector<cv::Point>& points2d, std:
     vtkSmartPointer<vtkPropPicker> propPicker = vtkSmartPointer<vtkPropPicker>::New();
     cellPicker->SetTolerance( _tolerance);
 
-    boost::unordered_map<vtkActor*, boost::unordered_set<int> > actorCells;
-    BOOST_FOREACH ( const cv::Point& p, points2d)
+    std::unordered_map<vtkActor*, std::unordered_set<int> > actorCells;
+    for ( const cv::Point& p : points2d)
     {
         const cv::Point np = changeOriginOfPoint( _ren, p, _pointOrigin);
         propPicker->Pick( np.x, np.y, 0, _ren);
@@ -76,14 +81,13 @@ int RendererPicker::pickActorCells( const std::vector<cv::Point>& points2d, std:
 
     int numActorsPicked = 0;
     // Copy the picked actors and their cells to the output parameter
-    typedef std::pair<vtkActor*, boost::unordered_set<int> > ActorCellsPair;
-    BOOST_FOREACH ( const ActorCellsPair& pickedActor, actorCells)
+    for ( const auto& pickedActor : actorCells)
     {
         numActorsPicked++;
         picked.resize( picked.size() + 1);
         ActorSubset& actorSubset = *picked.rbegin();
         actorSubset.actor = pickedActor.first;
-        const boost::unordered_set<int>& actorCellIds = pickedActor.second;
+        const std::unordered_set<int>& actorCellIds = pickedActor.second;
         actorSubset.cellIds.insert( actorSubset.cellIds.end(), actorCellIds.begin(), actorCellIds.end());
     }   // end foreach
 
@@ -104,8 +108,8 @@ int RendererPicker::pickActorCells( const std::vector<cv::Point>& points2d,
     pickFrom->AddItem(actor);
     cellPicker->SetTolerance( _tolerance);
 
-    boost::unordered_set<int> setCellIds;   // Avoid duplicate cell IDs being picked
-    BOOST_FOREACH ( const cv::Point& p, points2d)
+    std::unordered_set<int> setCellIds;   // Avoid duplicate cell IDs being picked
+    for ( const cv::Point& p : points2d)
     {
         const cv::Point np = changeOriginOfPoint( _ren, p, _pointOrigin);
         propPicker->PickProp( np.x, np.y, _ren, pickFrom);
@@ -143,8 +147,7 @@ namespace
 vtkSmartPointer<vtkPropCollection> createPropCollection( const std::vector<vtkActor*>& possActors)
 {
     vtkSmartPointer<vtkPropCollection> pickFrom = vtkSmartPointer<vtkPropCollection>::New();
-    BOOST_FOREACH ( vtkActor* actor, possActors)
-        pickFrom->AddItem(actor);
+    std::for_each( std::begin(possActors), std::end(possActors), [&](auto a){pickFrom->AddItem(a);});
     return pickFrom;
 }   // end createPropCollection
 
@@ -152,8 +155,7 @@ vtkSmartPointer<vtkPropCollection> createPropCollection( const std::vector<vtkAc
 vtkSmartPointer<vtkPropCollection> createPropCollection( const std::vector<vtkSmartPointer<vtkActor> >& possActors)
 {
     vtkSmartPointer<vtkPropCollection> pickFrom = vtkSmartPointer<vtkPropCollection>::New();
-    BOOST_FOREACH ( vtkSmartPointer<vtkActor> actor, possActors)
-        pickFrom->AddItem(actor.GetPointer());
+    std::for_each( std::begin(possActors), std::end(possActors), [&](auto a){pickFrom->AddItem(a.GetPointer());});
     return pickFrom;
 }   // end createPropCollection
 

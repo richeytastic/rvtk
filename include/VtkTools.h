@@ -27,14 +27,14 @@
 #include <vtkCamera.h>
 #include <vtkTexture.h>
 #include <vtkPolyData.h>
+#include <vtkMatrix4x4.h>
 #include <vtkImageImport.h>
 #include <vtkLookupTable.h>
 #include <vtkSmartPointer.h>
 #include <vtkPolyDataMapper.h>
 #include "rVTK_Export.h"
 
-namespace RVTK
-{
+namespace RVTK {
 
 // Set a provided lookup table of colours from startCol to endCol (inclusive).
 // Colour values should be specified in RGB order.
@@ -46,6 +46,10 @@ rVTK_EXPORT RFeatures::ObjModel::Ptr makeObject( const vtkActor*);
 
 // Return poly data from actor
 rVTK_EXPORT vtkPolyData* getPolyData( const vtkActor*);
+
+// Transform the point data on the given actor using the given matrix.
+// If the given matrix is NULL, the actor's internal (GPU) matrix is used.
+rVTK_EXPORT void transform( vtkActor*, const vtkMatrix4x4 *m=NULL);
 
 // VTK version independent creation of mapper object from poly data
 rVTK_EXPORT vtkSmartPointer<vtkPolyDataMapper> createMapper( const vtkSmartPointer<vtkPolyData>& data);
@@ -64,6 +68,12 @@ rVTK_EXPORT vtkSmartPointer<vtkImageImport> makeImageImporter( const cv::Mat img
 // For CV_8UC3 images, byte order colours should be BGR (normal OpenCV style).
 rVTK_EXPORT vtkSmartPointer<vtkTexture> convertToTexture( const cv::Mat& img, bool XFLIP=true);
 rVTK_EXPORT vtkSmartPointer<vtkTexture> loadTexture( const std::string& fname, bool XFLIP=true);
+
+// Convert matrix to VTK format.
+rVTK_EXPORT vtkSmartPointer<vtkMatrix4x4> toVTK( const cv::Matx44d&);
+
+// Convert VTK matrix to OpenCV format.
+rVTK_EXPORT cv::Matx44d toCV( const vtkMatrix4x4*);
 
 // Extract the vertex IDs of points in pdata that lie on edges used only by one polygon.
 rVTK_EXPORT void extractBoundaryVertices( const vtkSmartPointer<vtkPolyData>& pdata, std::vector<int>& pts);

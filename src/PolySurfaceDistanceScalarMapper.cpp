@@ -25,7 +25,7 @@ using RFeatures::ObjModel;
 PolySurfaceDistanceScalarMapper::PolySurfaceDistanceScalarMapper( const ObjModel::Ptr model,
                                                                   vtkActor* actor,
                                                                   const IntIntMap* lookupMap,
-                                                                  const boost::unordered_map<int,double>& dvals,
+                                                                  const std::unordered_map<int,double>& dvals,
                                                                   const std::string& mname)
     : RVTK::SurfaceMapper( model, actor, lookupMap, mname, RVTK::PolygonMetricMapper::create(1)), _model(model), _dvals(dvals)
 {

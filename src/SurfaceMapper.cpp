@@ -29,7 +29,6 @@ using RVTK::VertexMetricMapper;
 #include <vtkProperty.h>
 #include <climits>
 #include <cassert>
-#include <boost/foreach.hpp>
 using RFeatures::ObjModel;
 
 // public
@@ -108,7 +107,7 @@ void SurfaceMapper::mapActor()
         float *mval = new float[nc];
         cvals->SetNumberOfComponents( nc);
         cvals->SetNumberOfTuples( objids.size());
-        BOOST_FOREACH ( int objid, objids)
+        for ( int objid : objids)
         {
             for ( int k = 0; k < nc; ++k)
                 mval[k] = val( objid, k);
@@ -120,7 +119,7 @@ void SurfaceMapper::mapActor()
     {
         float mval;
         cvals->SetNumberOfValues( objids.size());
-        BOOST_FOREACH ( int objid, objids)
+        for ( int objid : objids)
         {
             mval = val( objid, 0);
             cvals->SetValue( _lmap->at(objid), mval);

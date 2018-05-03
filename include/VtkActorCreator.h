@@ -32,15 +32,12 @@ typedef unsigned char byte;
 #include <vtkActor.h>
 #include <vtkPoints.h>
 #include <vtkCellArray.h>
-#include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
-typedef boost::unordered_set<int> IntSet;
-typedef boost::unordered_map<int, int> IntIntMap;
+typedef std::unordered_set<int> IntSet;
+typedef std::unordered_map<int, int> IntIntMap;
 #include <vector>
 
 
-namespace RVTK
-{
+namespace RVTK {
 
 class rVTK_EXPORT VtkActorCreator
 {

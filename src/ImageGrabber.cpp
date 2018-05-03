@@ -15,20 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#include "ImageGrabber.h"
-#include <VtkTools.h>       // RVTK
+#include <ImageGrabber.h>
+#include <VtkTools.h>
 #include <FeatureUtils.h>   // RFeatures
 using RVTK::ImageGrabber;
-
+using RVTK::Viewer;
 
 // public
-ImageGrabber::ImageGrabber( const vtkRenderWindow* rw) : _renWin(rw)
+ImageGrabber::ImageGrabber( const vtkRenderWindow* rw, int h) : _renWin(rw)
 {
+    refresh(h);
+}   // end ctor
+
+// public
+ImageGrabber::ImageGrabber( const Viewer::Ptr v, int h) : _renWin(v->getRenderWindow())
+{
+    refresh(h);
 }   // end ctor
 
 
 // public
-void ImageGrabber::update( int reqHeight)
+void ImageGrabber::refresh( int reqHeight)
 {
     if ( reqHeight <= 0)
         reqHeight = const_cast<vtkRenderWindow*>(_renWin)->GetSize()[1];
@@ -49,4 +56,4 @@ void ImageGrabber::update( int reqHeight)
     rngMap -= float(mn);   // Make nearest point 0
     const float depthProp = 1.0;    // Proportion of depth buffer to use (also try 1/2)
     rngMap.convertTo( _ddmap, CV_8U, -255./((mx-mn)*depthProp), 255);
-}   // end update
+}   // end refresh

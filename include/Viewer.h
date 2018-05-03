@@ -31,9 +31,7 @@
 #include <opencv2/opencv.hpp>
 #include "rVTK_Export.h"
 
-
-namespace RVTK
-{
+namespace RVTK {
 
 class rVTK_EXPORT Viewer
 {
@@ -59,6 +57,7 @@ public:
     double getClipNear() const;
     double getClipFar() const;
     void setClippingRange( double near, double far);    // Default is 0.1, 1000
+    void resetClippingRange();
 
     // Affects direction camera is looking in (i.e. modifies focus and up vector).
     void setCameraOrientation( double pitch, double yaw, double roll);

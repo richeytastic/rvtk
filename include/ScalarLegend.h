@@ -39,7 +39,7 @@ public:
     void setTitle( const std::string& title);
 
     // Set simple colour range from minCol to maxCol over ncols.
-    void setColours( const vtkColor3ub& minCol, const vtkColor3ub& maxCol, int ncols);
+    void setColours( const vtkColor3ub& minCol, const vtkColor3ub& maxCol, size_t ncols);
 
     // Specify a colour midway between the start and end colours.
     // If two values for the number of colours are used, ncols0 and ncols1,
@@ -48,11 +48,11 @@ public:
     void setColours( const vtkColor3ub& minCol,  // Colour at min value
                      const vtkColor3ub& midCol,  // Colour at midway value
                      const vtkColor3ub& maxCol,  // Colour at max value
-                     int ncols0, int ncols1=0);
+                     size_t ncols0, size_t ncols1=0);
 
     void setLookupTable( vtkMapper*, float minv, float maxv);
 
-    int getNumColours() const;
+    size_t getNumColours() const;
 
     void setVisible( bool);
     bool isVisible() const;

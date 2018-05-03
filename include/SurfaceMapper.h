@@ -21,8 +21,7 @@
 #include "SurfaceMapperInterface.h"
 
 
-namespace RVTK
-{
+namespace RVTK {
 
 class rVTK_EXPORT SurfaceMapper : public MetricInterface
 {

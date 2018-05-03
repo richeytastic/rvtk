@@ -22,8 +22,7 @@
 #include <ObjModelCurvatureMetrics.h>   // RFeatures
 
 
-namespace RVTK
-{
+namespace RVTK {
 
 class rVTK_EXPORT PolySurfaceCurvScalarMapper : public SurfaceMapper
 {
@@ -41,7 +40,7 @@ protected:
     virtual float getCurvMetric( int faceIdx) const = 0;
 
 private:
-    boost::unordered_map<int,float> _cvals;
+    std::unordered_map<int,float> _cvals;
     virtual float getMetric( int, int);   // Implements SufaceMapper::getMetric
 };   // end class
 

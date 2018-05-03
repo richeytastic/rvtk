@@ -17,17 +17,16 @@
 
 #include <VtkActorCreator.h>
 #include <VtkTools.h>
-using RVTK::VtkActorCreator;
 #include <cassert>
 #include <algorithm>
 #include <sstream>
 #include <cmath>
-#include <boost/foreach.hpp>
 #include <vtkFloatArray.h>
 #include <vtkPointData.h>
 #include <ObjModelTriangleMeshParser.h> // RFeatures
 #include <VectorFloatKeyHashing.h>      // RFeatures
 using RFeatures::ObjModel;
+using RVTK::VtkActorCreator;
 
 
 vtkSmartPointer<vtkActor> makeActor( vtkSmartPointer<vtkPolyData> pd)
@@ -63,7 +62,7 @@ VtkActorCreator::VtkActorCreator()
     init();
 }   // end ctor
 
-
+/*
 // Need consistent ordering of triangle vertices for normals
 class CellPolygonCreator : public RFeatures::ObjModelTriangleParser
 {
@@ -125,6 +124,22 @@ private:
 
 
 // private
+vtkSmartPointer<vtkCellArray> VtkActorCreator::createPolygons( const ObjModel::Ptr model, const IntIntMap* uvmappings)
+{
+    CellPolygonCreator cellCreator( model, uvmappings, _ufmappings, _rufmappings, _ufidxs);
+    RFeatures::ObjModelTriangleMeshParser parser( model);
+    parser.addTriangleParser( &cellCreator);
+
+    // Keep going until all ObjPolys from the given model are created.
+    while ( cellCreator.getNextPolyToCreate() >= 0)
+        parser.parse( cellCreator.getNextPolyToCreate(), cv::Vec3d(0,0,1));
+
+    return cellCreator.getPolygons();
+}   // end createPolygons
+*/
+
+
+// private
 vtkSmartPointer<vtkPoints> VtkActorCreator::createVertices( const ObjModel::Ptr model, IntIntMap* uvmappings)
 {
     uvmappings->clear();
@@ -138,7 +153,7 @@ vtkSmartPointer<vtkPoints> VtkActorCreator::createVertices( const ObjModel::Ptr 
 
     int i = 0;
     const IntSet& vidxs = model->getVertexIds();
-    BOOST_FOREACH ( const int& vi, vidxs)
+    for ( int vi : vidxs)
     {
         const cv::Vec3f& v = model->getVertex(vi);
         points->SetPoint( i, &v[0]);
@@ -159,15 +174,27 @@ vtkSmartPointer<vtkPoints> VtkActorCreator::createVertices( const ObjModel::Ptr 
 // private
 vtkSmartPointer<vtkCellArray> VtkActorCreator::createPolygons( const ObjModel::Ptr model, const IntIntMap* uvmappings)
 {
-    CellPolygonCreator cellCreator( model, uvmappings, _ufmappings, _rufmappings, _ufidxs);
-    RFeatures::ObjModelTriangleMeshParser parser( model);
-    parser.addTriangleParser( &cellCreator);
+    int vtkid = 0;
+    vtkSmartPointer<vtkCellArray> polys = vtkSmartPointer<vtkCellArray>::New();
+    for ( int fid : model->getFaceIds())
+    {
+        const int* vidxs = model->getFaceVertices(fid);
+        polys->InsertNextCell( 3);
+        polys->InsertCellPoint( uvmappings->at( vidxs[0]));
+        polys->InsertCellPoint( uvmappings->at( vidxs[1]));
+        polys->InsertCellPoint( uvmappings->at( vidxs[2]));
 
-    // Keep going until all ObjPolys from the given model are created.
-    while ( cellCreator.getNextPolyToCreate() >= 0)
-        parser.parse( cellCreator.getNextPolyToCreate(), cv::Vec3d(0,0,1));
+        if ( _rufmappings)
+            (*_rufmappings)[vtkid] = fid;
+        if ( _ufmappings)
+            (*_ufmappings)[fid] = vtkid;
+        if ( _ufidxs)
+            _ufidxs->insert(vtkid);
 
-    return cellCreator.getPolygons();
+        vtkid++;
+    }   // end foreach
+
+    return polys;
 }   // end createPolygons
 
 
@@ -229,8 +256,7 @@ vtkSmartPointer<vtkActor> VtkActorCreator::generatePointsActor( const ObjModel::
     const IntSet& vidxs = model->getVertexIds();
     std::vector<cv::Vec3f> vtxs(vidxs.size());
     int i = 0;
-    BOOST_FOREACH ( int vidx, vidxs)
-        vtxs[i++] = model->getVertex(vidx);
+    std::for_each( std::begin(vidxs), std::end(vidxs), [&](int vidx){ vtxs[i++] = model->getVertex(vidx);});
     return generatePointsActor(vtxs);
 }   // end generatePointsActor
 
@@ -416,7 +442,7 @@ struct SingleMaterialData
 
         int vtkPointId = 0;
         const IntSet& mfaceIds = model->getMaterialFaceIds(matId);
-        BOOST_FOREACH ( int fid, mfaceIds)
+        for ( int fid : mfaceIds)
         {
             vtkIdType vtkFaceId = faces->InsertNextCell( 3);
             mappings.mapFaceIndices( fid, (int)vtkFaceId);
@@ -453,7 +479,7 @@ size_t VtkActorCreator::generateTexturedActors( const ObjModel::Ptr model, std::
     mappings.clear();
 
     const IntSet& materialIds = model->getMaterialIds();
-    BOOST_FOREACH ( int mid, materialIds)
+    for ( int mid : materialIds)
     {
         SingleMaterialData smd( model, mid, mappings); // Read in the material data
         vtkSmartPointer<vtkPolyData> pd = vtkSmartPointer<vtkPolyData>::New();

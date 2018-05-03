@@ -173,6 +173,12 @@ void Viewer::setClippingRange( double near, double far)
 }   // end setClippingRange
 
 
+void Viewer::resetClippingRange()
+{
+    _ren->ResetCameraClippingRange();
+}   // end resetClippingRange
+
+
 RFeatures::CameraParams Viewer::getCamera() const
 {
     RFeatures::CameraParams cp;
