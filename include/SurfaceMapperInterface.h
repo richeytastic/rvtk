@@ -26,9 +26,7 @@
 #include <ObjModel.h>   // RFeatures
 typedef std::unordered_map<int,int> IntIntMap;
 
-
-namespace RVTK
-{
+namespace RVTK {
 
 class MetricMapper;
 
@@ -58,7 +56,7 @@ public:
     typedef boost::shared_ptr<MetricMapper> Ptr;
 protected:
     explicit MetricMapper( size_t nc) : _nc(nc) {}
-    virtual const IntSet* getMappingIds( const RFeatures::ObjModel::Ptr) const { return NULL;}
+    virtual const IntSet* getMappingIds( const RFeatures::ObjModel&) const { return NULL;}
     virtual vtkDataSetAttributes* getDataSet( vtkPolyData*) const { return NULL;}
     virtual void setLookupMap( VtkActorCreator*, IntIntMap*) const {}
     size_t getNumComponents() const { return _nc;}
@@ -68,7 +66,6 @@ private:
     MetricMapper( const MetricMapper&);     // No copy
     void operator=( const MetricMapper&);   // No copy
 };  // end class
-
 
 }   // end namespace
 

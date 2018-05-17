@@ -21,13 +21,12 @@
 #include "SurfaceMapper.h"
 #include <ObjModelCurvatureMetrics.h>   // RFeatures
 
-
 namespace RVTK {
 
 class rVTK_EXPORT PolySurfaceCurvScalarMapper : public SurfaceMapper
 {
 public:
-    PolySurfaceCurvScalarMapper( const RFeatures::ObjModelCurvatureMetrics::Ptr cm,
+    PolySurfaceCurvScalarMapper( const RFeatures::ObjModelCurvatureMetrics& cm,
                                  vtkActor* actor,
                                  const IntIntMap* lookupMap,    // Lookup actor poly IDs from ObjModel face IDs
                                  const std::string& metricName);
@@ -36,7 +35,7 @@ public:
     float getMappedRange( float* minv=NULL, float* maxv=NULL) const;
 
 protected:
-    const RFeatures::ObjModelCurvatureMetrics::Ptr _cmetrics;
+    const RFeatures::ObjModelCurvatureMetrics& _cmetrics;
     virtual float getCurvMetric( int faceIdx) const = 0;
 
 private:
@@ -47,4 +46,3 @@ private:
 }   // end namespace
 
 #endif
-

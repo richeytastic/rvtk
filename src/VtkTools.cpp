@@ -102,14 +102,6 @@ void RVTK::transform( vtkActor* actor, const vtkMatrix4x4* m)
 }   // end transform
 
 
-vtkSmartPointer<vtkPolyDataMapper> RVTK::createMapper( const vtkSmartPointer<vtkPolyData>& data)
-{
-    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-    mapper->SetInputData( data);
-    return mapper;
-}   // end createMapper
-
-
 vtkSmartPointer<vtkImageImport> RVTK::makeImageImporter( const cv::Mat img)
 {
     const int rows = img.rows;
@@ -167,7 +159,6 @@ vtkSmartPointer<vtkTexture> RVTK::convertToTexture( const cv::Mat& image, bool X
 }   // end convertToTexture
 
 
-
 vtkSmartPointer<vtkTexture> RVTK::loadTexture( const std::string& fname, bool XFLIP)
 {
     cv::Mat m = cv::imread( fname, true);
@@ -177,15 +168,10 @@ vtkSmartPointer<vtkTexture> RVTK::loadTexture( const std::string& fname, bool XF
 }   // end loadTexture
 
 
-
 void RVTK::extractBoundaryVertices( const vtkSmartPointer<vtkPolyData>& pdata, std::vector<int>& bvids)
 {
     vtkSmartPointer<vtkFeatureEdges> vfe = vtkSmartPointer<vtkFeatureEdges>::New();
-#if VTK_MAJOR_VERSION >= 6
     vfe->SetInputData( pdata);
-#else
-    vfe->SetInput( pdata);
-#endif
     vfe->BoundaryEdgesOn(); // Extract edges used by exactly one polygon
     vfe->FeatureEdgesOff();
     vfe->ManifoldEdgesOff();
@@ -211,11 +197,7 @@ void RVTK::extractBoundaryVertices( const vtkSmartPointer<vtkPolyData>& pdata, s
 vtkSmartPointer<vtkPolyData> RVTK::generateNormals( vtkSmartPointer<vtkPolyData> pdata)
 {
     vtkSmartPointer<vtkPolyDataNormals> normalsGenerator = vtkPolyDataNormals::New();
-#if VTK_MAJOR_VERSION <= 5
-    normalsGenerator->SetInput( pdata);
-#else
     normalsGenerator->SetInputData( pdata);
-#endif
     normalsGenerator->ConsistencyOff();
     normalsGenerator->ComputePointNormalsOn();
     normalsGenerator->ComputeCellNormalsOn();
@@ -223,7 +205,6 @@ vtkSmartPointer<vtkPolyData> RVTK::generateNormals( vtkSmartPointer<vtkPolyData>
     normalsGenerator->Update();
     return normalsGenerator->GetOutput();
 }   // end generateNormals
-
 
 
 cv::Mat_<cv::Vec3b> RVTK::extractImage( const vtkRenderWindow* renWin)
@@ -250,10 +231,8 @@ cv::Mat_<cv::Vec3b> RVTK::extractImage( const vtkRenderWindow* renWin)
 
     // Need to swap the red and blue channels for OpenCV
     cv::cvtColor( img, img, CV_RGB2BGR);
-
     return img;
 }   // end extractImage
-
 
 
 cv::Mat_<float> RVTK::extractZBuffer( const vtkRenderWindow* renWin)
@@ -277,10 +256,8 @@ cv::Mat_<float> RVTK::extractZBuffer( const vtkRenderWindow* renWin)
     cv::Mat_<float> rngMap( rows, cols);
     exporter->SetExportVoidPointer( rngMap.ptr());
     exporter->Export();
-
     return rngMap;
 }   // end extractZBuffer
-
 
 
 void RVTK::printCameraDetails( vtkCamera* cam, std::ostream &os)

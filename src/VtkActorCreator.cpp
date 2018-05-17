@@ -336,6 +336,14 @@ vtkSmartPointer<vtkActor> VtkActorCreator::generateLineActor( const std::vector<
 
 
 // public static
+vtkSmartPointer<vtkActor> VtkActorCreator::generateLineActor( const std::list<cv::Vec3f>& vtxs, bool joinLoop)
+{
+    std::vector<cv::Vec3f> vpts(vtxs.begin(), vtxs.end());
+    return generateLineActor(vpts);
+}   // end generateLineActor
+
+
+// public static
 vtkSmartPointer<vtkActor> VtkActorCreator::generateLinePairsActor( const std::vector<cv::Vec3f>& lps)
 {
     vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();

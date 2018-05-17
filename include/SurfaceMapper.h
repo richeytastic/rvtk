@@ -20,22 +20,19 @@
 
 #include "SurfaceMapperInterface.h"
 
-
 namespace RVTK {
 
 class rVTK_EXPORT SurfaceMapper : public MetricInterface
 {
 public:
     // Use existing actor - also requires existing lookup map (saved from RVTK::VtkActorCreator).
-    SurfaceMapper( const RFeatures::ObjModel::Ptr m,
+    SurfaceMapper( const RFeatures::ObjModel&,
                    vtkActor* actor,                   // Actor to which a new data array will be added
                    const IntIntMap* lookupMap,        // Lookup map to match poly or vertex metric mapper
                    const std::string& metricName,
                    const MetricMapper::Ptr mmapper);  // PolygonMetricMapper -or- VertexMetricMapper
 
-    virtual ~SurfaceMapper(){}
-
-    virtual std::string getMetricName() const;
+    std::string getMetricName() const override;
 
     // Map a new array to the actor's data set attributes and make the currently active dataset.
     // Given the actor's polydata, get its dataset attributes using:
@@ -47,24 +44,24 @@ public:
     // actor->GetProperty()->SetRepresentationToSurface() (obviously)
     // actor->GetMapper()->SetScalarModelToUseCellData() (may not be needed)
     // actor->GetMapper()->SetScalarVisibility(true)
-    virtual void mapActor();
+    void mapActor() override;
 
-    virtual float getMin( int c) const;
-    virtual float getMax( int c) const;
-    virtual int getNumMetricComponents() const;
+    float getMin( int c) const override;
+    float getMax( int c) const override;
+    int getNumMetricComponents() const override;
 
 protected:
     virtual float getMetric( int id, int c) = 0;  // Implement me!
 
 private:
-    const RFeatures::ObjModel::Ptr _model;
+    const RFeatures::ObjModel& _model;
     const std::string _mname;
     const MetricMapper::Ptr _mmapper;
     vtkActor* _actor;
     const IntIntMap *_lmap;
     std::vector<float> _min, _max;
     void init();
-    virtual float val( int id, int c);
+    float val( int id, int c) override;
 };  // end class
 
 
@@ -73,9 +70,9 @@ class rVTK_EXPORT PolygonMetricMapper : public MetricMapper
 public:
     static MetricMapper::Ptr create( size_t numComponents);
 protected:
-    virtual vtkDataSetAttributes* getDataSet( vtkPolyData*) const;
-    virtual const IntSet* getMappingIds( const RFeatures::ObjModel::Ptr) const;
-    virtual void setLookupMap( VtkActorCreator*, IntIntMap*) const;
+    vtkDataSetAttributes* getDataSet( vtkPolyData*) const override;
+    const IntSet* getMappingIds( const RFeatures::ObjModel&) const override;
+    void setLookupMap( VtkActorCreator*, IntIntMap*) const override;
     explicit PolygonMetricMapper( size_t numComponents);
 };  // end class
 
@@ -85,9 +82,9 @@ class rVTK_EXPORT VertexMetricMapper : public MetricMapper
 public:
     static MetricMapper::Ptr create( size_t numComponents);
 protected:
-    virtual vtkDataSetAttributes* getDataSet( vtkPolyData* pd) const;
-    virtual const IntSet* getMappingIds( const RFeatures::ObjModel::Ptr) const;
-    virtual void setLookupMap( VtkActorCreator*, IntIntMap*) const;
+    vtkDataSetAttributes* getDataSet( vtkPolyData* pd) const override;
+    const IntSet* getMappingIds( const RFeatures::ObjModel&) const override;
+    void setLookupMap( VtkActorCreator*, IntIntMap*) const override;
     explicit VertexMetricMapper( size_t numComponents);
 };  // end class
 

@@ -107,9 +107,9 @@ std::pair<float,float> map( PolySurfaceCurvScalarMapper& mapper)
 
 
 // public
-CurvatureSurfaceMapper::CurvatureSurfaceMapper( const RFeatures::ObjModelCurvatureMetrics& cm,
+CurvatureSurfaceMapper::CurvatureSurfaceMapper( RFeatures::ObjModelCurvatureMetrics::Ptr cmetrics,
                                                 vtkActor* prop, const IntIntMap* lmap)
-    : _cmetrics(cm), _actor(prop), _lmap(lmap)
+    : _cmetrics(cmetrics), _actor(prop), _lmap(lmap)
 {
 }   // end ctor
 

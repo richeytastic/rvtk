@@ -35,6 +35,7 @@ typedef unsigned char byte;
 typedef std::unordered_set<int> IntSet;
 typedef std::unordered_map<int, int> IntIntMap;
 #include <vector>
+#include <list>
 
 
 namespace RVTK {
@@ -79,6 +80,7 @@ public:
     // Generate a single line where the given points are joined in sequence.
     // Set joinLoop to true if the first point should be joined to the last.
     static vtkSmartPointer<vtkActor> generateLineActor( const std::vector<cv::Vec3f>&, bool joinLoop=false);
+    static vtkSmartPointer<vtkActor> generateLineActor( const std::list<cv::Vec3f>&, bool joinLoop=false);
 
     // Generate an actor that is a set of line segments where lps is a sequence of line segment
     // endpoints. (lps.size() must be even).

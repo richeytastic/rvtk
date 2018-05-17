@@ -51,9 +51,6 @@ rVTK_EXPORT vtkPolyData* getPolyData( const vtkActor*);
 // If the given matrix is NULL, the actor's internal (GPU) matrix is used.
 rVTK_EXPORT void transform( vtkActor*, const vtkMatrix4x4 *m=NULL);
 
-// VTK version independent creation of mapper object from poly data
-rVTK_EXPORT vtkSmartPointer<vtkPolyDataMapper> createMapper( const vtkSmartPointer<vtkPolyData>& data);
-
 rVTK_EXPORT vtkSmartPointer<vtkImageImport> makeImageImporter( const cv::Mat img);
 
 // Converts a CV_8UC3 or CV_8UC1 image into a texture object ready for

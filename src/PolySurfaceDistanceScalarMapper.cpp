@@ -22,7 +22,7 @@ using RFeatures::ObjModel;
 
 
 // public
-PolySurfaceDistanceScalarMapper::PolySurfaceDistanceScalarMapper( const ObjModel::Ptr model,
+PolySurfaceDistanceScalarMapper::PolySurfaceDistanceScalarMapper( const ObjModel& model,
                                                                   vtkActor* actor,
                                                                   const IntIntMap* lookupMap,
                                                                   const std::unordered_map<int,double>& dvals,
@@ -35,7 +35,7 @@ PolySurfaceDistanceScalarMapper::PolySurfaceDistanceScalarMapper( const ObjModel
 // private
 float PolySurfaceDistanceScalarMapper::getMetric( int faceIdx, int notused)
 {
-    const int* vidxs = _model->getFaceVertices(faceIdx);
+    const int* vidxs = _model.getFaceVertices(faceIdx);
     const double v = (_dvals.at(vidxs[0]) + _dvals.at(vidxs[1]) + _dvals.at(vidxs[2]))/3;
     return float(v);
 }   // end getMetric
@@ -52,5 +52,3 @@ float PolySurfaceDistanceScalarMapper::getMappedRange( float* minv, float* maxv)
         *maxv = highv;
     return highv - lowv;
 }   // end getMappedRange
-
-
