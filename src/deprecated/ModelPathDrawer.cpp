@@ -74,13 +74,13 @@ private:
 };  // end class
 
 
-class ModelPathDrawer::Deleter
-{ public:
-    void operator()( ModelPathDrawer *d) { delete d;}
-};  // end class
 
 // public
-ModelPathDrawer::Ptr ModelPathDrawer::create( vtkSmartPointer<vtkRenderWindowInteractor> rwi) { return Ptr( new ModelPathDrawer( rwi), Deleter());}
+ModelPathDrawer::Ptr ModelPathDrawer::create( vtkSmartPointer<vtkRenderWindowInteractor> rwi)
+{
+    return Ptr( new ModelPathDrawer( rwi), [](auto d){ delete d;});
+}   // end create
+
 
 // private
 ModelPathDrawer::ModelPathDrawer( vtkSmartPointer<vtkRenderWindowInteractor> rwi)

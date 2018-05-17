@@ -32,7 +32,7 @@ DijkstraShortestPathLineInterpolator* DijkstraShortestPathLineInterpolator::New(
 }   // end New
 
 // public
-void DijkstraShortestPathLineInterpolator::setModel( RFeatures::ObjModelKDTree::Ptr kdtree) { _kdtree = kdtree;}
+void DijkstraShortestPathLineInterpolator::setModel( const RFeatures::ObjModelKDTree* kdtree) { _kdtree = kdtree;}
 
 
 // public
@@ -60,7 +60,7 @@ int DijkstraShortestPathLineInterpolator::InterpolateLine( vtkRenderer* ren, vtk
     const int uv0 = _kdtree->find(p0);
     const int uv1 = _kdtree->find(p1);
 
-    const RFeatures::ObjModel::Ptr model = _kdtree->getObject();
+    const RFeatures::ObjModel* model = _kdtree->model();
     RFeatures::DijkstraShortestPathFinder spfinder( model);
     if ( !spfinder.setEndPointVertexIndices( uv0, uv1))
         assert(false);

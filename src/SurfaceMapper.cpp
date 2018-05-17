@@ -36,7 +36,7 @@ MetricMapper::Ptr PolygonMetricMapper::create( size_t nc) { return MetricMapper:
 // protected
 PolygonMetricMapper::PolygonMetricMapper( size_t nc) : MetricMapper(nc) {}
 vtkDataSetAttributes* PolygonMetricMapper::getDataSet( vtkPolyData* pd) const { return pd->GetCellData();}
-const IntSet* PolygonMetricMapper::getMappingIds( const ObjModel& m) const { return &m.getFaceIds();}
+const IntSet* PolygonMetricMapper::getMappingIds( const ObjModel* m) const { return &m->getFaceIds();}
 void PolygonMetricMapper::setLookupMap( RVTK::VtkActorCreator* ac, IntIntMap* lmap) const { ac->setObjToVTKUniqueFaceMap( lmap);}
 
 
@@ -45,7 +45,7 @@ MetricMapper::Ptr VertexMetricMapper::create( size_t nc) { return MetricMapper::
 // protected
 VertexMetricMapper::VertexMetricMapper( size_t nc) : MetricMapper(nc) {}
 vtkDataSetAttributes* VertexMetricMapper::getDataSet( vtkPolyData* pd) const { return pd->GetPointData();}
-const IntSet* VertexMetricMapper::getMappingIds( const ObjModel& m) const { return &m.getVertexIds();}
+const IntSet* VertexMetricMapper::getMappingIds( const ObjModel* m) const { return &m->getVertexIds();}
 void VertexMetricMapper::setLookupMap( RVTK::VtkActorCreator* ac, IntIntMap* lmap) const { ac->setObjToVTKUniqueVertexMap( lmap);}
 
 
@@ -64,7 +64,7 @@ void SurfaceMapper::init()
 
 
 // public
-SurfaceMapper::SurfaceMapper( const ObjModel& m, vtkActor* actor, const IntIntMap* lmap,
+SurfaceMapper::SurfaceMapper( const ObjModel* m, vtkActor* actor, const IntIntMap* lmap,
                               const std::string& metricName, const MetricMapper::Ptr mmapper)
     : _model(m), _mname(metricName), _mmapper(mmapper), _actor(actor), _lmap(lmap)
 {

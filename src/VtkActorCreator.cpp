@@ -67,7 +67,7 @@ VtkActorCreator::VtkActorCreator()
 class CellPolygonCreator : public RFeatures::ObjModelTriangleParser
 {
 public:
-    CellPolygonCreator( const ObjModel::Ptr model, const IntIntMap* uvmappings,
+    CellPolygonCreator( const ObjModel* model, const IntIntMap* uvmappings,
                         IntIntMap* ufmappings, IntIntMap* rufmappings, IntSet* ufidxs)
         : _model(model), _uvmappings(uvmappings), _polys( vtkSmartPointer<vtkCellArray>::New()), _vtkFid(0),
           _ufmappings(ufmappings), _rufmappings(rufmappings), _ufidxs(ufidxs),
@@ -111,7 +111,7 @@ protected:
     }   // end parseTriangle
 
 private:
-    const ObjModel::Ptr _model;
+    const ObjModel* _model;
     const IntIntMap* _uvmappings;
     vtkSmartPointer<vtkCellArray> _polys;
     int _vtkFid;
@@ -124,7 +124,7 @@ private:
 
 
 // private
-vtkSmartPointer<vtkCellArray> VtkActorCreator::createPolygons( const ObjModel::Ptr model, const IntIntMap* uvmappings)
+vtkSmartPointer<vtkCellArray> VtkActorCreator::createPolygons( const ObjModel* model, const IntIntMap* uvmappings)
 {
     CellPolygonCreator cellCreator( model, uvmappings, _ufmappings, _rufmappings, _ufidxs);
     RFeatures::ObjModelTriangleMeshParser parser( model);
@@ -140,7 +140,7 @@ vtkSmartPointer<vtkCellArray> VtkActorCreator::createPolygons( const ObjModel::P
 
 
 // private
-vtkSmartPointer<vtkPoints> VtkActorCreator::createVertices( const ObjModel::Ptr model, IntIntMap* uvmappings)
+vtkSmartPointer<vtkPoints> VtkActorCreator::createVertices( const ObjModel* model, IntIntMap* uvmappings)
 {
     uvmappings->clear();
     if ( _ruvmappings)
@@ -172,7 +172,7 @@ vtkSmartPointer<vtkPoints> VtkActorCreator::createVertices( const ObjModel::Ptr 
 
 
 // private
-vtkSmartPointer<vtkCellArray> VtkActorCreator::createPolygons( const ObjModel::Ptr model, const IntIntMap* uvmappings)
+vtkSmartPointer<vtkCellArray> VtkActorCreator::createPolygons( const ObjModel* model, const IntIntMap* uvmappings)
 {
     int vtkid = 0;
     vtkSmartPointer<vtkCellArray> polys = vtkSmartPointer<vtkCellArray>::New();
@@ -199,7 +199,7 @@ vtkSmartPointer<vtkCellArray> VtkActorCreator::createPolygons( const ObjModel::P
 
 
 // public
-vtkSmartPointer<vtkActor> VtkActorCreator::generateSurfaceActor( const ObjModel::Ptr model)
+vtkSmartPointer<vtkActor> VtkActorCreator::generateSurfaceActor( const ObjModel* model)
 {
     IntIntMap* uvmappings = _uvmappings;    // Provided memory
     bool dodelete = false;
@@ -251,7 +251,7 @@ vtkSmartPointer<vtkActor> VtkActorCreator::generatePointsActor( const std::vecto
 
 
 // public static
-vtkSmartPointer<vtkActor> VtkActorCreator::generatePointsActor( const ObjModel::Ptr model)
+vtkSmartPointer<vtkActor> VtkActorCreator::generatePointsActor( const ObjModel* model)
 {
     const IntSet& vidxs = model->getVertexIds();
     std::vector<cv::Vec3f> vtxs(vidxs.size());
@@ -426,7 +426,7 @@ struct SingleMaterialData
     vtkSmartPointer<vtkCellArray> faces; // Each cell element holds three integers which are the indices into points
 
     // Create the required VTK data from
-    SingleMaterialData( const ObjModel::Ptr model, int matId, Mappings& mappings)
+    SingleMaterialData( const ObjModel* model, int matId, Mappings& mappings)
     {
         // Only take one of the texture maps
         const std::vector<cv::Mat>& ambient = model->getMaterialAmbient(matId);
@@ -476,7 +476,7 @@ struct SingleMaterialData
 
 
 // public
-size_t VtkActorCreator::generateTexturedActors( const ObjModel::Ptr model, std::vector<vtkSmartPointer<vtkActor> >& actors)
+size_t VtkActorCreator::generateTexturedActors( const ObjModel* model, std::vector<vtkSmartPointer<vtkActor> >& actors)
 {
     actors.clear();
 

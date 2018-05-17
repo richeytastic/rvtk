@@ -7,91 +7,91 @@ namespace {
 class KP1CurvMapper : public PolySurfaceCurvScalarMapper
 {
 public:
-    KP1CurvMapper( const RFeatures::ObjModelCurvatureMetrics& cm,
+    KP1CurvMapper( const RFeatures::ObjModelCurvatureMetrics* cm,
                    vtkActor* actor, const IntIntMap* lmap, const std::string& metricName)
         : PolySurfaceCurvScalarMapper(cm, actor, lmap, metricName){}
 protected:
-    float getCurvMetric( int fid) const override { return _cmetrics.faceKP1FirstOrder(fid);}
+    float getCurvMetric( int fid) const override { return _cmetrics->faceKP1FirstOrder(fid);}
 };  // end class
 
 
 class KP1FirstCurvMapper : public PolySurfaceCurvScalarMapper
 {
 public:
-    KP1FirstCurvMapper( const RFeatures::ObjModelCurvatureMetrics& cm,
+    KP1FirstCurvMapper( const RFeatures::ObjModelCurvatureMetrics* cm,
                    vtkActor* actor, const IntIntMap* lmap, const std::string& metricName)
         : PolySurfaceCurvScalarMapper(cm, actor, lmap, metricName){}
 protected:
-    float getCurvMetric( int fid) const override { return _cmetrics.faceKP1SecondOrder(fid);}
+    float getCurvMetric( int fid) const override { return _cmetrics->faceKP1SecondOrder(fid);}
 };  // end class
 
 
 class KP2CurvMapper : public PolySurfaceCurvScalarMapper
 {
 public:
-    KP2CurvMapper( const RFeatures::ObjModelCurvatureMetrics& cm,
+    KP2CurvMapper( const RFeatures::ObjModelCurvatureMetrics* cm,
                    vtkActor* actor, const IntIntMap* lmap, const std::string& metricName)
         : PolySurfaceCurvScalarMapper(cm, actor, lmap, metricName){}
 protected:
-    float getCurvMetric( int fid) const override { return _cmetrics.faceKP2FirstOrder(fid);}
+    float getCurvMetric( int fid) const override { return _cmetrics->faceKP2FirstOrder(fid);}
 };  // end class
 
 
 class KP2FirstCurvMapper : public PolySurfaceCurvScalarMapper
 {
 public:
-    KP2FirstCurvMapper( const RFeatures::ObjModelCurvatureMetrics& cm,
+    KP2FirstCurvMapper( const RFeatures::ObjModelCurvatureMetrics* cm,
                    vtkActor* actor, const IntIntMap* lmap, const std::string& metricName)
         : PolySurfaceCurvScalarMapper(cm, actor, lmap, metricName){}
 protected:
-    float getCurvMetric( int fid) const override { return _cmetrics.faceKP2SecondOrder(fid);}
+    float getCurvMetric( int fid) const override { return _cmetrics->faceKP2SecondOrder(fid);}
 };  // end class
 
 
 class AbsCurvMapper : public PolySurfaceCurvScalarMapper
 {
 public:
-    AbsCurvMapper( const RFeatures::ObjModelCurvatureMetrics& cm,
+    AbsCurvMapper( const RFeatures::ObjModelCurvatureMetrics* cm,
                    vtkActor* actor, const IntIntMap* lmap, const std::string& metricName)
         : PolySurfaceCurvScalarMapper(cm, actor, lmap, metricName){}
 protected:
     float getCurvMetric( int fid) const override {
-        return sqrt( (pow(_cmetrics.faceKP2FirstOrder(fid),2) + pow(_cmetrics.faceKP1FirstOrder(fid),2)) / 2);}
+        return sqrt( (pow(_cmetrics->faceKP2FirstOrder(fid),2) + pow(_cmetrics->faceKP1FirstOrder(fid),2)) / 2);}
 };  // end class
 
 
 class MeanCurvMapper : public PolySurfaceCurvScalarMapper
 {
 public:
-    MeanCurvMapper( const RFeatures::ObjModelCurvatureMetrics& cm,
+    MeanCurvMapper( const RFeatures::ObjModelCurvatureMetrics* cm,
                     vtkActor* actor, const IntIntMap* lmap, const std::string& metricName)
         : PolySurfaceCurvScalarMapper(cm, actor, lmap, metricName){}
 protected:
     float getCurvMetric( int fid) const override {
-        return (_cmetrics.faceKP2FirstOrder(fid) + _cmetrics.faceKP1FirstOrder(fid)) / 2;}
+        return (_cmetrics->faceKP2FirstOrder(fid) + _cmetrics->faceKP1FirstOrder(fid)) / 2;}
 };  // end class
 
 
 class DeterminantCurvMapper : public PolySurfaceCurvScalarMapper
 {
 public:
-    DeterminantCurvMapper( const RFeatures::ObjModelCurvatureMetrics& cm,
+    DeterminantCurvMapper( const RFeatures::ObjModelCurvatureMetrics* cm,
                     vtkActor* actor, const IntIntMap* lmap, const std::string& metricName)
         : PolySurfaceCurvScalarMapper(cm, actor, lmap, metricName){}
 protected:
-    float getCurvMetric( int fid) const override { return _cmetrics.faceDeterminant(fid);}
+    float getCurvMetric( int fid) const override { return _cmetrics->faceDeterminant(fid);}
 };  // end class
 
 
 class GaussianCurvMapper : public PolySurfaceCurvScalarMapper
 {
 public:
-    GaussianCurvMapper( const RFeatures::ObjModelCurvatureMetrics& cm,
+    GaussianCurvMapper( const RFeatures::ObjModelCurvatureMetrics* cm,
                     vtkActor* actor, const IntIntMap* lmap, const std::string& metricName)
         : PolySurfaceCurvScalarMapper(cm, actor, lmap, metricName){}
 protected:
     float getCurvMetric( int fid) const override {
-        return _cmetrics.faceKP1FirstOrder(fid) * _cmetrics.faceKP2FirstOrder(fid);}
+        return _cmetrics->faceKP1FirstOrder(fid) * _cmetrics->faceKP2FirstOrder(fid);}
 };  // end class
 
 
@@ -107,7 +107,7 @@ std::pair<float,float> map( PolySurfaceCurvScalarMapper& mapper)
 
 
 // public
-CurvatureSurfaceMapper::CurvatureSurfaceMapper( const RFeatures::ObjModelCurvatureMetrics& cm,
+CurvatureSurfaceMapper::CurvatureSurfaceMapper( const RFeatures::ObjModelCurvatureMetrics* cm,
                                                 vtkActor* prop, const IntIntMap* lmap)
     : _cmetrics(cm), _actor(prop), _lmap(lmap)
 {

@@ -53,10 +53,10 @@ class SurfaceMapper;
 class rVTK_EXPORT MetricMapper
 {
 public:
-    typedef boost::shared_ptr<MetricMapper> Ptr;
+    typedef std::shared_ptr<MetricMapper> Ptr;
 protected:
     explicit MetricMapper( size_t nc) : _nc(nc) {}
-    virtual const IntSet* getMappingIds( const RFeatures::ObjModel&) const { return NULL;}
+    virtual const IntSet* getMappingIds( const RFeatures::ObjModel*) const { return NULL;}
     virtual vtkDataSetAttributes* getDataSet( vtkPolyData*) const { return NULL;}
     virtual void setLookupMap( VtkActorCreator*, IntIntMap*) const {}
     size_t getNumComponents() const { return _nc;}

@@ -26,7 +26,7 @@ class rVTK_EXPORT SurfaceMapper : public MetricInterface
 {
 public:
     // Use existing actor - also requires existing lookup map (saved from RVTK::VtkActorCreator).
-    SurfaceMapper( const RFeatures::ObjModel&,
+    SurfaceMapper( const RFeatures::ObjModel*,
                    vtkActor* actor,                   // Actor to which a new data array will be added
                    const IntIntMap* lookupMap,        // Lookup map to match poly or vertex metric mapper
                    const std::string& metricName,
@@ -54,7 +54,7 @@ protected:
     virtual float getMetric( int id, int c) = 0;  // Implement me!
 
 private:
-    const RFeatures::ObjModel& _model;
+    const RFeatures::ObjModel* _model;
     const std::string _mname;
     const MetricMapper::Ptr _mmapper;
     vtkActor* _actor;
@@ -71,7 +71,7 @@ public:
     static MetricMapper::Ptr create( size_t numComponents);
 protected:
     vtkDataSetAttributes* getDataSet( vtkPolyData*) const override;
-    const IntSet* getMappingIds( const RFeatures::ObjModel&) const override;
+    const IntSet* getMappingIds( const RFeatures::ObjModel*) const override;
     void setLookupMap( VtkActorCreator*, IntIntMap*) const override;
     explicit PolygonMetricMapper( size_t numComponents);
 };  // end class
@@ -83,7 +83,7 @@ public:
     static MetricMapper::Ptr create( size_t numComponents);
 protected:
     vtkDataSetAttributes* getDataSet( vtkPolyData* pd) const override;
-    const IntSet* getMappingIds( const RFeatures::ObjModel&) const override;
+    const IntSet* getMappingIds( const RFeatures::ObjModel*) const override;
     void setLookupMap( VtkActorCreator*, IntIntMap*) const override;
     explicit VertexMetricMapper( size_t numComponents);
 };  // end class

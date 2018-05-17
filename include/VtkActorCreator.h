@@ -63,7 +63,7 @@ public:
     // Call the actor generation functions only AFTER setting the needed lookup maps.
     // The surface actor uses only the unique vertices from the provided object.
     // This makes it possible to treat the surface as a graph.
-    vtkSmartPointer<vtkActor> generateSurfaceActor( const RFeatures::ObjModel::Ptr);
+    vtkSmartPointer<vtkActor> generateSurfaceActor( const RFeatures::ObjModel*);
 
     // Since multi-texturing is a bit flaky in VTK (as at version 7.1), this function
     // generates a set of actors where each is separately texture mapped. This is because
@@ -71,11 +71,11 @@ public:
     // currently. DO NOT USE THESE ACTORS FOR GRAPH OPERATIONS due to morphological
     // discontinuities. Returns the number of actors generated. The provided vector
     // is cleared prior to use.
-    size_t generateTexturedActors( const RFeatures::ObjModel::Ptr, std::vector<vtkSmartPointer<vtkActor> >&);
+    size_t generateTexturedActors( const RFeatures::ObjModel*, std::vector<vtkSmartPointer<vtkActor> >&);
 
     // Generate a simple points actor.
     static vtkSmartPointer<vtkActor> generatePointsActor( const std::vector<cv::Vec3f>&);
-    static vtkSmartPointer<vtkActor> generatePointsActor( const RFeatures::ObjModel::Ptr);
+    static vtkSmartPointer<vtkActor> generatePointsActor( const RFeatures::ObjModel*);
 
     // Generate a single line where the given points are joined in sequence.
     // Set joinLoop to true if the first point should be joined to the last.
@@ -93,8 +93,8 @@ private:
     IntIntMap *_uvmappings, *_vmappings, *_ufmappings, *_fmappings; // Obj to VTK unique indices (for lookup)
     IntIntMap *_ruvmappings, *_rvmappings, *_rufmappings, *_rfmappings; // Reverse mappings from VTK to obj indices (for lookup)
 
-    vtkSmartPointer<vtkPoints> createVertices( const RFeatures::ObjModel::Ptr, IntIntMap*);
-    vtkSmartPointer<vtkCellArray> createPolygons( const RFeatures::ObjModel::Ptr, const IntIntMap*);
+    vtkSmartPointer<vtkPoints> createVertices( const RFeatures::ObjModel*, IntIntMap*);
+    vtkSmartPointer<vtkCellArray> createPolygons( const RFeatures::ObjModel*, const IntIntMap*);
 };  // end class
 
 }   // end namespace

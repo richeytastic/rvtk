@@ -25,7 +25,7 @@ namespace RVTK {
 class rVTK_EXPORT PolySurfaceDistanceScalarMapper : public SurfaceMapper
 {
 public:
-    PolySurfaceDistanceScalarMapper( const RFeatures::ObjModel& model,
+    PolySurfaceDistanceScalarMapper( const RFeatures::ObjModel* model,
                                      vtkActor* actor,
                                      const IntIntMap* lookupMap,
                                      const std::unordered_map<int,double>& dvals,
@@ -34,7 +34,7 @@ public:
     float getMappedRange( float* minv=NULL, float* maxv=NULL) const;
 
 private:
-    const RFeatures::ObjModel& _model;
+    const RFeatures::ObjModel* _model;
     const std::unordered_map<int,double>& _dvals;
     virtual float getMetric( int, int);
 };   // end class

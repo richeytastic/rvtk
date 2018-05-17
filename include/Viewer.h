@@ -27,16 +27,15 @@
 
 #include "VTKTypes.h"
 #include <CameraParams.h>   // RFeatures
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <opencv2/opencv.hpp>
-#include "rVTK_Export.h"
 
 namespace RVTK {
 
 class rVTK_EXPORT Viewer
 {
 public:
-    typedef boost::shared_ptr<Viewer> Ptr;
+    typedef std::shared_ptr<Viewer> Ptr;
     static Ptr create( bool offscreenRendering=false);
 
     // Check for multi-texturing support.

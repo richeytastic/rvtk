@@ -29,7 +29,7 @@ class rVTK_EXPORT CurvatureSurfaceMapper
 public:
     // Map must map ObjModel face IDs to VTK poly IDs.
     // Map is generated along with the VTK surface model when using RVTK::VtkActorCreator.
-    CurvatureSurfaceMapper( const RFeatures::ObjModelCurvatureMetrics&, vtkActor*, const IntIntMap*);
+    CurvatureSurfaceMapper( const RFeatures::ObjModelCurvatureMetrics*, vtkActor*, const IntIntMap*);
 
     // Map surface of the actor with the desired metric.
     // Pass in the lookup name for the surface metric / legend title.
@@ -44,7 +44,7 @@ public:
     std::pair<float,float> mapDeterminant( const std::string&);
 
 private:
-    const RFeatures::ObjModelCurvatureMetrics& _cmetrics;
+    const RFeatures::ObjModelCurvatureMetrics* _cmetrics;
     vtkActor* _actor;
     const IntIntMap* _lmap;
 };  // end class

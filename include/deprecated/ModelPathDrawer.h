@@ -24,12 +24,11 @@
 #include <vtkContourWidget.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkOrientedGlyphContourRepresentation.h>
-#include <boost/shared_ptr.hpp>
 #include <opencv2/opencv.hpp>
+#include <memory>
 #include <vector>
 
-namespace RVTK
-{
+namespace RVTK {
 
 class ModelPathDrawer;
 
@@ -45,7 +44,7 @@ class rVTK_EXPORT ModelPathEventObserver
 class rVTK_EXPORT ModelPathDrawer
 {
 public:
-    typedef boost::shared_ptr<ModelPathDrawer> Ptr;
+    typedef std::shared_ptr<ModelPathDrawer> Ptr;
     static Ptr create( vtkSmartPointer<vtkRenderWindowInteractor>);
 
     void setActor( const vtkActor*);
@@ -79,7 +78,6 @@ private:
     ~ModelPathDrawer();
     ModelPathDrawer( const ModelPathDrawer&);   // No copy
     void operator=( const ModelPathDrawer&);    // No copy
-    class Deleter;
 };  // end class
 
 }   // end namespace

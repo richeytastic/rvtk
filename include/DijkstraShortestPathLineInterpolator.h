@@ -24,8 +24,7 @@
 #include <vtkContourLineInterpolator.h>
 #include <ObjModelKDTree.h>              // RFeatures
 
-namespace RVTK
-{
+namespace RVTK {
 
 /*** Custom line interpolation ***/
 //class VTK_WIDGETS_EXPORT DijkstraShortestPathLineInterpolator : public vtkContourLineInterpolator
@@ -35,7 +34,7 @@ public:
     vtkTypeMacro( DijkstraShortestPathLineInterpolator, vtkContourLineInterpolator);
     static DijkstraShortestPathLineInterpolator* New();
 
-    void setModel( RFeatures::ObjModelKDTree::Ptr);
+    void setModel( const RFeatures::ObjModelKDTree*);
 
     // Interpolate between nodes n0 and n1 on the given vtkContourRepresentation
     virtual int InterpolateLine( vtkRenderer* ren, vtkContourRepresentation* rep, int n0, int n1);
@@ -44,11 +43,10 @@ protected:
     virtual ~DijkstraShortestPathLineInterpolator(){}
 
 private:
-    RFeatures::ObjModelKDTree::Ptr _kdtree;
-
+    const RFeatures::ObjModelKDTree* _kdtree;
     DijkstraShortestPathLineInterpolator();
-    DijkstraShortestPathLineInterpolator( const DijkstraShortestPathLineInterpolator&);   // Not implemented
-    void operator=( const DijkstraShortestPathLineInterpolator&);    // Not implemented
+    DijkstraShortestPathLineInterpolator( const DijkstraShortestPathLineInterpolator&); // No copy
+    void operator=( const DijkstraShortestPathLineInterpolator&);                       // No copy
 };  // end class
 
 }   // end namespace
