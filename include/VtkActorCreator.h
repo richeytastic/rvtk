@@ -70,7 +70,8 @@ public:
     // VTK requires one-2-one correspondence between points and texture coordinates
     // currently. DO NOT USE THESE ACTORS FOR GRAPH OPERATIONS due to morphological
     // discontinuities. Returns the number of actors generated. The provided vector
-    // is cleared prior to use.
+    // is cleared prior to use. All actors have ambient lighting set to 1 and diffuse
+    // and specular set to zero (for proper texture colouring).
     size_t generateTexturedActors( const RFeatures::ObjModel*, std::vector<vtkSmartPointer<vtkActor> >&);
 
     // Generate a simple points actor.

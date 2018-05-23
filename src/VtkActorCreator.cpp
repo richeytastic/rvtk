@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <sstream>
 #include <cmath>
+#include <vtkProperty.h>
 #include <vtkFloatArray.h>
 #include <vtkPointData.h>
 #include <ObjModelTriangleMeshParser.h> // RFeatures
@@ -513,6 +514,12 @@ size_t VtkActorCreator::generateTexturedActors( const ObjModel* model, std::vect
         }   // end for
         ****************************************************************/
         actor->SetTexture( smd.texture);
+
+        // Set ambient lighting for proper texture lighting
+        actor->GetProperty()->SetAmbient(1.0);
+        actor->GetProperty()->SetDiffuse(0.0);
+        actor->GetProperty()->SetSpecular(0.0);
+
         actors.push_back(actor);
     }   // end foreach
 
@@ -521,16 +528,3 @@ size_t VtkActorCreator::generateTexturedActors( const ObjModel* model, std::vect
     //actors.insert( actors.end(), mactors.begin(), mactors.end());
     return actors.size();
 }   // end generateTexturedActor
-
-
-    /*
-    vtkSmartPointer<vtkCurvatures> curveFilter = vtkSmartPointer<vtkCurvatures>::New();
-#if VTK_MAJOR_VERSION == 6
-    curveFilter->SetInputData( trianglesPolyData);
-#else
-    curveFilter->SetInput( trianglesPolyData);
-#endif
-    curveFilter->SetCurvatureTypeToMean();
-    curveFilter->Update();
-    mapper->SetInputConnection( curveFilter->GetOutputPort());
-    */
