@@ -121,6 +121,7 @@ void SurfaceMapper::mapActor()
         cvals->SetNumberOfValues( objids.size());
         for ( int objid : objids)
         {
+            assert( _model->getFaceIds().count(objid) > 0);
             mval = val( objid, 0);
             cvals->SetValue( _lmap->at(objid), mval);
         }   // end for

@@ -409,3 +409,10 @@ cv::Matx44d RVTK::toCV( const vtkMatrix4x4 *m)
 
     return cm;
 }   // end toCV
+
+
+void RVTK::print( std::ostream& os, const vtkMatrix4x4* m)
+{
+    cv::Matx44d cm = toCV(m);
+    os << cm << std::endl;
+}   // end print

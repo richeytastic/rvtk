@@ -37,10 +37,11 @@ ScalarLegend::ScalarLegend( vtkRenderWindowInteractor* rwint)
     legend->SetMaximumWidthInPixels( 80);
     legend->SetUnconstrainedFontSize(true);
     legend->DrawTickLabelsOn();
-    legend->SetPosition(0.81, 0.3);
+    legend->SetPosition(0.61, 0.3);
     legend->SetHeight(0.65);
 
     _widget->SetInteractor(rwint);
+    _widget->SetRepositionable(false);
 }   // end dtor
 
 

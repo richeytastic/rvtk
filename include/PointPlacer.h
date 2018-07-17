@@ -25,15 +25,13 @@
 #ifndef RVTK_POINT_PLACER_H
 #define RVTK_POINT_PLACER_H
 
-#include <boost/shared_ptr.hpp>
-#include <vtkSmartPointer.h>
+#include <memory>
 #include <vtkActor.h>
 #include <vtkRenderer.h>
 #include <vtkPolygonalSurfacePointPlacer.h>
 #include "rVTK_Export.h"
 
-namespace RVTK
-{
+namespace RVTK {
 
 enum rVTK_EXPORT DisplayOrigin
 {
@@ -45,9 +43,9 @@ enum rVTK_EXPORT DisplayOrigin
 class rVTK_EXPORT PointPlacer
 {
 public:
-    typedef boost::shared_ptr<PointPlacer> Ptr;
-    static Ptr create( const vtkSmartPointer<vtkRenderer>);
-    static Ptr create( const vtkSmartPointer<vtkRenderer>, vtkSmartPointer<vtkPolygonalSurfacePointPlacer>);
+    typedef std::shared_ptr<PointPlacer> Ptr;
+    static Ptr create( const vtkRenderer*);
+    static Ptr create( const vtkRenderer*, vtkPolygonalSurfacePointPlacer*);
 
     void set( const vtkProp*);    // Set prop as the only one
     void add( const vtkProp*);    // Add a prop
@@ -61,18 +59,20 @@ public:
     // OpenCV coords uses TOP_LEFT_DISPLAY_ORIGIN.
     bool calcSurfacePosition( int x, int y, float* worldPos, DisplayOrigin displayOrigin=BOTTOM_LEFT_DISPLAY_ORIGIN) const;
 
-    const vtkSmartPointer<vtkRenderer> getRenderer() const { return _renderer;}
-    const vtkSmartPointer<vtkPolygonalSurfacePointPlacer> getVtkPointPlacer() const { return _pplacer;}
+    const vtkRenderer* getRenderer() const { return _renderer;}
+    const vtkPolygonalSurfacePointPlacer* getVtkPointPlacer() const { return _pplacer;}
 
 protected:
-    const vtkSmartPointer<vtkRenderer> _renderer;
-    vtkSmartPointer<vtkPolygonalSurfacePointPlacer> _pplacer;
+    vtkRenderer* _renderer;
+    vtkPolygonalSurfacePointPlacer* _pplacer;
+    bool _delplacer;
 
 private:
-    explicit PointPlacer( const vtkSmartPointer<vtkRenderer>);
-    PointPlacer( const vtkSmartPointer<vtkRenderer>, vtkSmartPointer<vtkPolygonalSurfacePointPlacer>);
-    PointPlacer( const PointPlacer&);       // No copy
-    void operator=( const PointPlacer&);    // No copy
+    explicit PointPlacer( const vtkRenderer*);
+    PointPlacer( const vtkRenderer*, vtkPolygonalSurfacePointPlacer*);
+    ~PointPlacer();
+    PointPlacer( const PointPlacer&) = delete;
+    void operator=( const PointPlacer&) = delete;
 };  // end class
 
 }   // end namespace

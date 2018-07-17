@@ -30,14 +30,14 @@ using RFeatures::ObjModel;
 using RVTK::VtkActorCreator;
 
 
-vtkSmartPointer<vtkActor> makeActor( vtkSmartPointer<vtkPolyData> pd)
+vtkActor* makeActor( vtkSmartPointer<vtkPolyData> pd)
 {
     //pd = RVTK::generateNormals( pd);
     //pd->BuildLinks();   // Required to use vtkPolyData::GetPointCells
     //pd->BuildCells();
     vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     mapper->SetInputData( pd);
-    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+    vtkActor* actor = vtkActor::New();
     actor->SetMapper( mapper);
     return actor;
 }   // end makeActor
@@ -56,9 +56,9 @@ void init()
 
 // public
 VtkActorCreator::VtkActorCreator()
-    : _uvidxs(NULL), _ufidxs(NULL),
-      _uvmappings(NULL), _vmappings(NULL), _ufmappings(NULL), _fmappings(NULL),
-      _ruvmappings(NULL), _rvmappings(NULL), _rufmappings(NULL), _rfmappings(NULL)
+    : _uvidxs(nullptr), _ufidxs(nullptr),
+      _uvmappings(nullptr), _vmappings(nullptr), _ufmappings(nullptr), _fmappings(nullptr),
+      _ruvmappings(nullptr), _rvmappings(nullptr), _rufmappings(nullptr), _rfmappings(nullptr)
 {
     init();
 }   // end ctor
@@ -200,7 +200,7 @@ vtkSmartPointer<vtkCellArray> VtkActorCreator::createPolygons( const ObjModel* m
 
 
 // public
-vtkSmartPointer<vtkActor> VtkActorCreator::generateSurfaceActor( const ObjModel* model)
+vtkActor* VtkActorCreator::generateSurfaceActor( const ObjModel* model)
 {
     IntIntMap* uvmappings = _uvmappings;    // Provided memory
     bool dodelete = false;
@@ -240,7 +240,7 @@ vtkSmartPointer<vtkPoints> createVerts( const std::vector<cv::Vec3f>& vtxs, vtkS
 
 
 // public static
-vtkSmartPointer<vtkActor> VtkActorCreator::generatePointsActor( const std::vector<cv::Vec3f>& vtxs)
+vtkActor* VtkActorCreator::generatePointsActor( const std::vector<cv::Vec3f>& vtxs)
 {
     vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
     vtkSmartPointer<vtkPoints> points = createVerts( vtxs, vertices);
@@ -252,7 +252,7 @@ vtkSmartPointer<vtkActor> VtkActorCreator::generatePointsActor( const std::vecto
 
 
 // public static
-vtkSmartPointer<vtkActor> VtkActorCreator::generatePointsActor( const ObjModel* model)
+vtkActor* VtkActorCreator::generatePointsActor( const ObjModel* model)
 {
     const IntSet& vidxs = model->getVertexIds();
     std::vector<cv::Vec3f> vtxs(vidxs.size());
@@ -323,7 +323,7 @@ vtkSmartPointer<vtkPoints> createLinePairs( const std::vector<cv::Vec3f>& lps,
 
 
 // public static
-vtkSmartPointer<vtkActor> VtkActorCreator::generateLineActor( const std::vector<cv::Vec3f>& vtxs, bool joinLoop)
+vtkActor* VtkActorCreator::generateLineActor( const std::vector<cv::Vec3f>& vtxs, bool joinLoop)
 {
     vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
     vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
@@ -337,7 +337,7 @@ vtkSmartPointer<vtkActor> VtkActorCreator::generateLineActor( const std::vector<
 
 
 // public static
-vtkSmartPointer<vtkActor> VtkActorCreator::generateLineActor( const std::list<cv::Vec3f>& vtxs, bool joinLoop)
+vtkActor* VtkActorCreator::generateLineActor( const std::list<cv::Vec3f>& vtxs, bool joinLoop)
 {
     std::vector<cv::Vec3f> vpts(vtxs.begin(), vtxs.end());
     return generateLineActor(vpts);
@@ -345,7 +345,7 @@ vtkSmartPointer<vtkActor> VtkActorCreator::generateLineActor( const std::list<cv
 
 
 // public static
-vtkSmartPointer<vtkActor> VtkActorCreator::generateLinePairsActor( const std::vector<cv::Vec3f>& lps)
+vtkActor* VtkActorCreator::generateLinePairsActor( const std::vector<cv::Vec3f>& lps)
 {
     vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
     vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
@@ -477,7 +477,7 @@ struct SingleMaterialData
 
 
 // public
-size_t VtkActorCreator::generateTexturedActors( const ObjModel* model, std::vector<vtkSmartPointer<vtkActor> >& actors)
+size_t VtkActorCreator::generateTexturedActors( const ObjModel* model, std::vector<vtkActor*>& actors)
 {
     actors.clear();
 
@@ -501,7 +501,7 @@ size_t VtkActorCreator::generateTexturedActors( const ObjModel* model, std::vect
         //pd->GetPointData()->AddArray( smd.uvs);  // Add texture coords to poly data
         pd->GetPointData()->SetTCoords( smd.uvs);  // Add texture coords to poly data
 
-        vtkSmartPointer<vtkActor> actor = makeActor(pd);
+        vtkActor* actor = makeActor(pd);
         /*************** Multitexturing code ***************************
         tmaps[0].texture->SetBlendingMode( vtkTexture::VTK_TEXTURE_BLENDING_MODE_REPLACE);
         for ( int i = 0; i < numMaterials; ++i)

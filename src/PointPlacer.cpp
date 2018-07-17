@@ -19,29 +19,36 @@
 using RVTK::PointPlacer;
 
 
-PointPlacer::Ptr PointPlacer::create( const vtkSmartPointer<vtkRenderer> r)
+PointPlacer::Ptr PointPlacer::create( const vtkRenderer* r)
 {
-    return Ptr( new PointPlacer(r));
+    return Ptr( new PointPlacer(r), [](auto d){ delete d;});
 }   // end create
 
 
-PointPlacer::Ptr PointPlacer::create( const vtkSmartPointer<vtkRenderer> r,
-                                      vtkSmartPointer<vtkPolygonalSurfacePointPlacer> p)
+PointPlacer::Ptr PointPlacer::create( const vtkRenderer* r, vtkPolygonalSurfacePointPlacer* p)
 {
-    return Ptr( new PointPlacer(r,p));
+    return Ptr( new PointPlacer(r,p), [](auto d){ delete d;});
 }   // end create
 
 
 // private
-PointPlacer::PointPlacer( const vtkSmartPointer<vtkRenderer> r)
-    : _renderer(r), _pplacer( vtkPolygonalSurfacePointPlacer::New())
+PointPlacer::PointPlacer( const vtkRenderer* r)
+    : _renderer(const_cast<vtkRenderer*>(r)), _pplacer( vtkPolygonalSurfacePointPlacer::New()), _delplacer(true)
 {}   // end ctor
 
 
 // private
-PointPlacer::PointPlacer( const vtkSmartPointer<vtkRenderer> r, vtkSmartPointer<vtkPolygonalSurfacePointPlacer> p)
-    : _renderer(r), _pplacer( p)
+PointPlacer::PointPlacer( const vtkRenderer* r, vtkPolygonalSurfacePointPlacer* p)
+    : _renderer(const_cast<vtkRenderer*>(r)), _pplacer( p), _delplacer(false)
 {}   // end ctor
+
+
+// private
+PointPlacer::~PointPlacer()
+{
+    if ( _delplacer)
+        _pplacer->Delete();
+}   // end dtor
 
 
 void PointPlacer::set( const vtkProp* p)

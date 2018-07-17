@@ -17,9 +17,6 @@
 
 /**
  * Create different VTK Actors from an ObjModel supporting the mapping of the different vertex and face indices to VTK.
- *
- * Richard Palmer
- * August 2016
  */
 
 #ifndef RVTK_VTK_ACTOR_CREATOR_H
@@ -63,7 +60,7 @@ public:
     // Call the actor generation functions only AFTER setting the needed lookup maps.
     // The surface actor uses only the unique vertices from the provided object.
     // This makes it possible to treat the surface as a graph.
-    vtkSmartPointer<vtkActor> generateSurfaceActor( const RFeatures::ObjModel*);
+    vtkActor* generateSurfaceActor( const RFeatures::ObjModel*);
 
     // Since multi-texturing is a bit flaky in VTK (as at version 7.1), this function
     // generates a set of actors where each is separately texture mapped. This is because
@@ -72,20 +69,20 @@ public:
     // discontinuities. Returns the number of actors generated. The provided vector
     // is cleared prior to use. All actors have ambient lighting set to 1 and diffuse
     // and specular set to zero (for proper texture colouring).
-    size_t generateTexturedActors( const RFeatures::ObjModel*, std::vector<vtkSmartPointer<vtkActor> >&);
+    size_t generateTexturedActors( const RFeatures::ObjModel*, std::vector<vtkActor*>&);
 
     // Generate a simple points actor.
-    static vtkSmartPointer<vtkActor> generatePointsActor( const std::vector<cv::Vec3f>&);
-    static vtkSmartPointer<vtkActor> generatePointsActor( const RFeatures::ObjModel*);
+    static vtkActor* generatePointsActor( const std::vector<cv::Vec3f>&);
+    static vtkActor* generatePointsActor( const RFeatures::ObjModel*);
 
     // Generate a single line where the given points are joined in sequence.
     // Set joinLoop to true if the first point should be joined to the last.
-    static vtkSmartPointer<vtkActor> generateLineActor( const std::vector<cv::Vec3f>&, bool joinLoop=false);
-    static vtkSmartPointer<vtkActor> generateLineActor( const std::list<cv::Vec3f>&, bool joinLoop=false);
+    static vtkActor* generateLineActor( const std::vector<cv::Vec3f>&, bool joinLoop=false);
+    static vtkActor* generateLineActor( const std::list<cv::Vec3f>&, bool joinLoop=false);
 
     // Generate an actor that is a set of line segments where lps is a sequence of line segment
     // endpoints. (lps.size() must be even).
-    static vtkSmartPointer<vtkActor> generateLinePairsActor( const std::vector<cv::Vec3f>& lps);
+    static vtkActor* generateLinePairsActor( const std::vector<cv::Vec3f>& lps);
 
 private:
     IntSet* _uvidxs;  // VTK unique vertex (surface model) IDs
