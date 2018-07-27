@@ -30,6 +30,8 @@ using RFeatures::ObjModel;
 using RVTK::VtkActorCreator;
 
 
+namespace {
+
 vtkActor* makeActor( vtkSmartPointer<vtkPolyData> pd)
 {
     //pd = RVTK::generateNormals( pd);
@@ -52,6 +54,8 @@ void init()
     // Add static initialisation here...
     vtkMapper::SetResolveCoincidentTopologyToPolygonOffset();
 }   // end init
+
+}   // end namespace
 
 
 // public
@@ -224,6 +228,8 @@ vtkActor* VtkActorCreator::generateSurfaceActor( const ObjModel* model)
 }   // end generateSurfaceActor
 
 
+namespace {
+
 vtkSmartPointer<vtkPoints> createVerts( const std::vector<cv::Vec3f>& vtxs, vtkSmartPointer<vtkCellArray> vertices)
 {
     const int n = (int)vtxs.size();
@@ -237,6 +243,8 @@ vtkSmartPointer<vtkPoints> createVerts( const std::vector<cv::Vec3f>& vtxs, vtkS
     }   // end for
     return points;
 }   // end createVerts
+
+}   // end namespace
 
 
 // public static
@@ -262,6 +270,8 @@ vtkActor* VtkActorCreator::generatePointsActor( const ObjModel* model)
 }   // end generatePointsActor
 
 
+namespace {
+
 vtkSmartPointer<vtkPoints> createLines( const std::vector<cv::Vec3f>& vtxs,
                                         vtkSmartPointer<vtkCellArray> vertices,
                                         vtkSmartPointer<vtkCellArray> lines,
@@ -277,19 +287,19 @@ vtkSmartPointer<vtkPoints> createLines( const std::vector<cv::Vec3f>& vtxs,
         vertices->InsertCellPoint(i);
     }   // end for
 
-    for ( int i = 1; i < n; ++i)
-    {
-        lines->InsertNextCell(2);
-        lines->InsertCellPoint(i-1);
-        lines->InsertCellPoint(i);
-    }   // end for
-
     if ( joinLoop)
     {
         lines->InsertNextCell(2);
         lines->InsertCellPoint(n-1);
         lines->InsertCellPoint(0);
     }   // end if
+
+    for ( int i = 1; i < n; ++i)
+    {
+        lines->InsertNextCell(2);
+        lines->InsertCellPoint(i-1);
+        lines->InsertCellPoint(i);
+    }   // end for
 
     return points;
 }   // end createLines
@@ -321,6 +331,8 @@ vtkSmartPointer<vtkPoints> createLinePairs( const std::vector<cv::Vec3f>& lps,
     return points;
 }   // end createLinePairs
 
+}   // end namespace
+
 
 // public static
 vtkActor* VtkActorCreator::generateLineActor( const std::vector<cv::Vec3f>& vtxs, bool joinLoop)
@@ -340,7 +352,7 @@ vtkActor* VtkActorCreator::generateLineActor( const std::vector<cv::Vec3f>& vtxs
 vtkActor* VtkActorCreator::generateLineActor( const std::list<cv::Vec3f>& vtxs, bool joinLoop)
 {
     std::vector<cv::Vec3f> vpts(vtxs.begin(), vtxs.end());
-    return generateLineActor(vpts);
+    return generateLineActor( vpts, joinLoop);
 }   // end generateLineActor
 
 
