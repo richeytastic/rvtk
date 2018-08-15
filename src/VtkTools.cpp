@@ -80,7 +80,7 @@ RFeatures::ObjModel::Ptr RVTK::makeObject( const vtkActor* actor)
 vtkPolyData* RVTK::getPolyData( const vtkActor* actor)
 {
     if ( !actor)
-        return NULL;
+        return nullptr;
     vtkPolyDataMapper* mapper = (vtkPolyDataMapper*)const_cast<vtkActor*>(actor)->GetMapper();
     return mapper->GetInput();
 }   // end getPolyData

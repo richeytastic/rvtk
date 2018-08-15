@@ -63,7 +63,7 @@ public:
                         vtkActor* actor,
                         std::vector<int>& cellIds) const;
 
-    // Given a 2D point, find the actor being pointed to. Returns NULL if no actor found.
+    // Given a 2D point, find the actor being pointed to. Returns null if no actor found.
     vtkActor* pickActor( const cv::Point&) const;
     vtkActor* pickActor( const cv::Point2f&) const;
 
