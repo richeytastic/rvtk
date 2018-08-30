@@ -430,7 +430,7 @@ vtkActor* VtkActorCreator::generateActor( const ObjModel* model)
         return generateSurfaceActor( model);
     }   // end if
 
-    const int NP = 3*model->getNumFaces();
+    const int NP = 3*(int)model->getNumFaces();
     Mappings mappings( _uvmappings, _ruvmappings, _ufmappings, _rufmappings);
 
     const int MID = *model->getMaterialIds().begin();   // The one and only material ID
