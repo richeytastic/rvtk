@@ -23,7 +23,6 @@
 #include <vtkSmartPointer.h>
 #include <vtkLookupTable.h>
 #include <vtkMapper.h>
-#include <vtkColor.h>
 #include <string>
 #include "rVTK_Export.h"
 
@@ -36,30 +35,14 @@ public:
     explicit ScalarLegend( vtkRenderWindowInteractor*);
     virtual ~ScalarLegend(){}
 
-    void setTitle( const std::string& title);
-
-    // Set simple colour range from minCol to maxCol over ncols.
-    void setColours( const vtkColor3ub& minCol, const vtkColor3ub& maxCol, size_t ncols);
-
-    // Specify a colour midway between the start and end colours.
-    // If two values for the number of colours are used, ncols0 and ncols1,
-    // ncols0 specifies the number of colour values below the middle value
-    // and ncols1 specifies the number of colour values above the middle value.
-    void setColours( const vtkColor3ub& minCol,  // Colour at min value
-                     const vtkColor3ub& midCol,  // Colour at midway value
-                     const vtkColor3ub& maxCol,  // Colour at max value
-                     size_t ncols0, size_t ncols1=0);
-
-    void setLookupTable( vtkMapper*, float minv, float maxv);
-
-    size_t getNumColours() const;
+    void setTitle( const std::string&);
+    void setLookupTable( const vtkLookupTable*);
 
     void setVisible( bool);
     bool isVisible() const;
 
 private:
     vtkSmartPointer<vtkScalarBarWidget> _widget;
-    vtkSmartPointer<vtkLookupTable> _lut;
     bool _shown;
 };  // end class
 

@@ -23,6 +23,7 @@ set( INCLUDE_FILES
     "${INCLUDE_DIR}/KeyPresser.h"
     "${INCLUDE_DIR}/LinePlotter.h"
     "${INCLUDE_DIR}/LinesMapper.h"
+    "${INCLUDE_DIR}/LookupTable.h"
     #"${INCLUDE_DIR}/ModelPathDrawer.h"
     #"${INCLUDE_DIR}/PointCloudMapper.h"
     "${INCLUDE_DIR}/PointPlacer.h"
@@ -56,6 +57,7 @@ set( SRC_FILES
     ${SRC_DIR}/KeyPresser
     ${SRC_DIR}/LinePlotter
     ${SRC_DIR}/LinesMapper
+    ${SRC_DIR}/LookupTable
     #${SRC_DIR}/ModelPathDrawer
     #${SRC_DIR}/PointCloudMapper
     ${SRC_DIR}/PointPlacer

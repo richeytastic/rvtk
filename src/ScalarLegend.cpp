@@ -19,7 +19,6 @@
 using RVTK::ScalarLegend;
 #include <vtkTextProperty.h>
 #include <vtkScalarBarActor.h>
-#include <vtkColor.h>
 #include <sstream>
 
 
@@ -27,8 +26,6 @@ ScalarLegend::ScalarLegend( vtkRenderWindowInteractor* rwint)
 {
     _widget = vtkSmartPointer<vtkScalarBarWidget>::New();
     vtkScalarBarActor* legend = _widget->GetScalarBarActor();
-    _lut = vtkSmartPointer<vtkLookupTable>::New();
-    legend->SetLookupTable(_lut);
 
     legend->GetLabelTextProperty()->SetFontFamilyToCourier();
     legend->GetLabelTextProperty()->SetItalic(false);
@@ -58,105 +55,24 @@ void ScalarLegend::setTitle( const std::string& title)
 
 
 // public
-void ScalarLegend::setColours( const vtkColor3ub& scol, const vtkColor3ub& fcol, size_t ncols)
+void ScalarLegend::setLookupTable( const vtkLookupTable* lut)
 {
-    assert( ncols > 0);
-    if ( ncols < 2)
-        ncols = 2;
+    vtkLookupTable* ltable = const_cast<vtkLookupTable*>(lut);
+    const double minv = ltable->GetTableRange()[0];
+    const double maxv = ltable->GetTableRange()[1];
 
-    // Map lookup colours to the lookup table
-    _lut->SetNumberOfTableValues( (int)ncols);
-    _lut->Build();
-
-    float cstep[3] = {0,0,0};
-    if ( ncols > 1)
-    {
-        cstep[0] = (float(fcol[0]) - float(scol[0]))/(ncols-1);
-        cstep[1] = (float(fcol[1]) - float(scol[1]))/(ncols-1);
-        cstep[2] = (float(fcol[2]) - float(scol[2]))/(ncols-1);
-    }   // end if
-
-    float rgb[3] = {0,0,0};
-    for ( size_t i = 0; i < ncols; ++i)
-    {
-        rgb[0] = (scol[0] + i*cstep[0])/255.0f;
-        rgb[1] = (scol[1] + i*cstep[1])/255.0f;
-        rgb[2] = (scol[2] + i*cstep[2])/255.0f;
-        _lut->SetTableValue( i, rgb[0], rgb[1], rgb[2], 1);
-    }   // end for
-}   // end setColours
-
-
-// public
-void ScalarLegend::setColours( const vtkColor3ub& scol, const vtkColor3ub& mcol, const vtkColor3ub& fcol, size_t ncols0, size_t ncols1)
-{
-    assert( ncols0 > 0);
-    if ( ncols1 == 0)
-    {
-        ncols1 = ncols0/2;
-        ncols0 = ncols0 - ncols1;
-    }   // end if
-
-    const size_t totCols = ncols0 + ncols1;
-    _lut->SetNumberOfTableValues( (int)totCols);
-    _lut->Build();
-
-    float cstep[3] = {0,0,0};
-    if ( ncols0 > 1)
-    {
-        cstep[0] = (float(mcol[0]) - float(scol[0]))/(ncols0-1);
-        cstep[1] = (float(mcol[1]) - float(scol[1]))/(ncols0-1);
-        cstep[2] = (float(mcol[2]) - float(scol[2]))/(ncols0-1);
-    }   // end if
-
-    float rgb[3] {0,0,0};
-
-    // First half
-    for ( size_t i = 0; i < ncols0; ++i)
-    {
-        rgb[0] = (scol[0] + i*cstep[0])/255.0f;
-        rgb[1] = (scol[1] + i*cstep[1])/255.0f;
-        rgb[2] = (scol[2] + i*cstep[2])/255.0f;
-        _lut->SetTableValue( i, rgb[0], rgb[1], rgb[2], 1);
-    }   // end for
-
-    cstep[0] = 0;
-    cstep[1] = 0;
-    cstep[2] = 0;
-    if ( ncols1 > 1)
-    {
-        cstep[0] = (float(fcol[0]) - float(mcol[0]))/(ncols1-1);
-        cstep[1] = (float(fcol[1]) - float(mcol[1]))/(ncols1-1);
-        cstep[2] = (float(fcol[2]) - float(mcol[2]))/(ncols1-1);
-    }   // end if
-
-    for ( size_t i = ncols0, j = 0; i < totCols; ++i, ++j)
-    {
-        rgb[0] = (mcol[0] + j*cstep[0])/255.0f;
-        rgb[1] = (mcol[1] + j*cstep[1])/255.0f;
-        rgb[2] = (mcol[2] + j*cstep[2])/255.0f;
-        _lut->SetTableValue( i, rgb[0], rgb[1], rgb[2], 1);
-    }   // end for
-}   // end setColours
-
-
-// public
-void ScalarLegend::setLookupTable( vtkMapper* mapper, float minv, float maxv)
-{
     const int maxWidth = 4;
-    int ndecimals = std::max<int>(0, maxWidth - (int)(logf(maxv - minv) + 1));
+    int ndecimals = std::max<int>(0, maxWidth - (int)(log(maxv - minv) + 1));
     ndecimals = std::min<int>(ndecimals, maxWidth-1);
 
-    vtkScalarBarActor* legend = _widget->GetScalarBarActor();
     std::ostringstream oss;
     oss << "% " << maxWidth << "." << ndecimals << "f";
-    legend->SetLabelFormat(oss.str().c_str());
-    mapper->SetScalarRange( minv, maxv);
-    mapper->SetLookupTable( _lut);
+    vtkScalarBarActor* legend = _widget->GetScalarBarActor();
+    legend->SetLabelFormat( oss.str().c_str());
+    legend->SetLookupTable( ltable);
 }   // end setLookupTable
 
 
 // public
-size_t ScalarLegend::getNumColours() const { return (size_t)_lut->GetNumberOfTableValues();}
 bool ScalarLegend::isVisible() const { return _widget->GetEnabled() > 0;}
 void ScalarLegend::setVisible( bool visible) { _widget->SetEnabled(visible);}
