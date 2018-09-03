@@ -28,6 +28,7 @@ typedef unsigned char byte;
 #include <vtkSmartPointer.h>
 #include <vtkActor.h>
 #include <vtkPoints.h>
+#include <vtkTexture.h>
 #include <vtkCellArray.h>
 typedef std::unordered_set<int> IntSet;
 typedef std::unordered_map<int, int> IntIntMap;
@@ -62,22 +63,13 @@ public:
     // are defined, this function is equivalent to calling generateSurfaceActor.
     // On return, if textured, lighting is set to 100% ambient, 0% diffuse and specular.
     // Returns null if there's more than one material defined on the object.
-    vtkActor* generateActor( const RFeatures::ObjModel*);
+    vtkActor* generateActor( const RFeatures::ObjModel*, vtkSmartPointer<vtkTexture>&);
 
     // Call the actor generation functions only AFTER setting the needed lookup maps.
     // The surface actor uses only the unique vertices from the provided object.
     // This makes it possible to treat the surface as a graph.
     // The returned actor has 100% diffuse lighting set and 0% ambient and specular.
     vtkActor* generateSurfaceActor( const RFeatures::ObjModel*);
-
-    // Since multi-texturing is a bit flaky in VTK (as at version 7.1), this function
-    // generates a set of actors where each is separately texture mapped. This is because
-    // VTK requires one-2-one correspondence between points and texture coordinates
-    // currently. DO NOT USE THESE ACTORS FOR GRAPH OPERATIONS due to morphological
-    // discontinuities. Returns the number of actors generated. The provided vector
-    // is cleared prior to use. All actors have ambient lighting set to 1 and diffuse
-    // and specular set to zero (for proper texture colouring).
-    size_t generateTexturedActors( const RFeatures::ObjModel*, std::vector<vtkActor*>&);
 
     // Generate a simple points actor.
     static vtkActor* generatePointsActor( const std::vector<cv::Vec3f>&);

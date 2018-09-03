@@ -28,8 +28,8 @@ class rVTK_EXPORT ImageGrabber
 public:
     // Grabs the current set of images from the passed in render window and scales to requested height.
     // If height is left as non-positive, produced images are the same size as the render window.
-    ImageGrabber( const vtkRenderWindow*, int reqPixelHeight=0);
-    ImageGrabber( const Viewer::Ptr, int reqPixelHeight=0);
+    ImageGrabber( vtkRenderWindow*, int reqPixelHeight=0);
+    ImageGrabber( Viewer&, int reqPixelHeight=0);
 
     // Refresh images (only needed if render window has been updated since construction).
     void refresh( int reqPixelHeight = 0);
@@ -41,14 +41,14 @@ public:
     cv::Mat_<byte> depthb() const { return _ddmap;}
 
 private:
-    const vtkRenderWindow* _renWin;
+    vtkRenderWindow* _renWin;
     cv::Mat_<cv::Vec3b> _colmap;  // Original colour map
     cv::Mat_<byte> _dcmap;   // CIE-L light map
     cv::Mat_<float> _dzmap;  // Depth map (raw z-buffer floats)
     cv::Mat_<byte> _ddmap;   // Converted depth map
 
-    ImageGrabber( const ImageGrabber&);
-    void operator=( const ImageGrabber&);
+    ImageGrabber( const ImageGrabber&) = delete;
+    void operator=( const ImageGrabber&) = delete;
 };  // end class
 
 }   // end namespace

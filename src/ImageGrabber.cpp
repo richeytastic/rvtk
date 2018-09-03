@@ -22,13 +22,13 @@ using RVTK::ImageGrabber;
 using RVTK::Viewer;
 
 // public
-ImageGrabber::ImageGrabber( const vtkRenderWindow* rw, int h) : _renWin(rw)
+ImageGrabber::ImageGrabber( vtkRenderWindow* rw, int h) : _renWin(rw)
 {
     refresh(h);
 }   // end ctor
 
 // public
-ImageGrabber::ImageGrabber( const Viewer::Ptr v, int h) : _renWin(v->getRenderWindow())
+ImageGrabber::ImageGrabber( Viewer& v, int h) : _renWin(v.renderWindow())
 {
     refresh(h);
 }   // end ctor
@@ -38,7 +38,7 @@ ImageGrabber::ImageGrabber( const Viewer::Ptr v, int h) : _renWin(v->getRenderWi
 void ImageGrabber::refresh( int reqHeight)
 {
     if ( reqHeight <= 0)
-        reqHeight = const_cast<vtkRenderWindow*>(_renWin)->GetSize()[1];
+        reqHeight = _renWin->GetSize()[1];
     // Get the raw input images at their view size
     const cv::Mat_<cv::Vec3b> cimg = RVTK::extractImage( _renWin);
     const cv::Mat_<float> dimg = RVTK::extractZBuffer( _renWin);

@@ -18,94 +18,31 @@
 #include <Viewer.h>
 #include <VtkTools.h>
 #include <vtkFollower.h>
-//#include <vtkOpenGLRenderWindow.h>
-//#include <vtkGraphicsFactory.h>
 using RVTK::Viewer;
 
+Viewer::Ptr Viewer::create( bool offscreen) { return Ptr( new Viewer( offscreen), [](auto d){delete d;});}
 
-class Viewer::Deleter
+Viewer::Viewer( bool offscreen)
 {
-public:
-    void operator()( Viewer *p)
-    {
-        delete p;
-    }   // end operator()
-};  // end Deleter
-
-
-Viewer::Ptr Viewer::create( bool offscreen)
-{
-    Viewer::Ptr ptr( new Viewer( offscreen), Viewer::Deleter());
-    return ptr;
-}   // end create
-
-
-Viewer::Viewer( bool offscreen) :
-	_ren( vtkSmartPointer<vtkRenderer>::New()),
-    _renWin( vtkSmartPointer<vtkRenderWindow>::New())
-{
-    //vtkGraphicsFactory::SetOffScreenOnlyMode(offscreen);
-    //vtkGraphicsFactory::setUseMesaClasses(true);
     _renWin->SetOffScreenRendering(offscreen);
-    // For temporary offscreen, use:
-    //_renWin->SetUseOffScreenBuffers(offscreen);
-
 	_ren->SetBackground( 0.0, 0.0, 0.0);
     _renWin->SetPointSmoothing( false);
 	_renWin->AddRenderer( _ren);
-
     _ren->SetTwoSidedLighting( true);  // Don't light occluded sides
     _ren->SetAutomaticLightCreation( true);
 }  // end ctor
 
 
-Viewer::~Viewer()
+void Viewer::addActor( vtkActor* actor)
 {
-    //_renWin->SetUseOffScreenBuffers(false);
-}   // end dtor
-
-
-bool Viewer::getSupportsMultiTexturing() const
-{
-    return false;
-    /*
-    vtkOpenGLHardwareSupport* hardware = vtkOpenGLRenderWindow::SafeDownCast(_renWin)->GetHardwareSupport();
-    return hardware->GetSupportsMultiTexturing();
-    */
-}   // end getSupportsMultiTexturing
-
-
-int Viewer::getNumFixedTextureUnits() const
-{
-    return 1;
-    /*
-    vtkOpenGLHardwareSupport* hardware = vtkOpenGLRenderWindow::SafeDownCast(_renWin)->GetHardwareSupport();
-    return hardware->GetNumberOfFixedTextureUnits();
-    */
-}   // end getNumFixedTextureUnits
-
-
-
-void Viewer::addActor( const vtkSmartPointer<vtkActor> actor)
-{
-    double *pos = actor->GetPosition();
-	actor->SetPosition( pos[0], pos[1], pos[2]);
-	_ren->AddActor( actor);
+    _ren->AddViewProp( actor);
     if (actor->IsA( "vtkFollower"))
         vtkFollower::SafeDownCast(actor)->SetCamera( _ren->GetActiveCamera());
 }  // end addActor
 
+void Viewer::removeActor( vtkActor* actor) { _ren->RemoveViewProp( actor);}
 
-void Viewer::removeActor( const vtkSmartPointer<vtkActor> actor)
-{
-    _ren->RemoveActor( actor);
-}   // end removeActor
-
-
-void Viewer::clear()
-{
-	_ren->RemoveAllViewProps();
-}	// end clear
+void Viewer::clear() { _ren->RemoveAllViewProps();}	// end clear
 
 
 void Viewer::setCamera( const RFeatures::CameraParams& cp)
@@ -119,18 +56,8 @@ void Viewer::setCamera( const RFeatures::CameraParams& cp)
 }   // end setCamera
 
 
-double Viewer::getClipNear() const
-{
-	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
-    return cam->GetClippingRange()[0];
-}   // end getClipNear
-
-
-double Viewer::getClipFar() const
-{
-	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
-    return cam->GetClippingRange()[1];
-}   // end getClipFar
+double Viewer::clipNear() const { return _ren->GetActiveCamera()->GetClippingRange()[0];}
+double Viewer::clipFar() const { return _ren->GetActiveCamera()->GetClippingRange()[1];}
 
 
 void Viewer::setCameraOrientation( double pitch, double yaw, double roll)
@@ -143,7 +70,7 @@ void Viewer::setCameraOrientation( double pitch, double yaw, double roll)
 
 void Viewer::addCameraPitch( double pitch)
 {
-	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
+	vtkCamera* cam = _ren->GetActiveCamera();
     cam->Pitch(pitch);
     cam->OrthogonalizeViewUp();
 }   // end addCameraPitch
@@ -151,7 +78,7 @@ void Viewer::addCameraPitch( double pitch)
 
 void Viewer::addCameraYaw( double yaw)
 {
-	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
+	vtkCamera* cam = _ren->GetActiveCamera();
     cam->Yaw(yaw);
     cam->OrthogonalizeViewUp();
 }   // end addCameraYaw
@@ -159,7 +86,7 @@ void Viewer::addCameraYaw( double yaw)
 
 void Viewer::addCameraRoll( double roll)
 {
-	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
+	vtkCamera* cam = _ren->GetActiveCamera();
     cam->Roll(roll);
     cam->OrthogonalizeViewUp();
 }   // end addCameraRoll
@@ -168,21 +95,17 @@ void Viewer::addCameraRoll( double roll)
 void Viewer::setClippingRange( double near, double far)
 {
     assert( near <= far);
-	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
-    cam->SetClippingRange( near, far);
+	_ren->GetActiveCamera()->SetClippingRange( near, far);
 }   // end setClippingRange
 
 
-void Viewer::resetClippingRange()
-{
-    _ren->ResetCameraClippingRange();
-}   // end resetClippingRange
+void Viewer::resetClippingRange() { _ren->ResetCameraClippingRange();}
 
 
-RFeatures::CameraParams Viewer::getCamera() const
+RFeatures::CameraParams Viewer::camera() const
 {
     RFeatures::CameraParams cp;
-	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
+	vtkCamera* cam = _ren->GetActiveCamera();
     double *arr = cam->GetPosition();
     cp.pos = cv::Vec3f( arr[0], arr[1], arr[2]);
     arr = cam->GetFocalPoint();
@@ -191,13 +114,12 @@ RFeatures::CameraParams Viewer::getCamera() const
     cv::normalize( cv::Vec3f( arr[0], arr[1], arr[2]), cp.up);  // Ensure normalized
     cp.fov = cam->GetViewAngle();
     return cp;
-}   // end getCamera
+}   // end camera
 
 
 void Viewer::setPerspective( bool enabled)
 {
-	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
-
+	vtkCamera* cam = _ren->GetActiveCamera();
 	if (!enabled && !cam->GetParallelProjection())
 		cam->ParallelProjectionOn();
 	else if (enabled && cam->GetParallelProjection())
@@ -205,84 +127,31 @@ void Viewer::setPerspective( bool enabled)
 }	// end setPerspective
 
 
-void Viewer::setParallelScale( double scale)
+void Viewer::setParallelScale( double scale) { _ren->GetActiveCamera()->SetParallelScale( scale);}
+void Viewer::setInteractor( vtkRenderWindowInteractor* interactor) { interactor->SetRenderWindow( _renWin);}
+
+
+void Viewer::setInteractorStyle( vtkInteractorStyle* style)
 {
-	vtkSmartPointer<vtkCamera> cam = _ren->GetActiveCamera();
-    cam->SetParallelScale( scale);
-}   // end setParallelScale
-
-
-void Viewer::setInteractor( vtkSmartPointer<vtkRenderWindowInteractor> interactor)
-{
-    interactor->SetRenderWindow( _renWin);
-	//_renWin->SetInteractor( interactor);
-}  // end setInteractor
-
-
-void Viewer::setInteractorStyle( vtkSmartPointer<vtkInteractorStyle> style)
-{
-    vtkSmartPointer<vtkRenderWindowInteractor> interactor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+    vtkRenderWindowInteractor* interactor = vtkRenderWindowInteractor::New();
     interactor->SetInteractorStyle( style);
     setInteractor( interactor);
 }  // end setInteractorStyle
 
 
-void Viewer::changeBackground( double c)
-{
-	_ren->SetBackground( c,c,c);
-}  // end changeBackground
+void Viewer::changeBackground( double c) { _ren->SetBackground( c,c,c);}
+void Viewer::setStereoRendering( bool opt) { _renWin->SetStereoRender( opt);}
+bool Viewer::stereoRendering() const { return _renWin->GetStereoRender() > 0;}
+void Viewer::setSize( size_t width, size_t height) { _renWin->SetSize( width, height);}
+int Viewer::width() const { return _renWin->GetSize()[0];}
+int Viewer::height() const { return _renWin->GetSize()[1];}
 
-
-void Viewer::setStereoRendering( bool opt)
-{
-	_renWin->SetStereoRender( opt);
-}	// end setStereoRendering
-
-
-bool Viewer::getStereoRendering() const
-{
-    return _renWin->GetStereoRender() > 0;
-}	// end getStereoRendering
-
-
-void Viewer::setSize( int width, int height)
-{
-    _renWin->SetSize( width, height);
-}   // end setSize
-
-
-int Viewer::getWidth() const
-{
-    return _renWin->GetSize()[0];
-}   // end getWidth
-
-
-int Viewer::getHeight() const
-{
-    return _renWin->GetSize()[1];
-}   // end getHeight
-
-
-cv::Size Viewer::getSize() const
+cv::Size Viewer::size() const
 {
     const int* sz = _renWin->GetSize();
     return cv::Size( sz[0], sz[1]);
-}   // end getSize
+}   // end size
 
-
-void Viewer::updateRender()
-{
-	_renWin->Render();
-}	// end updateRender
-
-
-cv::Mat_<cv::Vec3b> Viewer::extractImage() const
-{
-    return RVTK::extractImage( _renWin);
-}   // end extractImage
-
-
-cv::Mat_<float> Viewer::extractZBuffer() const
-{
-    return RVTK::extractZBuffer( _renWin);
-}   // end extractZBuffer
+void Viewer::updateRender() { _renWin->Render();}
+cv::Mat_<cv::Vec3b> Viewer::extractImage() const { return RVTK::extractImage( _renWin);}
+cv::Mat_<float> Viewer::extractZBuffer() const { return RVTK::extractZBuffer( _renWin);}

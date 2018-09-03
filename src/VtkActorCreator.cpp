@@ -364,60 +364,14 @@ vtkSmartPointer<vtkTexture> createMaterialTexture( const ObjModel* model, int mi
     return tx;
 }   // end createMaterialTexture
 
-
-// VTK requires a one-to-one correspondence between geometric points and texture coordinates.
-// SingleMaterialData encapsulates all of the one-to-one geometry with a texture map as
-// defined by a ObjModel::Material struct.
-struct SingleMaterialData
-{
-    vtkSmartPointer<vtkTexture> texture; // The material's texture (only 1 per actor currently)
-    vtkSmartPointer<vtkFloatArray> uvs;  // Texture coords (|uvs| == |points|)
-    vtkSmartPointer<vtkPoints> points;   // 3D vertices (may contain duplicates due to element pairing with uvs)
-    vtkSmartPointer<vtkCellArray> faces; // Each cell element holds three integers which are the indices into points
-
-    // Create the required VTK data from
-    SingleMaterialData( const ObjModel* model, int mid, Mappings& mappings)
-    {
-        texture = createMaterialTexture( model, mid);
-        faces = vtkSmartPointer<vtkCellArray>::New();
-        points = vtkSmartPointer<vtkPoints>::New();
-        uvs = vtkSmartPointer<vtkFloatArray>::New();
-        uvs->SetNumberOfComponents(2);
- 
-        std::ostringstream oss;
-        oss << "TCoords_" << mid;
-        uvs->SetName( oss.str().c_str());
-
-        int vtkPointId = 0;
-        const IntSet& mfaceIds = model->getMaterialFaceIds(mid);
-        for ( int fid : mfaceIds)
-        {
-            vtkIdType vtkFaceId = faces->InsertNextCell( 3);
-            mappings.mapFaceIndices( fid, (int)vtkFaceId);
-
-            const int* uvids = model->getFaceUVs(fid);
-            const int* vtxs = model->getFaceVertices(fid);
-
-            for ( int i = 0; i < 3; ++i)
-            {
-                const int vid = vtxs[i];
-                const cv::Vec2f& uv = model->uv( mid, uvids[i]);
-                mappings.mapVertexIndices( vid, vtkPointId);
-                faces->InsertCellPoint( vtkPointId);
-                points->InsertPoint( vtkPointId, &(model->vtx( vid)[0]));
-                uvs->InsertTuple2( vtkPointId, uv[0], uv[1]);
-                vtkPointId++;
-            }   // end for
-        }   // end foreach
-    }   // end ctor
-};  // end struct
-
 }   // end namespace
 
 
 // public
-vtkActor* VtkActorCreator::generateActor( const ObjModel* model)
+vtkActor* VtkActorCreator::generateActor( const ObjModel* model, vtkSmartPointer<vtkTexture>& texture)
 {
+    texture = nullptr;
+
     if ( model->getNumMaterials() > 1)  // Can't create if more than one material!
     {
         std::cerr << "[ERROR] RVTK::VtkActorCreator::generateActor: Model has more than one material! Merge first." << std::endl;
@@ -430,10 +384,12 @@ vtkActor* VtkActorCreator::generateActor( const ObjModel* model)
         return generateSurfaceActor( model);
     }   // end if
 
+    const int MID = *model->getMaterialIds().begin();   // The one and only material ID
+    texture = createMaterialTexture( model, MID);       // Set the texture for return
+
     const int NP = 3*(int)model->getNumFaces();
     Mappings mappings( _uvmappings, _ruvmappings, _ufmappings, _rufmappings);
 
-    const int MID = *model->getMaterialIds().begin();   // The one and only material ID
     vtkSmartPointer<vtkCellArray> faces = vtkSmartPointer<vtkCellArray>::New();
     vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
     points->SetNumberOfPoints( NP);
@@ -482,7 +438,7 @@ vtkActor* VtkActorCreator::generateActor( const ObjModel* model)
     pd->GetPointData()->SetTCoords( uvs);  // Add texture coords to poly data
 
     vtkActor* actor = makeActor(pd);
-    actor->SetTexture( createMaterialTexture( model, MID));
+    actor->SetTexture( texture);
 
     // Set ambient lighting for proper texture lighting
     actor->GetProperty()->SetAmbient(1.0);
@@ -491,57 +447,3 @@ vtkActor* VtkActorCreator::generateActor( const ObjModel* model)
 
     return actor;
 }   // end generateActor
-
-
-
-// public
-size_t VtkActorCreator::generateTexturedActors( const ObjModel* model, std::vector<vtkActor*>& actors)
-{
-    actors.clear();
-
-    if ( model->getNumMaterials() == 0) // Can't generate if no materials!
-        return 0;
-
-    Mappings mappings( _vmappings, _rvmappings, _fmappings, _rfmappings);
-
-    const IntSet& materialIds = model->getMaterialIds();
-    for ( int mid : materialIds)
-    {
-        SingleMaterialData smd( model, mid, mappings); // Read in the material data
-        vtkSmartPointer<vtkPolyData> pd = vtkSmartPointer<vtkPolyData>::New();
-        pd->SetPoints( smd.points);
-        pd->SetPolys( smd.faces);
-        // For multitexturing (useMultiTexturing true), may need to use AddArray instead of SetTCoords.
-        // This would allow multitexturing over a single actor. However, in testing in VTK-7.1,
-        // multi-texturing is not properly supported, and SingleMaterialData gets the geometric data
-        // corresponding to a single texture mapped actor.
-        //pd->GetPointData()->AddArray( smd.uvs);  // Add texture coords to poly data
-        pd->GetPointData()->SetTCoords( smd.uvs);  // Add texture coords to poly data
-
-        vtkActor* actor = makeActor(pd);
-        /*************** Multitexturing code ***************************
-        tmaps[0].texture->SetBlendingMode( vtkTexture::VTK_TEXTURE_BLENDING_MODE_REPLACE);
-        for ( int i = 0; i < numMaterials; ++i)
-        {
-            vtkPolyDataMapper* mapper = vtkPolyDataMapper::SafeDownCast( actor->GetMapper());
-            if ( i > 0)
-                tmaps[i].texture->SetBlendingMode( vtkTexture::VTK_TEXTURE_BLENDING_MODE_ADD);
-            mapper->MapDataArrayToMultiTextureAttribute( i, tmaps[i].uvs->GetName(), vtkDataObject::FIELD_ASSOCIATION_POINTS);
-            actor->GetProperty()->SetTexture( i, tmaps[i].texture);
-        }   // end for
-        ****************************************************************/
-        actor->SetTexture( smd.texture);
-
-        // Set ambient lighting for proper texture lighting
-        actor->GetProperty()->SetAmbient(1.0);
-        actor->GetProperty()->SetDiffuse(0.0);
-        actor->GetProperty()->SetSpecular(0.0);
-
-        actors.push_back(actor);
-    }   // end foreach
-
-    // With all of the material actors made, we find the remaining geometry not accounted for
-    // by the collection of SingleMaterialData instantiations, and create the final actor.
-    //actors.insert( actors.end(), mactors.begin(), mactors.end());
-    return actors.size();
-}   // end generateTexturedActor

@@ -37,26 +37,25 @@ class rVTK_EXPORT Viewer
 public:
     typedef std::shared_ptr<Viewer> Ptr;
     static Ptr create( bool offscreenRendering=false);
-
-    // Check for multi-texturing support.
-    bool getSupportsMultiTexturing() const;
-    int getNumFixedTextureUnits() const;
+    Viewer( bool offscreenRendering=false);
 
     // Add the provided actor. If this is the first actor,
     // subsequent actors will be placed relative to it.
-    void addActor( const vtkSmartPointer<vtkActor> actor);
+    void addActor( vtkActor* actor);
+
     // Remove the provided actor from the viewer.
-    void removeActor( const vtkSmartPointer<vtkActor> actor);
+    void removeActor( vtkActor* actor);
+
     void clear();	// Remove all actors
 
-    void setCamera( const RFeatures::CameraParams&);
-    RFeatures::CameraParams getCamera() const;
-
     // Get/set the near and far clipping range values
-    double getClipNear() const;
-    double getClipFar() const;
     void setClippingRange( double near, double far);    // Default is 0.1, 1000
     void resetClippingRange();
+    double clipNear() const;
+    double clipFar() const;
+
+    void setCamera( const RFeatures::CameraParams&);
+    RFeatures::CameraParams camera() const;
 
     // Affects direction camera is looking in (i.e. modifies focus and up vector).
     void setCameraOrientation( double pitch, double yaw, double roll);
@@ -74,29 +73,25 @@ public:
     // with a custom style before or after calling this function. Alternatively,
     // use function setInteractorStyle below to attach a style to a new Interactor
     // which is set for the render window.
-    void setInteractor( vtkSmartPointer<vtkRenderWindowInteractor>);
-    void setInteractorStyle( vtkSmartPointer<vtkInteractorStyle>);
+    void setInteractor( vtkRenderWindowInteractor*);
+    void setInteractorStyle( vtkInteractorStyle*);
 
 	// Change background colour to something between 0 and 255.
 	void changeBackground( double c);
 
 	// Set stereo rendering on or off and get the current stereo rendering value.
 	void setStereoRendering( bool opt);
-	bool getStereoRendering() const;
+	bool stereoRendering() const;
 
-    void setSize( int width, int height);
-    int getWidth() const;
-    int getHeight() const;
-    cv::Size getSize() const;
+    void setSize( size_t width, size_t height);
+    cv::Size size() const;
+    int width() const;
+    int height() const;
 
-	// Update the rendered image after making changes.
 	void updateRender();
 
-	// Return the rendering window to interested clients.
-	inline vtkSmartPointer<vtkRenderWindow> getRenderWindow() { return _renWin;}
-
-    // Return the renderer to interested clients
-    inline vtkSmartPointer<vtkRenderer> getRenderer() { return _ren;}
+    vtkRenderer* renderer() const { return _ren;}
+	vtkRenderWindow* renderWindow() const { return _renWin;}
 
     // Create and return an image of the current window
     cv::Mat_<cv::Vec3b> extractImage() const;
@@ -105,14 +100,11 @@ public:
     cv::Mat_<float> extractZBuffer() const;
 
 private:
-    vtkSmartPointer<vtkRenderer> _ren;
-    vtkSmartPointer<vtkRenderWindow> _renWin;
+    vtkNew<vtkRenderer> _ren;
+    vtkNew<vtkRenderWindow> _renWin;
 
-    Viewer( bool);
-    ~Viewer();
-    Viewer( const Viewer&);             // No copy
-    void operator=( const Viewer &);    // No copy
-    class Deleter;
+    Viewer( const Viewer&) = delete;
+    void operator=( const Viewer&) = delete;
 };  // end class
 
 }   // end namespace
