@@ -49,6 +49,7 @@ public:
                      const cv::Vec3b& maxCol,
                      size_t ncols0, size_t ncols1=0);
 
+    vtkLookupTable* vtk() { return _lut;}
     const vtkLookupTable* vtk() const { return _lut;}
 
 private:

@@ -19,6 +19,7 @@
 using RVTK::ScalarLegend;
 #include <vtkTextProperty.h>
 #include <vtkScalarBarActor.h>
+#include <iostream>
 #include <sstream>
 
 
@@ -75,4 +76,11 @@ void ScalarLegend::setLookupTable( const vtkLookupTable* lut)
 
 // public
 bool ScalarLegend::isVisible() const { return _widget->GetEnabled() > 0;}
-void ScalarLegend::setVisible( bool visible) { _widget->SetEnabled(visible);}
+
+
+// public
+void ScalarLegend::setVisible( bool visible)
+{
+    if ( _widget->GetScalarBarActor()->GetLookupTable() != nullptr)
+        _widget->SetEnabled(visible);
+}   // end setVisible
