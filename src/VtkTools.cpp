@@ -72,7 +72,7 @@ RFeatures::ObjModel::Ptr RVTK::makeObject( const vtkActor* actor)
     vtkIdType npts;
     vtkIdType *vidxs;
     while ( faces->GetNextCell( npts, vidxs) > 0)
-        model->setFace( vmap[vidxs[0]], vmap[vidxs[1]], vmap[vidxs[2]]);
+        model->addFace( vmap[vidxs[0]], vmap[vidxs[1]], vmap[vidxs[2]]);
     return model;
 }   // end makeObject
 
