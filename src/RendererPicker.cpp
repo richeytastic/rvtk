@@ -151,14 +151,14 @@ vtkSmartPointer<vtkPropCollection> createPropCollection( const std::vector<vtkAc
     return pickFrom;
 }   // end createPropCollection
 
-
+/*
 vtkSmartPointer<vtkPropCollection> createPropCollection( const std::vector<vtkSmartPointer<vtkActor> >& possActors)
 {
     vtkSmartPointer<vtkPropCollection> pickFrom = vtkSmartPointer<vtkPropCollection>::New();
     std::for_each( std::begin(possActors), std::end(possActors), [&](auto a){pickFrom->AddItem(a.GetPointer());});
     return pickFrom;
 }   // end createPropCollection
-
+*/
 
 vtkActor* pick( const cv::Point& p, vtkSmartPointer<vtkPropCollection> pickFrom, vtkRenderer* ren, RendererPicker::PointOrigin po)
 {
