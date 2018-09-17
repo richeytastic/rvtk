@@ -142,7 +142,7 @@ void Viewer::setInteractorStyle( vtkInteractorStyle* style)
 void Viewer::changeBackground( double c) { _ren->SetBackground( c,c,c);}
 void Viewer::setStereoRendering( bool opt) { _renWin->SetStereoRender( opt);}
 bool Viewer::stereoRendering() const { return _renWin->GetStereoRender() > 0;}
-void Viewer::setSize( size_t width, size_t height) { _renWin->SetSize( width, height);}
+void Viewer::setSize( size_t width, size_t height) { _renWin->SetSize( static_cast<int>(width), static_cast<int>(height));}
 int Viewer::width() const { return _renWin->GetSize()[0];}
 int Viewer::height() const { return _renWin->GetSize()[1];}
 

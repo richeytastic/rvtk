@@ -13,7 +13,6 @@ include_directories( ${INCLUDE_DIR})
 set( INCLUDE_FILES
     "${INCLUDE_DIR}/Axes.h"
     #"${INCLUDE_DIR}/ClosestPointFinder.h"
-    "${INCLUDE_DIR}/CurvatureSurfaceMapper.h"
     "${INCLUDE_DIR}/DataReader.h"
     "${INCLUDE_DIR}/DijkstraShortestPathLineInterpolator.h"
     #"${INCLUDE_DIR}/FlightInteractor.h"
@@ -24,16 +23,14 @@ set( INCLUDE_FILES
     "${INCLUDE_DIR}/LinePlotter.h"
     "${INCLUDE_DIR}/LinesMapper.h"
     "${INCLUDE_DIR}/LookupTable.h"
+    "${INCLUDE_DIR}/MetricMapper.h"
     #"${INCLUDE_DIR}/ModelPathDrawer.h"
     #"${INCLUDE_DIR}/PointCloudMapper.h"
     "${INCLUDE_DIR}/PointPlacer.h"
-    "${INCLUDE_DIR}/PolySurfaceCurvScalarMapper.h"
-    "${INCLUDE_DIR}/PolySurfaceDistanceScalarMapper.h"
     "${INCLUDE_DIR}/RendererPicker.h"
     "${INCLUDE_DIR}/ScalarLegend.h"
     "${INCLUDE_DIR}/SnapshotKeyPresser.h"
     "${INCLUDE_DIR}/SurfaceMapper.h"
-    "${INCLUDE_DIR}/SurfaceMapperInterface.h"
     #"${INCLUDE_DIR}/SurfacePathInterpolator.h"
     "${INCLUDE_DIR}/Viewer.h"
     "${INCLUDE_DIR}/ViewerProjector.h"
@@ -47,7 +44,6 @@ set( INCLUDE_FILES
 set( SRC_FILES
     ${SRC_DIR}/Axes
     #${SRC_DIR}/ClosestPointFinder
-    ${SRC_DIR}/CurvatureSurfaceMapper
     ${SRC_DIR}/DataReader
     ${SRC_DIR}/DijkstraShortestPathLineInterpolator
     #${SRC_DIR}/FlightInteractor
@@ -61,8 +57,6 @@ set( SRC_FILES
     #${SRC_DIR}/ModelPathDrawer
     #${SRC_DIR}/PointCloudMapper
     ${SRC_DIR}/PointPlacer
-    ${SRC_DIR}/PolySurfaceCurvScalarMapper
-    ${SRC_DIR}/PolySurfaceDistanceScalarMapper
     ${SRC_DIR}/RendererPicker
     ${SRC_DIR}/ScalarLegend
     ${SRC_DIR}/SnapshotKeyPresser

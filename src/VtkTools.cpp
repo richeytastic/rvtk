@@ -212,7 +212,7 @@ cv::Mat_<cv::Vec3b> RVTK::extractImage( const vtkRenderWindow* renWin)
     vtkRenderWindow* rw = const_cast<vtkRenderWindow*>( renWin);
     vtkSmartPointer<vtkWindowToImageFilter> filter = vtkSmartPointer<vtkWindowToImageFilter>::New();
     filter->SetInput( rw);
-    filter->SetMagnification(1);
+    filter->SetScale(1);
     filter->SetInputBufferTypeToRGB();  // Extract RGB info
 
     vtkSmartPointer<vtkImageShiftScale> scale = vtkSmartPointer<vtkImageShiftScale>::New();
@@ -240,7 +240,7 @@ cv::Mat_<float> RVTK::extractZBuffer( const vtkRenderWindow* renWin)
     vtkRenderWindow* rw = const_cast<vtkRenderWindow*>( renWin);
     vtkSmartPointer<vtkWindowToImageFilter> filter = vtkSmartPointer<vtkWindowToImageFilter>::New();
     filter->SetInput( rw);
-    filter->SetMagnification(1);
+    filter->SetScale(1);
     filter->SetInputBufferTypeToZBuffer();
 
     vtkSmartPointer<vtkImageShiftScale> scale = vtkSmartPointer<vtkImageShiftScale>::New();

@@ -18,74 +18,62 @@
 #ifndef RVTK_SURFACE_MAPPER_H
 #define RVTK_SURFACE_MAPPER_H
 
-#include "SurfaceMapperInterface.h"
+#include "MetricMapper.h"
+#include <vtkActor.h>
+#include <functional>
+#include <memory>
 
 namespace RVTK {
 
-class rVTK_EXPORT SurfaceMapper : public MetricInterface
+// Get metric for mapping either polygon or vertex ID from ObjModel for metric component
+// k (always 0 for scalars but up to 1 less than dimensionality for vector metrics).
+using MetricFn = std::function<float(int id, size_t k)>;
+
+class rVTK_EXPORT SurfaceMapper
 {
 public:
-    // Use existing actor - also requires existing lookup map (saved from RVTK::VtkActorCreator).
-    SurfaceMapper( const RFeatures::ObjModel*,
-                   vtkActor* actor,                   // Actor to which a new data array will be added
-                   const IntIntMap* lookupMap,        // Lookup map to match poly or vertex metric mapper
-                   const std::string& metricName,
-                   const MetricMapper::Ptr mmapper);  // PolygonMetricMapper -or- VertexMetricMapper
+    // Supply the label that will be used to identify the mapped range in the vtkActor.
+    // Set mapPolys to true to map polygons (default), false to map vertices.
+    // Set dims to 1 for mapping scalars (default), higher values for mapping vectors.
+    using CPtr = std::shared_ptr<const SurfaceMapper>;
+    static CPtr create( const std::string&, const MetricFn&, bool mapPolys=true, size_t dims=1);
 
-    std::string getMetricName() const override;
+    inline const std::string& label() const { return _label;}
+    inline bool mapsPolys() const { return _mapsPolys;}
+    inline size_t ndimensions() const { return _mmapper->ndimensions();}
 
-    // Map a new array to the actor's data set attributes and make the currently active dataset.
-    // Given the actor's polydata, get its dataset attributes using:
-    // da = polydata->GetCellData() (PolygonMetricMapper), or da = polydata->GetPointData (VertexMetricMapper).
+    // Map metrics array to the actor's data set attributes. Does NOT make the mapped array active!
+    // To activate the array for visualisation on the actor's polydata, get its dataset attributes using:
+    // da = polydata->GetCellData() (for polygon mapping), or
+    // da = polydata->GetPointData (for vertex mapping).
     // Then, set the appropriate scalar or vector mapping using:
-    // da->SetActiveScalars( metricName.c_str()) (for MetricMappers created with  1 component), or
-    // da->SetActiveVectors( metricName.c_str()) (for MetricMappers created with >1 components).
-    // Also, ensure that the following are set as needed:
+    // da->SetActiveScalars( label().c_str()), or
+    // da->SetActiveVectors( label().c_str())
+    // For scalar mapping, ensure that the following are set as needed:
     // actor->GetProperty()->SetRepresentationToSurface() (obviously)
     // actor->GetMapper()->SetScalarModelToUseCellData() (may not be needed)
     // actor->GetMapper()->SetScalarVisibility(true)
-    void mapActor() override;
+    void mapMetrics( const RFeatures::ObjModel*,
+                     const std::unordered_map<int,int>*,    // ObjModel ID to vtkActor ID lookup (for MetricMapper)
+                     vtkActor*) const;                      // the corresponding actor to map metrics array to.
 
-    float getMin( int c) const override;
-    float getMax( int c) const override;
-    int getNumMetricComponents() const override;
-
-protected:
-    virtual float getMetric( int id, int c) = 0;  // Implement me!
+    // Get min/max for component c from last call to mapActor.
+    float getMin( int c=0) const { return _min[c];}
+    float getMax( int c=0) const { return _max[c];}
 
 private:
-    const RFeatures::ObjModel* _model;
-    const std::string _mname;
-    const MetricMapper::Ptr _mmapper;
-    vtkActor* _actor;
-    const IntIntMap *_lmap;
-    std::vector<float> _min, _max;
-    void init();
-    float val( int id, int c) override;
-};  // end class
+    const std::string _label;
+    MetricFn _metricfn;
+    const bool _mapsPolys;
+    MetricMapper::Ptr _mmapper;
+    mutable std::vector<float> _min;
+    mutable std::vector<float> _max;
+    float val( int, size_t) const;
 
-
-class rVTK_EXPORT PolygonMetricMapper : public MetricMapper
-{
-public:
-    static MetricMapper::Ptr create( size_t numComponents);
-protected:
-    vtkDataSetAttributes* getDataSet( vtkPolyData*) const override;
-    const IntSet* getMappingIds( const RFeatures::ObjModel*) const override;
-    void setLookupMap( VtkActorCreator*, IntIntMap*) const override;
-    explicit PolygonMetricMapper( size_t numComponents);
-};  // end class
-
-
-class rVTK_EXPORT VertexMetricMapper : public MetricMapper
-{
-public:
-    static MetricMapper::Ptr create( size_t numComponents);
-protected:
-    vtkDataSetAttributes* getDataSet( vtkPolyData* pd) const override;
-    const IntSet* getMappingIds( const RFeatures::ObjModel*) const override;
-    void setLookupMap( VtkActorCreator*, IntIntMap*) const override;
-    explicit VertexMetricMapper( size_t numComponents);
+    SurfaceMapper( const std::string&, const MetricFn&, bool mapPolys, size_t dims);
+    ~SurfaceMapper(){}
+    SurfaceMapper( const SurfaceMapper&) = delete;
+    void operator=( const SurfaceMapper&) = delete;
 };  // end class
 
 }   // end namespace

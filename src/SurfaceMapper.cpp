@@ -16,121 +16,80 @@
  ************************************************************************/
 
 #include <SurfaceMapper.h>
-#include <VtkActorCreator.h>
 #include <VtkTools.h>
 using RVTK::SurfaceMapper;
-using RVTK::MetricMapper;
-using RVTK::PolygonMetricMapper;
-using RVTK::VertexMetricMapper;
+using RVTK::MetricFn;
 #include <vtkSmartPointer.h>
 #include <vtkFloatArray.h>
 #include <vtkPointData.h>
 #include <vtkCellData.h>
-#include <vtkProperty.h>
 #include <climits>
 #include <cassert>
 using RFeatures::ObjModel;
 
-// public
-MetricMapper::Ptr PolygonMetricMapper::create( size_t nc) { return MetricMapper::Ptr( new PolygonMetricMapper(nc)); }
-// protected
-PolygonMetricMapper::PolygonMetricMapper( size_t nc) : MetricMapper(nc) {}
-vtkDataSetAttributes* PolygonMetricMapper::getDataSet( vtkPolyData* pd) const { return pd->GetCellData();}
-const IntSet* PolygonMetricMapper::getMappingIds( const ObjModel* m) const { return &m->getFaceIds();}
-void PolygonMetricMapper::setLookupMap( RVTK::VtkActorCreator* ac, IntIntMap* lmap) const { ac->setObjToVTKUniqueFaceMap( lmap);}
 
-
-// public
-MetricMapper::Ptr VertexMetricMapper::create( size_t nc) { return MetricMapper::Ptr( new VertexMetricMapper(nc)); }
-// protected
-VertexMetricMapper::VertexMetricMapper( size_t nc) : MetricMapper(nc) {}
-vtkDataSetAttributes* VertexMetricMapper::getDataSet( vtkPolyData* pd) const { return pd->GetPointData();}
-const IntSet* VertexMetricMapper::getMappingIds( const ObjModel* m) const { return &m->getVertexIds();}
-void VertexMetricMapper::setLookupMap( RVTK::VtkActorCreator* ac, IntIntMap* lmap) const { ac->setObjToVTKUniqueVertexMap( lmap);}
-
-
-// private
-void SurfaceMapper::init()
+SurfaceMapper::CPtr SurfaceMapper::create( const std::string& label, const MetricFn& fn, bool mapPolys, size_t d)
 {
-    const size_t nc = _mmapper->getNumComponents();
-    _min.resize(nc);
-    _max.resize(nc);
-    for ( size_t i = 0; i < nc; ++i)
-    {
-        _min[i] = FLT_MAX;
-        _max[i] = -FLT_MAX;
-    }   // end for
-}   // end init
+    return CPtr( new SurfaceMapper( label, fn, mapPolys, d), [](auto x){ delete x;});
+}   // end create
 
 
-// public
-SurfaceMapper::SurfaceMapper( const ObjModel* m, vtkActor* actor, const IntIntMap* lmap,
-                              const std::string& metricName, const MetricMapper::Ptr mmapper)
-    : _model(m), _mname(metricName), _mmapper(mmapper), _actor(actor), _lmap(lmap)
+SurfaceMapper::SurfaceMapper( const std::string& label, const MetricFn& fn, bool mapPolys, size_t d)
+    : _label(label), _metricfn(fn), _mapsPolys(mapPolys),
+      _mmapper( mapPolys ? RVTK::PolygonMetricMapper::create(d) : RVTK::VertexMetricMapper::create(d))
 {
-    init();
-    assert( lmap != NULL);
-    assert( actor != NULL);
 }   // end ctor
 
 
-// public
-float SurfaceMapper::getMin( int c) const { return _min[c];}
-float SurfaceMapper::getMax( int c) const { return _max[c];}
-int SurfaceMapper::getNumMetricComponents() const { return (int)_mmapper->getNumComponents();}
-
-
-// protected
-std::string SurfaceMapper::getMetricName() const { return _mname;}
-
-
-// protected
-float SurfaceMapper::val( int id, int c)
+// private
+float SurfaceMapper::val( int id, size_t k) const
 {
-    const float v = getMetric(id,c);
-    _min[c] = std::min(v,_min[c]);
-    _max[c] = std::max(v,_max[c]);
+    const float v = _metricfn(id,k);
+    _min[k] = std::min(v,_min[k]);
+    _max[k] = std::max(v,_max[k]);
     return v;
 }   // end val
 
 
 // public
-void SurfaceMapper::mapActor()
+void SurfaceMapper::mapMetrics( const ObjModel *model, const std::unordered_map<int,int> *lmap, vtkActor *actor) const
 {
-    vtkSmartPointer<vtkFloatArray> cvals = vtkSmartPointer<vtkFloatArray>::New();
-    cvals->SetName( _mname.c_str());
-    const int nc = (int)_mmapper->getNumComponents();
-    const IntSet& objids = *_mmapper->getMappingIds( _model);
+    assert(lmap);
+    const size_t nd = ndimensions();
+    assert( nd >= 1);
 
-    if ( nc > 1)    // Vectors
+    // Reset the min/max values for this call to mapMetrics.
+    _min.resize(nd);
+    _max.resize(nd);
+    for ( size_t i = 0; i < nd; ++i)
     {
-        float *mval = new float[nc];
-        cvals->SetNumberOfComponents( nc);
+        _min[i] = FLT_MAX;
+        _max[i] = -FLT_MAX;
+    }   // end for
+
+    vtkSmartPointer<vtkFloatArray> cvals = vtkSmartPointer<vtkFloatArray>::New();
+    cvals->SetName( _label.c_str());
+    const IntSet& objids = *_mmapper->mappingIds( model);
+
+    if ( nd == 1)  // Scalars
+    {
+        cvals->SetNumberOfValues( objids.size());
+        for ( int objid : objids)
+            cvals->SetValue( lmap->at(objid), val( objid, 0));
+    }   // end if
+    else    // Vectors
+    {
+        std::vector<float> mval(nd);
+        cvals->SetNumberOfComponents( static_cast<int>(nd));
         cvals->SetNumberOfTuples( objids.size());
         for ( int objid : objids)
         {
-            for ( int k = 0; k < nc; ++k)
+            for ( size_t k = 0; k < nd; ++k)
                 mval[k] = val( objid, k);
-            cvals->SetTuple( _lmap->at(objid), mval);
+            cvals->SetTuple( lmap->at(objid), &mval[0]);
         }   // end for
-        delete[] mval;
-    }   // end if
-    else if ( nc == 1)  // Scalars
-    {
-        float mval;
-        cvals->SetNumberOfValues( objids.size());
-        for ( int objid : objids)
-        {
-            assert( _model->getFaceIds().count(objid) > 0);
-            mval = val( objid, 0);
-            cvals->SetValue( _lmap->at(objid), mval);
-        }   // end for
-    }   // end else if
+    }   // end else
 
-    vtkDataSetAttributes *ds = _mmapper->getDataSet( RVTK::getPolyData( _actor));    // polydata->GetCellData or polydata->GetPointData
+    vtkDataSetAttributes *ds = _mmapper->dataSet( RVTK::getPolyData( actor));    // polydata->GetCellData or polydata->GetPointData
     ds->AddArray( cvals);
-    if ( nc == 1)
-        ds->SetActiveScalars( cvals->GetName());
-    else if ( nc > 1)
-        ds->SetActiveVectors( cvals->GetName());
-}   // end mapActor
+}   // end mapMetrics

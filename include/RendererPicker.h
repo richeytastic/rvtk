@@ -25,8 +25,7 @@
 #include <vtkActor.h>
 #include "rVTK_Export.h"
 
-namespace RVTK
-{
+namespace RVTK {
 
 // An actor and a subset of its cells.
 struct rVTK_EXPORT ActorSubset
