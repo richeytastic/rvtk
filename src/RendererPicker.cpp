@@ -147,7 +147,7 @@ namespace
 vtkSmartPointer<vtkPropCollection> createPropCollection( const std::vector<vtkActor*>& possActors)
 {
     vtkSmartPointer<vtkPropCollection> pickFrom = vtkSmartPointer<vtkPropCollection>::New();
-    std::for_each( std::begin(possActors), std::end(possActors), [&](auto a){pickFrom->AddItem(a);});
+    std::for_each( std::begin(possActors), std::end(possActors), [&](vtkActor* a){pickFrom->AddItem(a);});
     return pickFrom;
 }   // end createPropCollection
 
@@ -155,7 +155,7 @@ vtkSmartPointer<vtkPropCollection> createPropCollection( const std::vector<vtkAc
 vtkSmartPointer<vtkPropCollection> createPropCollection( const std::vector<vtkSmartPointer<vtkActor> >& possActors)
 {
     vtkSmartPointer<vtkPropCollection> pickFrom = vtkSmartPointer<vtkPropCollection>::New();
-    std::for_each( std::begin(possActors), std::end(possActors), [&](auto a){pickFrom->AddItem(a.GetPointer());});
+    std::for_each( std::begin(possActors), std::end(possActors), [&](vtkActor a){pickFrom->AddItem(a.GetPointer());});
     return pickFrom;
 }   // end createPropCollection
 */

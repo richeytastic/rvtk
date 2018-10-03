@@ -20,7 +20,7 @@
 #include <vtkFollower.h>
 using RVTK::Viewer;
 
-Viewer::Ptr Viewer::create( bool offscreen) { return Ptr( new Viewer( offscreen), [](auto d){delete d;});}
+Viewer::Ptr Viewer::create( bool offscreen) { return Ptr( new Viewer( offscreen), [](Viewer* d){delete d;});}
 
 Viewer::Viewer( bool offscreen)
 {

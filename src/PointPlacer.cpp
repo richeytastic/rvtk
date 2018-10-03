@@ -21,13 +21,13 @@ using RVTK::PointPlacer;
 
 PointPlacer::Ptr PointPlacer::create( const vtkRenderer* r)
 {
-    return Ptr( new PointPlacer(r), [](auto d){ delete d;});
+    return Ptr( new PointPlacer(r), [](PointPlacer* d){ delete d;});
 }   // end create
 
 
 PointPlacer::Ptr PointPlacer::create( const vtkRenderer* r, vtkPolygonalSurfacePointPlacer* p)
 {
-    return Ptr( new PointPlacer(r,p), [](auto d){ delete d;});
+    return Ptr( new PointPlacer(r,p), [](PointPlacer* d){ delete d;});
 }   // end create
 
 

@@ -30,7 +30,7 @@ using RFeatures::ObjModel;
 
 SurfaceMapper::CPtr SurfaceMapper::create( const std::string& label, const MetricFn& fn, bool mapPolys, size_t d)
 {
-    return CPtr( new SurfaceMapper( label, fn, mapPolys, d), [](auto x){ delete x;});
+    return CPtr( new SurfaceMapper( label, fn, mapPolys, d), [](SurfaceMapper* x){ delete x;});
 }   // end create
 
 
