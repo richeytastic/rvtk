@@ -77,7 +77,7 @@ int RendererPicker::pickActorCells( const std::vector<cv::Point>& points2d, std:
         cellPicker->Pick( np.x, np.y, 0, _ren);
         const int cellId = cellPicker->GetCellId();
         actorCells[actor].insert(cellId);
-    }   // end foreach
+    }   // end for
 
     int numActorsPicked = 0;
     // Copy the picked actors and their cells to the output parameter
@@ -89,7 +89,7 @@ int RendererPicker::pickActorCells( const std::vector<cv::Point>& points2d, std:
         actorSubset.actor = pickedActor.first;
         const std::unordered_set<int>& actorCellIds = pickedActor.second;
         actorSubset.cellIds.insert( actorSubset.cellIds.end(), actorCellIds.begin(), actorCellIds.end());
-    }   // end foreach
+    }   // end for
 
     return numActorsPicked;
 }   // end pickActorCells
@@ -118,21 +118,21 @@ int RendererPicker::pickActorCells( const std::vector<cv::Point>& points2d,
             cellPicker->Pick( np.x, np.y, 0, _ren);
             setCellIds.insert( cellPicker->GetCellId());
         }   // end if
-    }   // end foreach
+    }   // end for
 
     cellIds.insert( cellIds.end(), setCellIds.begin(), setCellIds.end());
     return (int)setCellIds.size();
 }   // end pickActorCells
 
 
-
 // public
 vtkActor* RendererPicker::pickActor( const cv::Point& p) const
 {
-    vtkSmartPointer<vtkPropPicker> propPicker = vtkSmartPointer<vtkPropPicker>::New();
     const cv::Point np = changeOriginOfPoint( _ren, p, _pointOrigin);
-    propPicker->Pick( np.x, np.y, 0, _ren);
-    vtkActor* act = propPicker->GetActor();
+    vtkNew<vtkPropPicker> ppicker;
+    vtkActor* act = nullptr;
+    if ( ppicker->PickProp( np.x, np.y, _ren) > 0)
+        act = ppicker->GetActor();
     return act;
 }   // end pickActor
 

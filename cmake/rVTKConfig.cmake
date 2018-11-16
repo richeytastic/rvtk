@@ -21,8 +21,8 @@
 get_filename_component( rVTK_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 get_filename_component( rVTK_ROOT_DIR  "${rVTK_CMAKE_DIR}"           PATH)
 
-set( rVTK_INCLUDE_DIRS "${rVTK_ROOT_DIR}/include" CACHE PATH "The rVTK include directories.")
-set( rVTK_LIBRARY_DIR  "${rVTK_ROOT_DIR}/lib"     CACHE PATH "The rVTK library directory.")
+set( rVTK_INCLUDE_DIRS "${rVTK_ROOT_DIR}/../include" CACHE PATH "The rVTK include directories.")
+set( rVTK_LIBRARY_DIR  "${rVTK_ROOT_DIR}"            CACHE PATH "The rVTK library directory.")
 
 include( "${CMAKE_CURRENT_LIST_DIR}/Macros.cmake")
 get_library_suffix( _lsuff)
