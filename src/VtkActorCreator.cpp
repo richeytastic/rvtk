@@ -352,9 +352,9 @@ vtkSmartPointer<vtkTexture> createMaterialTexture( const ObjModel* model, int mi
     assert( model->getMaterialIds().count(mid) > 0);
     vtkSmartPointer<vtkTexture> tx;
     // Only take one of the texture maps
-    const std::vector<cv::Mat>& ambient = model->getMaterialAmbient(mid);
-    const std::vector<cv::Mat>& diffuse = model->getMaterialDiffuse(mid);
-    const std::vector<cv::Mat>& specular = model->getMaterialSpecular(mid);
+    const std::vector<cv::Mat>& ambient = model->materialAmbient(mid);
+    const std::vector<cv::Mat>& diffuse = model->materialDiffuse(mid);
+    const std::vector<cv::Mat>& specular = model->materialSpecular(mid);
     if ( !diffuse.empty())  // Diffuse texture
         tx = RVTK::convertToTexture( diffuse[0]);
     else if ( !ambient.empty())  // Ambient texture

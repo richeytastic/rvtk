@@ -25,6 +25,7 @@ set( INCLUDE_FILES
     "${INCLUDE_DIR}/LookupTable.h"
     "${INCLUDE_DIR}/MetricMapper.h"
     #"${INCLUDE_DIR}/ModelPathDrawer.h"
+    "${INCLUDE_DIR}/OffscreenModelViewer.h"
     #"${INCLUDE_DIR}/PointCloudMapper.h"
     "${INCLUDE_DIR}/PointPlacer.h"
     "${INCLUDE_DIR}/RendererPicker.h"
@@ -55,6 +56,7 @@ set( SRC_FILES
     ${SRC_DIR}/LinesMapper
     ${SRC_DIR}/LookupTable
     #${SRC_DIR}/ModelPathDrawer
+    ${SRC_DIR}/OffscreenModelViewer
     #${SRC_DIR}/PointCloudMapper
     ${SRC_DIR}/PointPlacer
     ${SRC_DIR}/RendererPicker
