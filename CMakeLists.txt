@@ -4,6 +4,7 @@ project( rVTK)
 
 set( WITH_RFEATURES TRUE)
 set( WITH_VTK TRUE)
+#set( WITH_QT TRUE)
 include( "cmake/FindLibs.cmake")
 
 set( INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
