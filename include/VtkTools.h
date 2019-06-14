@@ -48,15 +48,15 @@ rVTK_EXPORT RFeatures::ObjModel::Ptr makeObject( const vtkActor*);
 rVTK_EXPORT vtkPolyData* getPolyData( const vtkActor*);
 
 // Transform the point data on the given actor using the given matrix.
-// If the given matrix is NULL, the actor's internal (GPU) matrix is used.
-rVTK_EXPORT void transform( vtkActor*, const vtkMatrix4x4 *m=NULL);
+// If the given matrix is null, the actor's internal (GPU) matrix is used.
+rVTK_EXPORT void transform( vtkActor*, const vtkMatrix4x4 *m=nullptr);
 
 rVTK_EXPORT vtkSmartPointer<vtkImageImport> makeImageImporter( const cv::Mat img);
 
 // Converts a CV_8UC3 or CV_8UC1 image into a texture object ready for
 // addition to an actor (as long as the actor's mapper has poly data
 // with texture coordinates set).
-// An empty (NULL) pointer is returned if img is not suitable.
+// An empty (null) pointer is returned if img is not suitable.
 // NB: object texture coordinates typically use the bottom left corner
 // as the origin of the image texture whereas OpenCV uses the top left.
 // By default, this function flips the image vertically before processing.

@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2017 Richard Palmer
+ * Copyright (C) 2019 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,10 +35,7 @@ SurfaceMapper::CPtr SurfaceMapper::create( const std::string& label, const Metri
 
 
 SurfaceMapper::SurfaceMapper( const std::string& label, const MetricFn& fn, bool mapPolys, size_t d)
-    : _label(label), _metricfn(fn), _mapsPolys(mapPolys),
-      _mmapper( mapPolys ? RVTK::PolygonMetricMapper::create(d) : RVTK::VertexMetricMapper::create(d))
-{
-}   // end ctor
+    : _label(label), _metricfn(fn), _mapsPolys(mapPolys), _ndims(d) {}
 
 
 // private
@@ -52,9 +49,9 @@ float SurfaceMapper::val( int id, size_t k) const
 
 
 // public
-void SurfaceMapper::mapMetrics( const ObjModel *model, const std::unordered_map<int,int> *lmap, vtkActor *actor) const
+void SurfaceMapper::mapMetrics( const ObjModel *model, vtkActor *actor) const
 {
-    assert(lmap);
+    assert( model->hasSequentialIds());
     const size_t nd = ndimensions();
     assert( nd >= 1);
 
@@ -69,27 +66,55 @@ void SurfaceMapper::mapMetrics( const ObjModel *model, const std::unordered_map<
 
     vtkSmartPointer<vtkFloatArray> cvals = vtkSmartPointer<vtkFloatArray>::New();
     cvals->SetName( _label.c_str());
-    const IntSet& objids = *_mmapper->mappingIds( model);
 
     if ( nd == 1)  // Scalars
     {
-        cvals->SetNumberOfValues( objids.size());
-        for ( int objid : objids)
-            cvals->SetValue( lmap->at(objid), val( objid, 0));
+        if ( _mapsPolys)
+        {
+            const int nf = model->numPolys();
+            cvals->SetNumberOfValues( nf);
+            for ( int fid = 0; fid < nf; ++fid)
+                cvals->SetValue( fid, val( fid, 0));
+        }   // end if
+        else
+        {
+            const int nv = model->numVtxs();
+            cvals->SetNumberOfValues( nv);
+            for ( int vid = 0; vid < nv; ++vid)
+                cvals->SetValue( vid, val( vid, 0));
+        }   // end else
     }   // end if
     else    // Vectors
     {
         std::vector<float> mval(nd);
         cvals->SetNumberOfComponents( static_cast<int>(nd));
-        cvals->SetNumberOfTuples( objids.size());
-        for ( int objid : objids)
+        
+        if ( _mapsPolys)
         {
-            for ( size_t k = 0; k < nd; ++k)
-                mval[k] = val( objid, k);
-            cvals->SetTuple( lmap->at(objid), &mval[0]);
-        }   // end for
+            const int nf = model->numPolys();
+            cvals->SetNumberOfTuples( nf);
+            for ( int fid = 0; fid < nf; ++fid)
+            {
+                for ( size_t k = 0; k < nd; ++k)
+                    mval[k] = val( fid, k);
+                cvals->SetTuple( fid, &mval[0]);
+            }   // end for
+        }   // end if
+        else
+        {
+            const int nv = model->numVtxs();
+            cvals->SetNumberOfTuples( nv);
+            for ( int vid = 0; vid < nv; ++vid)
+            {
+                for ( size_t k = 0; k < nd; ++k)
+                    mval[k] = val( vid, k);
+                cvals->SetTuple( vid, &mval[0]);
+            }   // end for
+        }   // end else
     }   // end else
 
-    vtkDataSetAttributes *ds = _mmapper->dataSet( RVTK::getPolyData( actor));    // polydata->GetCellData or polydata->GetPointData
+    vtkPolyData* pd = RVTK::getPolyData(actor);
+    vtkDataSetAttributes *ds = _mapsPolys ? static_cast<vtkDataSetAttributes*>(pd->GetCellData())
+                                          : static_cast<vtkDataSetAttributes*>(pd->GetPointData());
     ds->AddArray( cvals);
 }   // end mapMetrics

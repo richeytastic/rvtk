@@ -19,7 +19,7 @@
 #define RVTK_IMAGE_GRABBER_H
 
 #include "Viewer.h"
-typedef unsigned char byte;
+using byte = unsigned char;
 
 namespace RVTK {
 
@@ -34,11 +34,11 @@ public:
     // Refresh images (only needed if render window has been updated since construction).
     void refresh( int reqPixelHeight = 0);
 
-    cv::Size size() const { return _colmap.size();}
-    cv::Mat_<cv::Vec3b> colour() const { return _colmap;}
-    cv::Mat_<byte> light() const { return _dcmap;}
-    cv::Mat_<float> depth() const { return _dzmap;}
-    cv::Mat_<byte> depthb() const { return _ddmap;}
+    inline cv::Size size() const { return _colmap.size();}
+    inline cv::Mat_<cv::Vec3b> colour() const { return _colmap;}
+    inline cv::Mat_<byte> light() const { return _dcmap;}
+    inline cv::Mat_<float> depth() const { return _dzmap;}
+    inline cv::Mat_<byte> depthb() const { return _ddmap;}
 
 private:
     vtkRenderWindow* _renWin;

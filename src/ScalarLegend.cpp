@@ -38,24 +38,27 @@ ScalarLegend::ScalarLegend( vtkRenderWindowInteractor* rwint)
     legend->SetPosition(0.61, 0.3);
     legend->SetHeight(0.65);
 
+    legend->GetTitleTextProperty()->SetFontFamilyToCourier();
+    legend->GetTitleTextProperty()->SetFontSize(16);
+    legend->GetTitleTextProperty()->SetBold(false);
+    legend->GetTitleTextProperty()->SetItalic(false);
+
     _widget->SetInteractor(rwint);
     _widget->SetRepositionable(false);
 }   // end dtor
 
 
-// public
+vtkTextProperty* ScalarLegend::titleProperty() { return _widget->GetScalarBarActor()->GetTitleTextProperty();}
+vtkTextProperty* ScalarLegend::labelProperty() { return _widget->GetScalarBarActor()->GetLabelTextProperty();}
+
+
 void ScalarLegend::setTitle( const std::string& title)
 {
     vtkScalarBarActor* legend = _widget->GetScalarBarActor();
-    legend->GetTitleTextProperty()->SetFontFamilyToCourier();
-    legend->GetTitleTextProperty()->SetFontSize(16);
-    legend->GetTitleTextProperty()->SetBold(false);
-    legend->GetTitleTextProperty()->SetItalic(false);
     legend->SetTitle( title.c_str());
 }   // end setTitle
 
 
-// public
 void ScalarLegend::setLookupTable( const vtkLookupTable* lut)
 {
     vtkLookupTable* ltable = const_cast<vtkLookupTable*>(lut);
@@ -74,11 +77,9 @@ void ScalarLegend::setLookupTable( const vtkLookupTable* lut)
 }   // end setLookupTable
 
 
-// public
 bool ScalarLegend::isVisible() const { return _widget->GetEnabled() > 0;}
 
 
-// public
 void ScalarLegend::setVisible( bool visible)
 {
     if ( _widget->GetScalarBarActor()->GetLookupTable() != nullptr)

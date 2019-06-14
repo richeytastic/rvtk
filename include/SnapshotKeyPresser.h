@@ -15,7 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#pragma once
 #ifndef RVTK_SNAPSHOT_KEY_PRESSER_H
 #define RVTK_SNAPSHOT_KEY_PRESSER_H
 
@@ -24,8 +23,7 @@
 #include "KeyPresser.h"
 
 
-namespace RVTK
-{
+namespace RVTK {
 
 class rVTK_EXPORT SnapshotKeyPresser : public RVTK::KeyPresser
 {

@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2018 Richard Palmer
+ * Copyright (C) 2019 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,8 +64,7 @@ void OffscreenModelViewer::setModel( const RFeatures::ObjModel* model)
     clear();
     // Create the actor
     vtkSmartPointer<vtkTexture> texture;
-    VtkActorCreator ac;
-    _actor = ac.generateActor( model, texture);
+    _actor = VtkActorCreator::generateActor( model, texture);
     _viewer->addActor( _actor);
     setCamera( _viewer->camera());  // Refresh
 }   // end setModel

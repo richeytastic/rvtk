@@ -37,8 +37,7 @@ using std::string;
 #include "VTKTypes.h"
 
 
-namespace RVTK
-{
+namespace RVTK {
 
 class rVTK_EXPORT DataReaderException: public std::exception
 {

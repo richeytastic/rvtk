@@ -15,7 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ************************************************************************/
 
-#pragma once
 #ifndef RVTK_VIEWER_PROJECTOR_H
 #define RVTK_VIEWER_PROJECTOR_H
 
@@ -39,8 +38,7 @@ cv::COLORMAP_HOT = 11
 */
 
 
-namespace RVTK
-{
+namespace RVTK {
 
 class rVTK_EXPORT ViewerProjector
 {

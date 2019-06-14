@@ -21,19 +21,22 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkScalarBarWidget.h>
 #include <vtkSmartPointer.h>
+#include <vtkTextProperty.h>
 #include <vtkLookupTable.h>
 #include <vtkMapper.h>
 #include <string>
 #include "rVTK_Export.h"
 
-namespace RVTK
-{
+namespace RVTK {
 
 class rVTK_EXPORT ScalarLegend
 {
 public:
     explicit ScalarLegend( vtkRenderWindowInteractor*);
     virtual ~ScalarLegend(){}
+
+    vtkTextProperty* titleProperty();
+    vtkTextProperty* labelProperty();
 
     void setTitle( const std::string&);
     void setLookupTable( const vtkLookupTable*);

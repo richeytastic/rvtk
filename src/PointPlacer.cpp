@@ -93,9 +93,9 @@ bool PointPlacer::calcSurfacePosition( int x, int y, float* worldPos, RVTK::Disp
     if (!_pplacer->ComputeWorldPosition( _renderer, dpos, wpos, worient))
         return false;
 
-    worldPos[0] = wpos[0];
-    worldPos[1] = wpos[1];
-    worldPos[2] = wpos[2];
+    worldPos[0] = static_cast<float>(wpos[0]);
+    worldPos[1] = static_cast<float>(wpos[1]);
+    worldPos[2] = static_cast<float>(wpos[2]);
 
     return true;
 }   // end calcSurfacePosition

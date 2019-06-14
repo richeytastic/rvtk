@@ -45,8 +45,8 @@ protected:
 private:
     const RFeatures::ObjModelKDTree* _kdtree;
     DijkstraShortestPathLineInterpolator();
-    DijkstraShortestPathLineInterpolator( const DijkstraShortestPathLineInterpolator&); // No copy
-    void operator=( const DijkstraShortestPathLineInterpolator&);                       // No copy
+    DijkstraShortestPathLineInterpolator( const DijkstraShortestPathLineInterpolator&) = delete;
+    void operator=( const DijkstraShortestPathLineInterpolator&) = delete;
 };  // end class
 
 }   // end namespace

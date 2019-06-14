@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2017 Richard Palmer
+ * Copyright (C) 2019 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,10 @@
 #ifndef RVTK_SURFACE_MAPPER_H
 #define RVTK_SURFACE_MAPPER_H
 
-#include "MetricMapper.h"
+#include "rVTK_Export.h"
+#include <ObjModel.h>   // RFeatures
 #include <vtkActor.h>
 #include <functional>
-#include <memory>
 
 namespace RVTK {
 
@@ -40,7 +40,7 @@ public:
 
     inline const std::string& label() const { return _label;}
     inline bool mapsPolys() const { return _mapsPolys;}
-    inline size_t ndimensions() const { return _mmapper->ndimensions();}
+    inline size_t ndimensions() const { return _ndims;}
 
     // Map metrics array to the actor's data set attributes. Does NOT make the mapped array active!
     // To activate the array for visualisation on the actor's polydata, get its dataset attributes using:
@@ -53,9 +53,7 @@ public:
     // actor->GetProperty()->SetRepresentationToSurface() (obviously)
     // actor->GetMapper()->SetScalarModelToUseCellData() (may not be needed)
     // actor->GetMapper()->SetScalarVisibility(true)
-    void mapMetrics( const RFeatures::ObjModel*,
-                     const std::unordered_map<int,int>*,    // ObjModel ID to vtkActor ID lookup (for MetricMapper)
-                     vtkActor*) const;                      // the corresponding actor to map metrics array to.
+    void mapMetrics( const RFeatures::ObjModel*, vtkActor*) const;
 
     // Get min/max for component c from last call to mapActor.
     float getMin( int c=0) const { return _min[c];}
@@ -65,7 +63,7 @@ private:
     const std::string _label;
     MetricFn _metricfn;
     const bool _mapsPolys;
-    MetricMapper::Ptr _mmapper;
+    const size_t _ndims;
     mutable std::vector<float> _min;
     mutable std::vector<float> _max;
     float val( int, size_t) const;

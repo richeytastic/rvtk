@@ -24,8 +24,7 @@
 #include <vtkSmartPointer.h>
 #include "rVTK_Export.h"
 
-namespace RVTK
-{
+namespace RVTK {
 
 class rVTK_EXPORT Axes
 {

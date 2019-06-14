@@ -32,8 +32,7 @@ using std::string;
 #include <boost/shared_ptr.hpp>
 
 
-namespace RVTK
-{
+namespace RVTK {
 
 class rVTK_EXPORT KeyPresser
 {

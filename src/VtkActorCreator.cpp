@@ -32,6 +32,18 @@ using RVTK::VtkActorCreator;
 
 namespace {
 
+void init()
+{
+    static bool initCalled = false;
+    if (!initCalled)
+    {
+        // Add static initialisation here...
+        vtkMapper::SetResolveCoincidentTopologyToPolygonOffset();
+        initCalled = true;
+    }   // end if
+}   // end ctor
+
+
 vtkActor* makeActor( vtkSmartPointer<vtkPolyData> pd)
 {
     /*
@@ -47,116 +59,6 @@ vtkActor* makeActor( vtkSmartPointer<vtkPolyData> pd)
 }   // end makeActor
 
 
-void init()
-{
-    static bool initCalled = false;
-    if (initCalled)
-        return;
-    initCalled = true;
-    // Add static initialisation here...
-    vtkMapper::SetResolveCoincidentTopologyToPolygonOffset();
-}   // end init
-
-}   // end namespace
-
-
-// public
-VtkActorCreator::VtkActorCreator()
-    : _uvidxs(nullptr), _ufidxs(nullptr),
-      _uvmappings(nullptr), _vmappings(nullptr), _ufmappings(nullptr), _fmappings(nullptr),
-      _ruvmappings(nullptr), _rvmappings(nullptr), _rufmappings(nullptr), _rfmappings(nullptr)
-{
-    init();
-}   // end ctor
-
-
-// private
-vtkSmartPointer<vtkPoints> VtkActorCreator::createVertices( const ObjModel* model, IntIntMap* uvmappings, vtkCellArray* vertices)
-{
-    uvmappings->clear();
-    if ( _ruvmappings)
-        _ruvmappings->clear();
-    if ( _uvidxs)
-        _uvidxs->clear();
-
-    vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
-    points->SetNumberOfPoints( model->getNumVertices());
-
-    int i = 0;
-    const IntSet& vidxs = model->getVertexIds();
-    for ( int vi : vidxs)
-    {
-        const cv::Vec3f& v = model->vtx(vi);
-        points->SetPoint( i, &v[0]);
-        vertices->InsertNextCell( 1);
-        vertices->InsertCellPoint( i);
-
-        (*uvmappings)[vi] = i; // Set the mapping of ObjModel vertices to VTK vertices
-        if ( _ruvmappings)
-            (*_ruvmappings)[i] = vi;
-        if ( _uvidxs)
-            _uvidxs->insert(i);
-        i++;
-    }   // end foreach
-    return points;
-}   // end createVertices
-
-
-// private
-vtkSmartPointer<vtkCellArray> VtkActorCreator::createPolygons( const ObjModel* model, const IntIntMap* uvmappings)
-{
-    int vtkid = 0;
-    vtkSmartPointer<vtkCellArray> polys = vtkSmartPointer<vtkCellArray>::New();
-    for ( int fid : model->getFaceIds())
-    {
-        const int* vidxs = model->getFaceVertices(fid);
-        polys->InsertNextCell( 3);
-        polys->InsertCellPoint( uvmappings->at( vidxs[0]));
-        polys->InsertCellPoint( uvmappings->at( vidxs[1]));
-        polys->InsertCellPoint( uvmappings->at( vidxs[2]));
-
-        if ( _rufmappings)
-            (*_rufmappings)[vtkid] = fid;
-        if ( _ufmappings)
-            (*_ufmappings)[fid] = vtkid;
-        if ( _ufidxs)
-            _ufidxs->insert(vtkid);
-
-        vtkid++;
-    }   // end for
-
-    return polys;
-}   // end createPolygons
-
-
-// public
-vtkActor* VtkActorCreator::generateSurfaceActor( const ObjModel* model)
-{
-    IntIntMap* uvmappings = _uvmappings;    // Provided memory
-    bool dodelete = false;
-    if ( !uvmappings)
-    {
-        dodelete = true;
-        uvmappings = new IntIntMap;
-    }   // end if
-
-    vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
-    vtkSmartPointer<vtkPoints> points = createVertices( model, uvmappings, vertices);
-    vtkSmartPointer<vtkCellArray> faces = createPolygons( model, uvmappings);
-
-    vtkSmartPointer<vtkPolyData> pd = vtkSmartPointer<vtkPolyData>::New();
-    //pd->SetVerts( vertices);  // NOPE! Can't seem to get rid of the vertices when visualising!
-    pd->SetPoints( points);
-    pd->SetPolys( faces);
-    if ( dodelete)
-        delete uvmappings;
-
-    return makeActor(pd);
-}   // end generateSurfaceActor
-
-
-namespace {
-
 vtkSmartPointer<vtkPoints> createVerts( const std::vector<cv::Vec3f>& vtxs, vtkCellArray* vertices)
 {
     const int n = (int)vtxs.size();
@@ -170,6 +72,39 @@ vtkSmartPointer<vtkPoints> createVerts( const std::vector<cv::Vec3f>& vtxs, vtkC
     }   // end for
     return points;
 }   // end createVerts
+
+
+vtkSmartPointer<vtkPoints> createVerts( const ObjModel* model, vtkCellArray* vertices)
+{
+    assert( model->hasSequentialVertexIds());
+    const int n = model->numVtxs();
+    vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
+    points->SetNumberOfPoints( n);
+    for ( int i = 0; i < n; ++i)
+    {
+        points->SetPoint( i, &model->vtx( i)[0]);
+        vertices->InsertNextCell(1);
+        vertices->InsertCellPoint(i);
+    }   // end for
+    return points;
+}   // end createVerts
+
+
+vtkSmartPointer<vtkCellArray> createPolys( const ObjModel* model)
+{
+    assert( model->hasSequentialFaceIds());
+    const int n = model->numPolys();
+    vtkSmartPointer<vtkCellArray> polys = vtkSmartPointer<vtkCellArray>::New();
+    for ( int f = 0; f < n; ++f)
+    {
+        const int* vidxs = model->fvidxs(f);
+        polys->InsertNextCell( 3);
+        polys->InsertCellPoint( vidxs[0]);
+        polys->InsertCellPoint( vidxs[1]);
+        polys->InsertCellPoint( vidxs[2]);
+    }   // end for
+    return polys;
+}   // end createPolys
 
 
 vtkSmartPointer<vtkPoints> createLines( const std::vector<cv::Vec3f>& vtxs,
@@ -229,13 +164,54 @@ vtkSmartPointer<vtkPoints> createLinePairs( const std::vector<cv::Vec3f>& lps,
     return points;
 }   // end createLinePairs
 
-
 }   // end namespace
 
 
-// public static
+vtkActor* VtkActorCreator::generateSurfaceActor( const ObjModel* model)
+{
+    assert( model->hasSequentialIds());
+    if ( !model->hasSequentialIds())
+    {
+        std::cerr << "[ERROR] RVTK::VtkActorCreator::generateSurfaceActor: Vertex/Face IDs must be in sequential order!" << std::endl;
+        return nullptr;
+    }   // end if
+
+    init();
+    vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
+    vtkSmartPointer<vtkPoints> points = createVerts( model, vertices);
+    vtkSmartPointer<vtkCellArray> faces = createPolys( model);
+
+    vtkSmartPointer<vtkPolyData> pd = vtkSmartPointer<vtkPolyData>::New();
+    //pd->SetVerts( vertices);  // NOPE! Can't seem to get rid of the vertices when visualising!
+    pd->SetPoints( points);
+    pd->SetPolys( faces);
+
+    return makeActor(pd);
+}   // end generateSurfaceActor
+
+
+
+vtkActor* VtkActorCreator::generatePointsActor( const ObjModel* model)
+{
+    if ( !model->hasSequentialVertexIds())
+    {
+        std::cerr << "[ERROR] RVTK::VtkActorCreator::generatePointsActor: Vertex IDs must be in sequential order!" << std::endl;
+        return nullptr;
+    }   // end if
+
+    init();
+    vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
+    vtkSmartPointer<vtkPoints> points = createVerts( model, vertices);
+    vtkSmartPointer<vtkPolyData> pd = vtkSmartPointer<vtkPolyData>::New();
+    pd->SetVerts( vertices);
+    pd->SetPoints( points);
+    return makeActor(pd);
+}   // end generatePointsActor
+
+
 vtkActor* VtkActorCreator::generatePointsActor( const std::vector<cv::Vec3f>& vtxs)
 {
+    init();
     vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
     vtkSmartPointer<vtkPoints> points = createVerts( vtxs, vertices);
     vtkSmartPointer<vtkPolyData> pd = vtkSmartPointer<vtkPolyData>::New();
@@ -245,20 +221,10 @@ vtkActor* VtkActorCreator::generatePointsActor( const std::vector<cv::Vec3f>& vt
 }   // end generatePointsActor
 
 
-// public static
-vtkActor* VtkActorCreator::generatePointsActor( const ObjModel* model)
-{
-    const IntSet& vidxs = model->getVertexIds();
-    std::vector<cv::Vec3f> vtxs(vidxs.size());
-    int i = 0;
-    std::for_each( std::begin(vidxs), std::end(vidxs), [&](int vidx){ vtxs[i++] = model->vtx(vidx);});
-    return generatePointsActor(vtxs);
-}   // end generatePointsActor
 
-
-// public static
 vtkActor* VtkActorCreator::generateLineActor( const std::vector<cv::Vec3f>& vtxs, bool joinLoop)
 {
+    init();
     vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
     vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
     vtkSmartPointer<vtkPoints> points = createLines( vtxs, vertices, lines, joinLoop);
@@ -270,7 +236,6 @@ vtkActor* VtkActorCreator::generateLineActor( const std::vector<cv::Vec3f>& vtxs
 }   // end generateLineActor
 
 
-// public static
 vtkActor* VtkActorCreator::generateLineActor( const std::list<cv::Vec3f>& vtxs, bool joinLoop)
 {
     std::vector<cv::Vec3f> vpts(vtxs.begin(), vtxs.end());
@@ -278,9 +243,9 @@ vtkActor* VtkActorCreator::generateLineActor( const std::list<cv::Vec3f>& vtxs, 
 }   // end generateLineActor
 
 
-// public static
 vtkActor* VtkActorCreator::generateLinePairsActor( const std::vector<cv::Vec3f>& lps)
 {
+    init();
     vtkSmartPointer<vtkCellArray> vertices = vtkSmartPointer<vtkCellArray>::New();
     vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
     vtkSmartPointer<vtkPoints> points = createLinePairs( lps, vertices, lines);
@@ -292,105 +257,38 @@ vtkActor* VtkActorCreator::generateLinePairsActor( const std::vector<cv::Vec3f>&
 }   // end generateLinePairsActor
 
 
-
-namespace {
-
-struct Mappings
-{
-private:
-    bool _dodelete;
-
-public:
-    IntIntMap *vmappings;   // Obj to VTK vertex ID mappings
-    IntIntMap *rvmappings;  // VTK to Obj vertex ID mappings
-    IntIntMap *fmappings;   // Obj to VTK face ID mappings
-    IntIntMap *rfmappings;  // VTK to Obj face ID mappings
-
-    Mappings( IntIntMap* vm, IntIntMap* rvm, IntIntMap* fm, IntIntMap* rfm)
-        : _dodelete(false), vmappings(vm), rvmappings(rvm), fmappings(fm), rfmappings(rfm)
-    {
-        if (!vmappings)
-        {
-            _dodelete = true;
-            vmappings = new IntIntMap;
-        }   // end if
-
-        vmappings->clear();
-        if ( rvmappings)
-            rvmappings->clear();
-        if ( fmappings)
-            fmappings->clear();
-        if ( rfmappings)
-            rfmappings->clear();
-    }   // end ctor
-
-    ~Mappings()
-    {
-        if (_dodelete)  // Don't delete if vmappings set externally
-            delete vmappings;
-    }   // end dtor
-
-    void mapVertexIndices( int objVtxId, int vtkPointId)
-    {
-        (*vmappings)[objVtxId] = vtkPointId;
-        if ( rvmappings)
-            (*rvmappings)[vtkPointId] = objVtxId;
-    }   // end mapVertexIndices
-
-    void mapFaceIndices( int objFaceId, int vtkFaceId)
-    {
-        if ( rfmappings)
-            (*rfmappings)[vtkFaceId] = objFaceId;
-        if ( fmappings)
-            (*fmappings)[objFaceId] = vtkFaceId;
-    }   // end mapFaceIndices
-};  // end struct
-
-
-vtkSmartPointer<vtkTexture> createMaterialTexture( const ObjModel* model, int mid)
-{
-    assert( model->getMaterialIds().count(mid) > 0);
-    vtkSmartPointer<vtkTexture> tx;
-    // Only take one of the texture maps
-    const std::vector<cv::Mat>& ambient = model->materialAmbient(mid);
-    const std::vector<cv::Mat>& diffuse = model->materialDiffuse(mid);
-    const std::vector<cv::Mat>& specular = model->materialSpecular(mid);
-    if ( !diffuse.empty())  // Diffuse texture
-        tx = RVTK::convertToTexture( diffuse[0]);
-    else if ( !ambient.empty())  // Ambient texture
-        tx = RVTK::convertToTexture( ambient[0]);
-    else if ( !specular.empty()) // Specular texture
-        tx = RVTK::convertToTexture( specular[0]);
-    return tx;
-}   // end createMaterialTexture
-
-}   // end namespace
-
-
-// public
 vtkActor* VtkActorCreator::generateActor( const ObjModel* model, vtkSmartPointer<vtkTexture>& texture)
 {
     texture = nullptr;
 
-    if ( model->getNumMaterials() > 1)  // Can't create if more than one material!
+    if ( model->numMats() > 1)  // Can't create if more than one material!
     {
         std::cerr << "[ERROR] RVTK::VtkActorCreator::generateActor: Model has more than one material! Merge first." << std::endl;
         return nullptr;
     }   // end if
 
-    if ( model->getNumMaterials() == 0)
+    if ( !model->hasSequentialIds())
+    {
+        std::cerr << "[ERROR] RVTK::VtkActorCreator::generateActor: Model IDs must be in sequential order!" << std::endl;
+        return nullptr;
+    }   // end if
+
+    if ( model->numMats() == 0)
     {
         std::cerr << "[INFO] RVTK::VtkActorCreator::generateActor: Model has no materials; generating surface actor." << std::endl;
         return generateSurfaceActor( model);
     }   // end if
 
-    const int MID = *model->getMaterialIds().begin();   // The one and only material ID
-    texture = createMaterialTexture( model, MID);       // Set the texture for return
+    const int MID = *model->materialIds().begin();   // The one and only material ID
+    texture = RVTK::convertToTexture( model->texture(MID)); // Texture for return
+    assert(texture);
 
-    const int NP = 3*(int)model->getNumFaces();
-    Mappings mappings( _uvmappings, _ruvmappings, _ufmappings, _rufmappings);
+    const int NP = 3*model->numPolys();
 
+    init();
     vtkSmartPointer<vtkCellArray> faces = vtkSmartPointer<vtkCellArray>::New();
+    // Note here for the number of points that it is approx. THREE TIMES the required number because we are mapping
+    // texture coords to correspond with the points and there need to be 3 texture coords per triangle.
     vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
     points->SetNumberOfPoints( NP);
     vtkSmartPointer<vtkFloatArray> uvs = vtkSmartPointer<vtkFloatArray>::New();
@@ -399,18 +297,18 @@ vtkActor* VtkActorCreator::generateActor( const ObjModel* model, vtkSmartPointer
     uvs->SetName( "TCoords_0");
 
     int vtkPointId = 0;
-    for ( int fid : model->getFaceIds())    // Over all polygons
+    const int nfaces = model->numPolys();
+    for ( int fid = 0; fid < nfaces; ++fid)    // Over all polygons
     {
-        mappings.mapFaceIndices( fid, (int)faces->InsertNextCell( 3));
+        faces->InsertNextCell(3);
+        const int* vtxs = model->fvidxs(fid);
+        const int* uvids = model->faceUVs(fid);
 
-        const int* vtxs = model->getFaceVertices(fid);
-        const int* uvids = model->getFaceUVs(fid);
         if ( uvids)
         {
             for ( int i = 0; i < 3; ++i)
             {
                 const int vid = vtxs[i];
-                mappings.mapVertexIndices( vid, vtkPointId);
                 faces->InsertCellPoint( vtkPointId);
                 points->SetPoint( vtkPointId, &(model->vtx( vid)[0]));
                 const cv::Vec2f& uv = model->uv( MID, uvids[i]);
@@ -423,7 +321,6 @@ vtkActor* VtkActorCreator::generateActor( const ObjModel* model, vtkSmartPointer
             for ( int i = 0; i < 3; ++i)
             {
                 const int vid = vtxs[i];
-                mappings.mapVertexIndices( vid, vtkPointId);
                 faces->InsertCellPoint( vtkPointId);
                 points->SetPoint( vtkPointId, &(model->vtx( vid)[0]));
                 uvs->SetTuple2( vtkPointId, 0.0, 0.0);
@@ -435,7 +332,7 @@ vtkActor* VtkActorCreator::generateActor( const ObjModel* model, vtkSmartPointer
     vtkSmartPointer<vtkPolyData> pd = vtkSmartPointer<vtkPolyData>::New();
     pd->SetPoints( points);
     pd->SetPolys( faces);
-    pd->GetPointData()->SetTCoords( uvs);  // Add texture coords to poly data
+    pd->GetPointData()->SetTCoords( uvs);
 
     vtkActor* actor = makeActor(pd);
     actor->SetTexture( texture);

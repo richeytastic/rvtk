@@ -25,8 +25,7 @@ using RVTK::KeyPresser;
 #include <vtkInteractorStyleTrackballCamera.h>
 
 
-namespace RVTK
-{
+namespace RVTK {
 
 class rVTK_EXPORT InteractorC1 : public vtkInteractorStyleTrackballCamera
 {

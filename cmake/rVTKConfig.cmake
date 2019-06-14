@@ -32,4 +32,4 @@ set( rVTK_LIBRARIES     ${rVTK_LIBRARIES}         CACHE FILE "The rVTK imported 
 
 # handle QUIETLY and REQUIRED args and set rVTK_FOUND to TRUE if all listed variables are TRUE
 include( "${CMAKE_ROOT}/Modules/FindPackageHandleStandardArgs.cmake")
-find_package_handle_standard_args( rVTK "Found:\t${rVTK_LIBRARIES}" rVTK_LIBRARIES rVTK_INCLUDE_DIRS)
+find_package_handle_standard_args( rVTK rVTK_FOUND rVTK_LIBRARIES rVTK_INCLUDE_DIRS)
