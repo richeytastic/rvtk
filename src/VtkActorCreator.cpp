@@ -25,7 +25,6 @@
 #include <vtkFloatArray.h>
 #include <vtkPointData.h>
 #include <ObjModelTriangleMeshParser.h> // RFeatures
-#include <VectorFloatKeyHashing.h>      // RFeatures
 using RFeatures::ObjModel;
 using RVTK::VtkActorCreator;
 
