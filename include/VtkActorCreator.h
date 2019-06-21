@@ -39,14 +39,14 @@ public:
     // The provided model must have all its vertex/face IDs in sequential order so they can
     // be treated as indices. On return, lighting is set to 100% ambient, 0% diffuse and 0% specular
     // so that the texture is lit properly. Returns null if more than one material defined on the object.
-    static vtkActor* generateActor( const RFeatures::ObjModel*, vtkSmartPointer<vtkTexture>&);
+    static vtkActor* generateActor( const RFeatures::ObjModel&, vtkSmartPointer<vtkTexture>&);
 
     // Returns a non-textured actor for the given model. Model must have all its vertex/face IDs
     // stored in sequential order so they can be treated as indices.
-    static vtkActor* generateSurfaceActor( const RFeatures::ObjModel*);
+    static vtkActor* generateSurfaceActor( const RFeatures::ObjModel&);
 
     // Generate a simple points actor. All vertices must be in sequential order.
-    static vtkActor* generatePointsActor( const RFeatures::ObjModel*);
+    static vtkActor* generatePointsActor( const RFeatures::ObjModel&);
 
     // Generate a points actor from raw vertices.
     static vtkActor* generatePointsActor( const std::vector<cv::Vec3f>&);

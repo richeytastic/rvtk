@@ -73,15 +73,15 @@ vtkSmartPointer<vtkPoints> createVerts( const std::vector<cv::Vec3f>& vtxs, vtkC
 }   // end createVerts
 
 
-vtkSmartPointer<vtkPoints> createVerts( const ObjModel* model, vtkCellArray* vertices)
+vtkSmartPointer<vtkPoints> createVerts( const ObjModel& model, vtkCellArray* vertices)
 {
-    assert( model->hasSequentialVertexIds());
-    const int n = model->numVtxs();
+    assert( model.hasSequentialVertexIds());
+    const int n = model.numVtxs();
     vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
     points->SetNumberOfPoints( n);
     for ( int i = 0; i < n; ++i)
     {
-        points->SetPoint( i, &model->vtx( i)[0]);
+        points->SetPoint( i, &model.vtx( i)[0]);
         vertices->InsertNextCell(1);
         vertices->InsertCellPoint(i);
     }   // end for
@@ -89,14 +89,14 @@ vtkSmartPointer<vtkPoints> createVerts( const ObjModel* model, vtkCellArray* ver
 }   // end createVerts
 
 
-vtkSmartPointer<vtkCellArray> createPolys( const ObjModel* model)
+vtkSmartPointer<vtkCellArray> createPolys( const ObjModel& model)
 {
-    assert( model->hasSequentialFaceIds());
-    const int n = model->numPolys();
+    assert( model.hasSequentialFaceIds());
+    const int n = model.numPolys();
     vtkSmartPointer<vtkCellArray> polys = vtkSmartPointer<vtkCellArray>::New();
     for ( int f = 0; f < n; ++f)
     {
-        const int* vidxs = model->fvidxs(f);
+        const int* vidxs = model.fvidxs(f);
         polys->InsertNextCell( 3);
         polys->InsertCellPoint( vidxs[0]);
         polys->InsertCellPoint( vidxs[1]);
@@ -166,10 +166,10 @@ vtkSmartPointer<vtkPoints> createLinePairs( const std::vector<cv::Vec3f>& lps,
 }   // end namespace
 
 
-vtkActor* VtkActorCreator::generateSurfaceActor( const ObjModel* model)
+vtkActor* VtkActorCreator::generateSurfaceActor( const ObjModel& model)
 {
-    assert( model->hasSequentialIds());
-    if ( !model->hasSequentialIds())
+    assert( model.hasSequentialIds());
+    if ( !model.hasSequentialIds())
     {
         std::cerr << "[ERROR] RVTK::VtkActorCreator::generateSurfaceActor: Vertex/Face IDs must be in sequential order!" << std::endl;
         return nullptr;
@@ -190,9 +190,9 @@ vtkActor* VtkActorCreator::generateSurfaceActor( const ObjModel* model)
 
 
 
-vtkActor* VtkActorCreator::generatePointsActor( const ObjModel* model)
+vtkActor* VtkActorCreator::generatePointsActor( const ObjModel& model)
 {
-    if ( !model->hasSequentialVertexIds())
+    if ( !model.hasSequentialVertexIds())
     {
         std::cerr << "[ERROR] RVTK::VtkActorCreator::generatePointsActor: Vertex IDs must be in sequential order!" << std::endl;
         return nullptr;
@@ -256,33 +256,33 @@ vtkActor* VtkActorCreator::generateLinePairsActor( const std::vector<cv::Vec3f>&
 }   // end generateLinePairsActor
 
 
-vtkActor* VtkActorCreator::generateActor( const ObjModel* model, vtkSmartPointer<vtkTexture>& texture)
+vtkActor* VtkActorCreator::generateActor( const ObjModel& model, vtkSmartPointer<vtkTexture>& texture)
 {
     texture = nullptr;
 
-    if ( model->numMats() > 1)  // Can't create if more than one material!
+    if ( model.numMats() > 1)  // Can't create if more than one material!
     {
         std::cerr << "[ERROR] RVTK::VtkActorCreator::generateActor: Model has more than one material! Merge first." << std::endl;
         return nullptr;
     }   // end if
 
-    if ( !model->hasSequentialIds())
+    if ( !model.hasSequentialIds())
     {
         std::cerr << "[ERROR] RVTK::VtkActorCreator::generateActor: Model IDs must be in sequential order!" << std::endl;
         return nullptr;
     }   // end if
 
-    if ( model->numMats() == 0)
+    if ( model.numMats() == 0)
     {
         std::cerr << "[INFO] RVTK::VtkActorCreator::generateActor: Model has no materials; generating surface actor." << std::endl;
         return generateSurfaceActor( model);
     }   // end if
 
-    const int MID = *model->materialIds().begin();   // The one and only material ID
-    texture = RVTK::convertToTexture( model->texture(MID)); // Texture for return
+    const int MID = *model.materialIds().begin();   // The one and only material ID
+    texture = RVTK::convertToTexture( model.texture(MID)); // Texture for return
     assert(texture);
 
-    const int NP = 3*model->numPolys();
+    const int NP = 3*model.numPolys();
 
     init();
     vtkSmartPointer<vtkCellArray> faces = vtkSmartPointer<vtkCellArray>::New();
@@ -296,12 +296,12 @@ vtkActor* VtkActorCreator::generateActor( const ObjModel* model, vtkSmartPointer
     uvs->SetName( "TCoords_0");
 
     int vtkPointId = 0;
-    const int nfaces = model->numPolys();
+    const int nfaces = model.numPolys();
     for ( int fid = 0; fid < nfaces; ++fid)    // Over all polygons
     {
         faces->InsertNextCell(3);
-        const int* vtxs = model->fvidxs(fid);
-        const int* uvids = model->faceUVs(fid);
+        const int* vtxs = model.fvidxs(fid);
+        const int* uvids = model.faceUVs(fid);
 
         if ( uvids)
         {
@@ -309,8 +309,8 @@ vtkActor* VtkActorCreator::generateActor( const ObjModel* model, vtkSmartPointer
             {
                 const int vid = vtxs[i];
                 faces->InsertCellPoint( vtkPointId);
-                points->SetPoint( vtkPointId, &(model->vtx( vid)[0]));
-                const cv::Vec2f& uv = model->uv( MID, uvids[i]);
+                points->SetPoint( vtkPointId, &(model.vtx( vid)[0]));
+                const cv::Vec2f& uv = model.uv( MID, uvids[i]);
                 uvs->SetTuple2( vtkPointId, uv[0], uv[1]);
                 vtkPointId++;
             }   // end for
@@ -321,7 +321,7 @@ vtkActor* VtkActorCreator::generateActor( const ObjModel* model, vtkSmartPointer
             {
                 const int vid = vtxs[i];
                 faces->InsertCellPoint( vtkPointId);
-                points->SetPoint( vtkPointId, &(model->vtx( vid)[0]));
+                points->SetPoint( vtkPointId, &(model.vtx( vid)[0]));
                 uvs->SetTuple2( vtkPointId, 0.0, 0.0);
                 vtkPointId++;
             }   // end for

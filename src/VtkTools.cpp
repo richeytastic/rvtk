@@ -86,7 +86,7 @@ vtkPolyData* RVTK::getPolyData( const vtkActor* actor)
 }   // end getPolyData
 
 
-void RVTK::transform( vtkActor* actor, const vtkMatrix4x4* m)
+void RVTK::fixTransform( vtkActor* actor, const vtkMatrix4x4* m)
 {
     if ( !m)
         m = actor->GetMatrix();
@@ -99,7 +99,8 @@ void RVTK::transform( vtkActor* actor, const vtkMatrix4x4* m)
     tfilter->SetTransform( transform);
     tfilter->Update();
     pdata->SetPoints( tfilter->GetOutput()->GetPoints());
-}   // end transform
+    actor->GetMatrix()->Identity();
+}   // end fixTransform
 
 
 vtkSmartPointer<vtkImageImport> RVTK::makeImageImporter( const cv::Mat img)

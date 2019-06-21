@@ -59,7 +59,7 @@ void OffscreenModelViewer::clear()
 }   // end clear
 
 
-void OffscreenModelViewer::setModel( const RFeatures::ObjModel* model)
+void OffscreenModelViewer::setModel( const RFeatures::ObjModel& model)
 {
     clear();
     // Create the actor

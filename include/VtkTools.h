@@ -49,7 +49,8 @@ rVTK_EXPORT vtkPolyData* getPolyData( const vtkActor*);
 
 // Transform the point data on the given actor using the given matrix.
 // If the given matrix is null, the actor's internal (GPU) matrix is used.
-rVTK_EXPORT void transform( vtkActor*, const vtkMatrix4x4 *m=nullptr);
+// On return, the actor's matrix is the identity matrix.
+rVTK_EXPORT void fixTransform( vtkActor*, const vtkMatrix4x4 *m=nullptr);
 
 rVTK_EXPORT vtkSmartPointer<vtkImageImport> makeImageImporter( const cv::Mat img);
 

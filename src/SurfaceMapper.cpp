@@ -49,9 +49,9 @@ float SurfaceMapper::val( int id, size_t k) const
 
 
 // public
-void SurfaceMapper::mapMetrics( const ObjModel *model, vtkActor *actor) const
+void SurfaceMapper::mapMetrics( const ObjModel& model, vtkActor *actor) const
 {
-    assert( model->hasSequentialIds());
+    assert( model.hasSequentialIds());
     const size_t nd = ndimensions();
     assert( nd >= 1);
 
@@ -71,14 +71,14 @@ void SurfaceMapper::mapMetrics( const ObjModel *model, vtkActor *actor) const
     {
         if ( _mapsPolys)
         {
-            const int nf = model->numPolys();
+            const int nf = model.numPolys();
             cvals->SetNumberOfValues( nf);
             for ( int fid = 0; fid < nf; ++fid)
                 cvals->SetValue( fid, val( fid, 0));
         }   // end if
         else
         {
-            const int nv = model->numVtxs();
+            const int nv = model.numVtxs();
             cvals->SetNumberOfValues( nv);
             for ( int vid = 0; vid < nv; ++vid)
                 cvals->SetValue( vid, val( vid, 0));
@@ -91,7 +91,7 @@ void SurfaceMapper::mapMetrics( const ObjModel *model, vtkActor *actor) const
         
         if ( _mapsPolys)
         {
-            const int nf = model->numPolys();
+            const int nf = model.numPolys();
             cvals->SetNumberOfTuples( nf);
             for ( int fid = 0; fid < nf; ++fid)
             {
@@ -102,7 +102,7 @@ void SurfaceMapper::mapMetrics( const ObjModel *model, vtkActor *actor) const
         }   // end if
         else
         {
-            const int nv = model->numVtxs();
+            const int nv = model.numVtxs();
             cvals->SetNumberOfTuples( nv);
             for ( int vid = 0; vid < nv; ++vid)
             {

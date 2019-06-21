@@ -53,7 +53,7 @@ public:
     // actor->GetProperty()->SetRepresentationToSurface() (obviously)
     // actor->GetMapper()->SetScalarModelToUseCellData() (may not be needed)
     // actor->GetMapper()->SetScalarVisibility(true)
-    void mapMetrics( const RFeatures::ObjModel*, vtkActor*) const;
+    void mapMetrics( const RFeatures::ObjModel&, vtkActor*) const;
 
     // Get min/max for component c from last call to mapActor.
     float getMin( int c=0) const { return _min[c];}

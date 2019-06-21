@@ -36,7 +36,7 @@ public:
 
     void clear();   // Clear the viewer (remove and delete the actor).
 
-    void setModel( const RFeatures::ObjModel*); // Reset the viewer with the given model.
+    void setModel( const RFeatures::ObjModel&); // Reset the viewer with the given model.
 
     void setSize( const cv::Size&); // Set size of the viewer for snapshots
 
