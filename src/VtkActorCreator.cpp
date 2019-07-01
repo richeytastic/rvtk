@@ -81,7 +81,7 @@ vtkSmartPointer<vtkPoints> createVerts( const ObjModel& model, vtkCellArray* ver
     points->SetNumberOfPoints( n);
     for ( int i = 0; i < n; ++i)
     {
-        points->SetPoint( i, &model.vtx( i)[0]);
+        points->SetPoint( i, &model.uvtx( i)[0]);
         vertices->InsertNextCell(1);
         vertices->InsertCellPoint(i);
     }   // end for
@@ -185,7 +185,9 @@ vtkActor* VtkActorCreator::generateSurfaceActor( const ObjModel& model)
     pd->SetPoints( points);
     pd->SetPolys( faces);
 
-    return makeActor(pd);
+    vtkActor* actor = makeActor(pd);
+    actor->PokeMatrix( RVTK::toVTK( model.transformMatrix()));
+    return actor;
 }   // end generateSurfaceActor
 
 
@@ -204,7 +206,10 @@ vtkActor* VtkActorCreator::generatePointsActor( const ObjModel& model)
     vtkSmartPointer<vtkPolyData> pd = vtkSmartPointer<vtkPolyData>::New();
     pd->SetVerts( vertices);
     pd->SetPoints( points);
-    return makeActor(pd);
+
+    vtkActor* actor = makeActor(pd);
+    actor->PokeMatrix( RVTK::toVTK( model.transformMatrix()));
+    return actor;
 }   // end generatePointsActor
 
 
@@ -309,7 +314,7 @@ vtkActor* VtkActorCreator::generateActor( const ObjModel& model, vtkSmartPointer
             {
                 const int vid = vtxs[i];
                 faces->InsertCellPoint( vtkPointId);
-                points->SetPoint( vtkPointId, &(model.vtx( vid)[0]));
+                points->SetPoint( vtkPointId, &(model.uvtx( vid)[0]));
                 const cv::Vec2f& uv = model.uv( MID, uvids[i]);
                 uvs->SetTuple2( vtkPointId, uv[0], uv[1]);
                 vtkPointId++;
@@ -321,7 +326,7 @@ vtkActor* VtkActorCreator::generateActor( const ObjModel& model, vtkSmartPointer
             {
                 const int vid = vtxs[i];
                 faces->InsertCellPoint( vtkPointId);
-                points->SetPoint( vtkPointId, &(model.vtx( vid)[0]));
+                points->SetPoint( vtkPointId, &(model.uvtx( vid)[0]));
                 uvs->SetTuple2( vtkPointId, 0.0, 0.0);
                 vtkPointId++;
             }   // end for
@@ -341,5 +346,6 @@ vtkActor* VtkActorCreator::generateActor( const ObjModel& model, vtkSmartPointer
     actor->GetProperty()->SetDiffuse(0.0);
     actor->GetProperty()->SetSpecular(0.0);
 
+    actor->PokeMatrix( RVTK::toVTK( model.transformMatrix()));
     return actor;
 }   // end generateActor
