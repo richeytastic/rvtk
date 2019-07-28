@@ -28,3 +28,5 @@
 *.app
 
 compile_commands.json
+
+CMakeLists.txt.user*
