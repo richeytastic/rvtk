@@ -1,5 +1,5 @@
 /************************************************************************
- * Copyright (C) 2018 Richard Palmer
+ * Copyright (C) 2019 Richard Palmer
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,6 +41,8 @@ public:
     void setSize( const cv::Size&); // Set size of the viewer for snapshots
 
     void setCamera( const RFeatures::CameraParams&);
+
+    void setBackgroundColour( double r, double g, double b);
 
     // Take and return a snapshot of the scene.
     cv::Mat_<cv::Vec3b> snapshot() const;

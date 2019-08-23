@@ -40,6 +40,12 @@ OffscreenModelViewer::~OffscreenModelViewer()
 }   // end dtor
 
 
+void OffscreenModelViewer::setBackgroundColour( double r, double g, double b)
+{
+    _viewer->renderer()->SetBackground(r,g,b);
+}   // end setBackgroundColour
+
+
 void OffscreenModelViewer::setSize( const cv::Size& dims)
 {
     _viewer->setSize( static_cast<size_t>(dims.width), static_cast<size_t>(dims.height));
