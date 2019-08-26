@@ -45,7 +45,7 @@ void init()
 
 vtkActor* makeActor( vtkSmartPointer<vtkPolyData> pd)
 {
-    pd = RVTK::generateNormals( pd);
+    //pd = RVTK::generateNormals( pd);
     /*
     pd->BuildLinks();   // Required to use vtkPolyData::GetPointCells
     pd->BuildCells();
