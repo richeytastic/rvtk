@@ -28,7 +28,7 @@ include( "${CMAKE_CURRENT_LIST_DIR}/Macros.cmake")
 get_library_suffix( _lsuff)
 set( _hints rVTK${_lsuff} librVTK${_lsuff})
 find_library( rVTK_LIBRARIES NAMES ${_hints} PATHS "${rVTK_LIBRARY_DIR}/static" "${rVTK_LIBRARY_DIR}")
-set( rVTK_LIBRARIES     ${rVTK_LIBRARIES}         CACHE FILE "The rVTK imported libraries to link to.")
+set( rVTK_LIBRARIES     ${rVTK_LIBRARIES}         CACHE FILEPATH "The rVTK imported libraries to link to.")
 
 # handle QUIETLY and REQUIRED args and set rVTK_FOUND to TRUE if all listed variables are TRUE
 include( "${CMAKE_ROOT}/Modules/FindPackageHandleStandardArgs.cmake")
