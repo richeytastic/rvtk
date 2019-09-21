@@ -70,8 +70,8 @@ rVTK_EXPORT vtkSmartPointer<vtkTexture> loadTexture( const std::string& fname, b
 // Convert matrix to VTK format.
 rVTK_EXPORT vtkSmartPointer<vtkMatrix4x4> toVTK( const cv::Matx44d&);
 
-// Convert VTK matrix to OpenCV format.
-rVTK_EXPORT cv::Matx44d toCV( const vtkMatrix4x4*);
+// Convert VTK matrix to OpenCV format. Returns identity matrix if null parameter.
+rVTK_EXPORT cv::Matx44d toCV( const vtkMatrix4x4* d=nullptr);
 
 // Print the given matrix to the given stream.
 rVTK_EXPORT void print( std::ostream&, const vtkMatrix4x4*);

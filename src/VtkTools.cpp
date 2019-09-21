@@ -386,6 +386,9 @@ vtkSmartPointer<vtkMatrix4x4> RVTK::toVTK( const cv::Matx44d& m)
 
 cv::Matx44d RVTK::toCV( const vtkMatrix4x4 *m)
 {
+    if ( !m)
+        return cv::Matx44d::eye();
+
     cv::Matx44d cm;
 
     cm(0,0) = m->GetElement(0,0);

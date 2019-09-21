@@ -106,7 +106,10 @@ double VtkScalingActor::opacity() const { return _actor->GetProperty()->GetOpaci
 // Makes temporary updates to the actor.
 void VtkScalingActor::pokeTransform( const vtkMatrix4x4* vm) { _actor->PokeMatrix( const_cast<vtkMatrix4x4*>(vm));}
 
-/*
+
+const vtkMatrix4x4* VtkScalingActor::transform() const { return _actor->GetMatrix();}
+
+
 // Update the actual position with the temporary changes to the actor's matrix.
 void VtkScalingActor::fixTransform()
 {
@@ -115,4 +118,3 @@ void VtkScalingActor::fixTransform()
     mover.transform(pos);  // In-place
     setPosition(pos);
 }   // end fixTransform
-*/

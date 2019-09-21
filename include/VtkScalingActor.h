@@ -69,6 +69,8 @@ public:
     double opacity() const;
 
     void pokeTransform( const vtkMatrix4x4*);   // Directly adjust the actor's transform.
+    const vtkMatrix4x4* transform() const;      // Return the actor's current transform.
+    void fixTransform();
 
     // Copy properties from the provided actor to this one (including renderer).
     void copyProperties( const VtkScalingActor&);
