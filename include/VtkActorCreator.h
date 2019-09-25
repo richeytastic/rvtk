@@ -22,12 +22,8 @@
 #include "rVTK_Export.h"
 #include <vtkSmartPointer.h>
 #include <vtkActor.h>
-#include <vtkPoints.h>
-#include <vtkTexture.h>
-#include <vtkCellArray.h>
 #include <vector>
 #include <list>
-
 
 namespace RVTK {
 
@@ -40,41 +36,37 @@ public:
     // be treated as indices. On return, lighting is set to 100% ambient, 0% diffuse and 0% specular
     // so that the texture is lit properly. Returns null if more than one material defined on the object.
     // On return, the internal matrix of the actor will match ObjModel::transformMatrix.
-    // If makeNormals is true, polygon normals will be generated will allows the lighting to
-    // be smoothly applied across the surface of each polygon.
-    static vtkActor* generateActor( const RFeatures::ObjModel&, vtkSmartPointer<vtkTexture>&, bool makeNormals=false);
+    static vtkSmartPointer<vtkActor> generateActor( const RFeatures::ObjModel&);
 
     // Returns a non-textured actor for the given model. Model must have all its vertex/face IDs
     // stored in sequential order so they can be treated as indices.
     // On return, the internal matrix of the actor will match ObjModel::transformMatrix.
-    // If makeNormals is true, polygon normals will be generated will allows the lighting to
-    // be smoothly applied across the surface of each polygon.
-    static vtkActor* generateSurfaceActor( const RFeatures::ObjModel&, bool makeNormals=false);
+    static vtkSmartPointer<vtkActor> generateSurfaceActor( const RFeatures::ObjModel&);
 
     // Generate a simple points actor.
     // On return, the actor's internal matrix will match ObjModel::transformMatrix.
-    static vtkActor* generatePointsActor( const RFeatures::ObjModel&);
+    static vtkSmartPointer<vtkActor> generatePointsActor( const RFeatures::ObjModel&);
 
     // Generate a simple points actor from the given subset of vertex IDs.
     // On return, the actor's internal matrix will match ObjModel::transformMatrix.
-    static vtkActor* generatePointsActor( const RFeatures::ObjModel&, const IntSet& vidxsSubset);
+    static vtkSmartPointer<vtkActor> generatePointsActor( const RFeatures::ObjModel&, const IntSet& vidxsSubset);
 
     // Generate a points actor from raw vertices.
-    static vtkActor* generatePointsActor( const std::vector<cv::Vec3f>&);
+    static vtkSmartPointer<vtkActor> generatePointsActor( const std::vector<cv::Vec3f>&);
 
     // Generate a single line where the given points are joined in sequence.
     // Set joinLoop to true if the first point should be joined to the last.
-    static vtkActor* generateLineActor( const std::vector<cv::Vec3f>&, bool joinLoop=false);
-    static vtkActor* generateLineActor( const std::list<cv::Vec3f>&, bool joinLoop=false);
+    static vtkSmartPointer<vtkActor> generateLineActor( const std::vector<cv::Vec3f>&, bool joinLoop=false);
+    static vtkSmartPointer<vtkActor> generateLineActor( const std::list<cv::Vec3f>&, bool joinLoop=false);
 
     // Generate a single line where the given points are joined in sequence.
     // Set joinLoop to true if the first point should be joined to the last.
     // On return, the actor's internal matrix will match ObjModel::transformMatrix.
-    static vtkActor* generateLineActor( const RFeatures::ObjModel&, const std::list<int>&, bool joinLoop=false);
+    static vtkSmartPointer<vtkActor> generateLineActor( const RFeatures::ObjModel&, const std::list<int>&, bool joinLoop=false);
 
     // Generate an actor that is a set of line segments where lps is a sequence of line segment
     // endpoints. (lps.size() must be even).
-    static vtkActor* generateLinePairsActor( const std::vector<cv::Vec3f>& lps);
+    static vtkSmartPointer<vtkActor> generateLinePairsActor( const std::vector<cv::Vec3f>& lps);
 };  // end class
 
 }   // end namespace

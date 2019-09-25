@@ -199,10 +199,10 @@ vtkSmartPointer<vtkPolyData> RVTK::generateNormals( vtkSmartPointer<vtkPolyData>
 {
     vtkSmartPointer<vtkPolyDataNormals> normalsGenerator = vtkPolyDataNormals::New();
     normalsGenerator->SetInputData( pdata);
-    normalsGenerator->ConsistencyOff();
     normalsGenerator->ComputePointNormalsOn();
-    normalsGenerator->ComputeCellNormalsOn();
-    normalsGenerator->NonManifoldTraversalOn();
+    normalsGenerator->ComputeCellNormalsOff();
+    //normalsGenerator->NonManifoldTraversalOn();
+    //normalsGenerator->ConsistencyOff();
     normalsGenerator->Update();
     return normalsGenerator->GetOutput();
 }   // end generateNormals

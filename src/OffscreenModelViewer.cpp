@@ -58,7 +58,6 @@ void OffscreenModelViewer::clear()
     if ( _actor)
     {
         _viewer->removeActor(_actor);
-        _actor->Delete();
         _actor = nullptr;
         setCamera( _viewer->camera());  // Refresh
     }   // end if
@@ -69,8 +68,7 @@ void OffscreenModelViewer::setModel( const RFeatures::ObjModel& model)
 {
     clear();
     // Create the actor
-    vtkSmartPointer<vtkTexture> texture;
-    _actor = VtkActorCreator::generateActor( model, texture);
+    _actor = VtkActorCreator::generateActor( model);
     _viewer->addActor( _actor);
     setCamera( _viewer->camera());  // Refresh
 }   // end setModel

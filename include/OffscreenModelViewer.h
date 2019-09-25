@@ -60,7 +60,7 @@ public:
     cv::Point2f imagePlane( const cv::Vec3f&) const;
 
 private:
-    vtkActor *_actor;
+    vtkSmartPointer<vtkActor> _actor;
     Viewer::Ptr _viewer;
     mutable RendererPicker *_picker;
     RendererPicker *picker() const;

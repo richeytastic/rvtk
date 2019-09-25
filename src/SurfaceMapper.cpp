@@ -67,21 +67,58 @@ void SurfaceMapper::mapMetrics( const ObjModel& model, vtkActor *actor) const
     vtkSmartPointer<vtkFloatArray> cvals = vtkSmartPointer<vtkFloatArray>::New();
     cvals->SetName( _label.c_str());
 
+    const int nf = model.numPolys();
+    const int nv = model.numVtxs();
+
     if ( nd == 1)  // Scalars
     {
         if ( _mapsPolys)
         {
-            const int nf = model.numPolys();
             cvals->SetNumberOfValues( nf);
             for ( int fid = 0; fid < nf; ++fid)
                 cvals->SetValue( fid, val( fid, 0));
         }   // end if
         else
         {
-            const int nv = model.numVtxs();
-            cvals->SetNumberOfValues( nv);
-            for ( int vid = 0; vid < nv; ++vid)
-                cvals->SetValue( vid, val( vid, 0));
+            // For vertex mapping, depending on how the actor's polydata have been created, there could be the
+            // same number of points as there are vertices in the model (if texture mapping was not done) or
+            // there could be three times the number of triangles (if texture mapping was done). In the first
+            // case, setting the value is a straight forward one-to-one mapping. However, in the second case,
+            // vertices that share faces will be duplicated and so each unique vertex metric value needs to
+            // be mapped to all of these duplicate corresponding points in the array.
+            const int np = RVTK::getPolyData(actor)->GetPoints()->GetNumberOfPoints();
+            const bool hasDups = np == 3*nf;
+            /*
+            std::cerr << "numVtxs  = " << nv << std::endl;
+            std::cerr << "numPolys = " << nf << std::endl;
+            std::cerr << "3*NF     = " << 3*nf << std::endl;
+            */
+
+            if ( !hasDups)
+            {
+                cvals->SetNumberOfValues( nv);
+                for ( int vid = 0; vid < nv; ++vid)
+                    cvals->SetValue( vid, val( vid, 0));    // One-to-one mapping
+            }   // end if
+            else
+            {
+                // Map of vertex ids to their values for local caching since we don't want
+                // to ask the client to repeatedly calculate the same metric for a vertex.
+                std::unordered_map<int,float> vmap;
+                int i = 0;
+                cvals->SetNumberOfValues( 3*nf);
+                for ( int fid = 0; fid < nf; ++fid)
+                {
+                    const int* fvidxs = model.fvidxs(fid);
+                    for ( int j = 0; j < 3; ++j)
+                    {
+                        const int vid = fvidxs[j];
+                        if ( vmap.count(vid) == 0)
+                            vmap[vid] = val( vid, 0);
+                        cvals->SetValue( i++, vmap[vid]);
+                    }   // end for
+                }   // end for
+            }   // end else
         }   // end else
     }   // end if
     else    // Vectors
@@ -91,7 +128,6 @@ void SurfaceMapper::mapMetrics( const ObjModel& model, vtkActor *actor) const
         
         if ( _mapsPolys)
         {
-            const int nf = model.numPolys();
             cvals->SetNumberOfTuples( nf);
             for ( int fid = 0; fid < nf; ++fid)
             {
@@ -102,19 +138,42 @@ void SurfaceMapper::mapMetrics( const ObjModel& model, vtkActor *actor) const
         }   // end if
         else
         {
-            const int nv = model.numVtxs();
-            cvals->SetNumberOfTuples( nv);
-            for ( int vid = 0; vid < nv; ++vid)
+            const bool hasDups = RVTK::getPolyData(actor)->GetPoints()->GetNumberOfPoints() == 3*nf;
+
+            if ( !hasDups)
             {
-                for ( size_t k = 0; k < nd; ++k)
-                    mval[k] = val( vid, k);
-                cvals->SetTuple( vid, &mval[0]);
-            }   // end for
+                cvals->SetNumberOfTuples( nv);
+                for ( int vid = 0; vid < nv; ++vid)
+                {
+                    for ( size_t k = 0; k < nd; ++k)
+                        mval[k] = val( vid, k);
+                    cvals->SetTuple( vid, &mval[0]);
+                }   // end for
+            }   // end if
+            else
+            {
+                std::unordered_map<int, std::vector<float> > vmap;
+                int i = 0;
+                cvals->SetNumberOfTuples( 3*nf);
+                for ( int fid = 0; fid < nf; ++fid)
+                {
+                    const int* fvidxs = model.fvidxs(fid);
+                    for ( int j = 0; j < 3; ++j)
+                    {
+                        const int vid = fvidxs[j];
+                        if ( vmap.count(vid) == 0)
+                        {
+                            for ( size_t k = 0; k < nd; ++k)
+                                vmap[vid][k] = val( vid, k);
+                        }   // end if
+                        cvals->SetTuple( i++, &vmap[vid][0]);
+                    }   // end for
+                }   // end for
+            }   // end else
         }   // end else
     }   // end else
 
     vtkPolyData* pd = RVTK::getPolyData(actor);
-    vtkDataSetAttributes *ds = _mapsPolys ? static_cast<vtkDataSetAttributes*>(pd->GetCellData())
-                                          : static_cast<vtkDataSetAttributes*>(pd->GetPointData());
+    vtkDataSetAttributes *ds = _mapsPolys ? (vtkDataSetAttributes*)pd->GetCellData() : (vtkDataSetAttributes*)pd->GetPointData();
     ds->AddArray( cvals);
 }   // end mapMetrics
